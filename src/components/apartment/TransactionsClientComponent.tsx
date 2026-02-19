@@ -95,11 +95,14 @@ export default function TransactionsClientComponent({
     );
   }, [transactions, localSearchTerm]);
 
+  // Use filtered count when searching, otherwise use total API count
+  const displayTotalCount = localSearchTerm ? clientFilteredTransactions.length : totalCount;
+
 
   return (
     <TransactionList
       transactions={clientFilteredTransactions} // Pass the client-filtered data
-      totalCount={totalCount}
+      totalCount={displayTotalCount}
       currentPage={currentPage}
       itemsPerPage={itemsPerPage}
       isLoading={isLoading}
