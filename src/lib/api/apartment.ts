@@ -36,9 +36,7 @@ export async function getApartmentTransactions(
   };
 
   try {
-    console.log('getApartmentTransactions - API Request Params:', params); // Debug log
     const response: TransactionResponse & { response?: { body?: { totalCount?: number } } } = await callPublicDataApi(APARTMENT_TRADE_API_PATH, params);
-    console.log('getApartmentTransactions - API Raw Response (totalCount):', response?.response?.body?.totalCount); // Debug log
 
     // API 응답 구조에 따라 items 객체 접근 경로가 달라질 수 있음.
     // 여기서는 service.response.body.items.item 구조를 가정.
