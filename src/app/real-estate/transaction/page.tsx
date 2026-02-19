@@ -52,18 +52,74 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
 }
 
 // 데이터 로딩 컴포넌트
-async function TransactionsLoader({ lawdCd, dealYmd, numOfRows, pageNo }: { lawdCd: string; dealYmd: string; numOfRows: number; pageNo: number }) { // Update props
-  let transactions = null;
+async function TransactionsLoader({ lawdCd, dealYmd, numOfRows, pageNo }: { lawdCd: string; dealYmd: string; numOfRows: number; pageNo: number }) {
+  let result = null;
   let error = null;
 
   try {
-    transactions = await getApartmentTransactions(lawdCd, dealYmd, numOfRows, pageNo); // Pass new params
+    result = await getApartmentTransactions(lawdCd, dealYmd, numOfRows, pageNo);
   } catch (e) {
     error = (e as Error).message;
   }
   
+  // onPageChange와 onLoadMore 핸들러는 클라이언트 컴포넌트에서 URL을 업데이트해야 하므로 useRouter를 사용
   // TransactionList는 클라이언트 컴포넌트이므로 isLoading 상태를 props로 전달
-  return <TransactionList transactions={transactions || []} isLoading={false} error={error} />;
+  return (
+    <TransactionsClientComponent
+      transactions={result?.transactions || []}
+      totalCount={result?.totalCount || 0}
+      currentPage={result?.pageNo || pageNo}
+      itemsPerPage={result?.numOfRows || numOfRows}
+      isLoading={false}
+      error={error}
+    />
+  );
+}
+
+// Client Component to handle pagination interactions
+function TransactionsClientComponent({
+  transactions,
+  totalCount,
+  currentPage,
+  itemsPerPage,
+  isLoading,
+  error,
+}: {
+  transactions: NormalizedTransaction[];
+  totalCount: number;
+  currentPage: number;
+  itemsPerPage: number;
+  isLoading: boolean;
+  error: string | null;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const handlePageChange = (newPage: number) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set('pageNo', String(newPage));
+    router.push(`?${current.toString()}`);
+  };
+
+  const handleLoadMore = () => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    const newNumOfRows = itemsPerPage + 100; // Load 100 more items
+    current.set('numOfRows', String(newNumOfRows));
+    router.push(`?${current.toString()}`);
+  };
+
+  return (
+    <TransactionList
+      transactions={transactions}
+      totalCount={totalCount}
+      currentPage={currentPage}
+      itemsPerPage={itemsPerPage}
+      isLoading={isLoading}
+      error={error}
+      onPageChange={handlePageChange}
+      onLoadMore={handleLoadMore}
+    />
+  );
 }
 
 // 로딩 UI 컴포넌트

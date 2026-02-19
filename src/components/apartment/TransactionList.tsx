@@ -1,6 +1,3 @@
-// src/components/apartment/TransactionList.tsx
-"use client";
-
 import React, { useState, useMemo } from 'react';
 import { NormalizedTransaction } from '@/types/real-estate';
 
@@ -11,12 +8,27 @@ interface TransactionListProps {
   transactions: NormalizedTransaction[];
   isLoading: boolean;
   error: string | null;
+  // Pagination props
+  totalCount: number;
+  currentPage: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onLoadMore: () => void;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoading, error }) => {
+const TransactionList: React.FC<TransactionListProps> = ({
+  transactions,
+  isLoading,
+  error,
+  totalCount,
+  currentPage,
+  itemsPerPage,
+  onPageChange,
+  onLoadMore,
+}) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -31,27 +43,23 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
     if (!transactions || transactions.length === 0) {
       return [];
     }
-    const sortableTransactions = [...transactions]; // Create a shallow copy to avoid mutating prop
+    const sortableTransactions = [...transactions];
 
     sortableTransactions.sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
 
-      // Handle numbers
       if (typeof aValue === 'number' && typeof bValue === 'number') {
         return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
-      // Handle strings (including dates as strings)
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
-      // Fallback for other types or mixed types
       return 0;
     });
     return sortableTransactions;
   }, [transactions, sortField, sortDirection]);
 
-  // New filteredTransactions based on searchTerm
   const filteredTransactions = useMemo(() => {
     if (!searchTerm) {
       return sortedTransactions;
@@ -81,6 +89,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
       </div>
     );
   }
+
+  // Calculate pagination details
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  // Determine if 'Load More' button should be shown
+  const canLoadMore = currentPage * itemsPerPage < totalCount;
+
 
   if (!transactions || transactions.length === 0) { // Check original transactions for empty state
     return (
@@ -125,7 +141,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredTransactions.map((transaction) => ( // Use filteredTransactions here
+            {filteredTransactions.map((transaction) => (
               <tr key={transaction.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
@@ -146,9 +162,56 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
           </tbody>
         </table>
       </div>
-      {filteredTransactions.length === 0 && searchTerm && ( // Display message if no results after filtering
+      {filteredTransactions.length === 0 && searchTerm && (
         <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4 text-center">
           <p>'{searchTerm}'에 해당하는 검색 결과가 없습니다.</p>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-md mt-4">
+          <div className="flex-1 flex justify-between sm:justify-end">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              이전
+            </button>
+            <div className="hidden sm:flex ml-3">
+              {pageNumbers.map(page => (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page)}
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                    page === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              다음
+            </button>
+          </div>
+        </nav>
+      )}
+
+      {/* Load More Button */}
+      {canLoadMore && (
+        <div className="text-center mt-4">
+          <button
+            onClick={onLoadMore}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            더보기 ({totalCount - (currentPage * itemsPerPage)}개 남음)
+          </button>
         </div>
       )}
     </div>
