@@ -51,10 +51,8 @@ async function TransactionsLoader({ lawdCd, dealYmd }: { lawdCd: string; dealYmd
 
   try {
     transactions = await getApartmentTransactions(lawdCd, dealYmd);
-    console.log('TransactionsLoader: Fetched transactions:', JSON.stringify(transactions, null, 2));
   } catch (e) {
     error = (e as Error).message;
-    console.error('TransactionsLoader: Error fetching transactions:', error);
   }
   
   // TransactionList는 클라이언트 컴포넌트이므로 isLoading 상태를 props로 전달

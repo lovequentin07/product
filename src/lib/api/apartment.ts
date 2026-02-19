@@ -37,20 +37,20 @@ export async function getApartmentTransactions(
     // 데이터 정규화
     const normalizedData: NormalizedTransaction[] = items.map((item: TransactionItem, index: number) => {
       // 거래금액에서 쉼표 제거 및 숫자로 변환
-      const price = parseInt(String(item.거래금액).replace(/,/g, ''), 10);
-      const dealDate = `${item.년}-${String(item.월).padStart(2, '0')}-${String(item.일).padStart(2, '0')}`;
-      const address = `${item.법정동 || ''} ${item.지번 || ''}`.trim();
+      const price = parseInt(String(item.dealAmount).replace(/,/g, ''), 10);
+      const dealDate = `${item.dealYear}-${String(item.dealMonth).padStart(2, '0')}-${String(item.dealDay).padStart(2, '0')}`;
+      const address = `${item.umdNm || ''} ${item.jibun || ''}`.trim();
 
       return {
         id: `${lawdCd}-${dealYmd}-${index}`, // 각 거래 고유 ID 생성 (임시)
-        aptName: item.아파트 || '정보 없음',
+        aptName: item.aptNm || '정보 없음',
         price: isNaN(price) ? 0 : price, // 유효하지 않은 값은 0으로 처리
-        area: item.전용면적 || 0,
+        area: item.excluUseAr || 0,
         date: dealDate,
         address: address,
-        floor: item.층 || 0,
-        buildYear: item.건축년도 || 0,
-        isCancelled: !!item.해제사유발생일, // 해제사유발생일이 있으면 취소된 거래로 간주
+        floor: item.floor || 0,
+        buildYear: item.buildYear || 0,
+        isCancelled: !!item.cdealDay, // cdealDay가 있으면 취소된 거래로 간주
       };
     });
 
