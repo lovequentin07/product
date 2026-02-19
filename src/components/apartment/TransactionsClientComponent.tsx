@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { NormalizedTransaction } from '@/types/real-estate';
