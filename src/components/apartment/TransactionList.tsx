@@ -11,6 +11,7 @@ interface TransactionListProps {
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoading, error }) => {
+  console.log('TransactionList: Received transactions prop:', JSON.stringify(transactions, null, 2));
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-40 text-gray-500">
