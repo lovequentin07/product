@@ -134,7 +134,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 responsive-table"> {/* Add responsive-table class */}
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('aptName')}>아파트명 {getSortIndicator('aptName')}</th>
@@ -150,14 +150,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredTransactions.map((transaction) => (
               <tr key={transaction.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{(transaction.price / 10000).toFixed(1)}억</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(transaction.area * 0.3025).toFixed(1)}평</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}층</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}년</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-label="아파트명">{transaction.aptName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="거래일">{transaction.date}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold" data-label="거래금액">{(transaction.price / 10000).toFixed(1)}억</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="전용면적">{(transaction.area * 0.3025).toFixed(1)}평</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="층수">{transaction.floor}층</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="주소">{transaction.address}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="건축년도">{transaction.buildYear}년</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm" data-label="상태">
                   {transaction.isCancelled && (
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                       계약 해제
@@ -169,6 +169,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           </tbody>
         </table>
       </div>
+      {/* TODO: Add CSS for .responsive-table in globals.css for mobile responsiveness */}
       {filteredTransactions.length === 0 && searchTerm && (
         <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4 text-center">
           <p>'{searchTerm}'에 해당하는 검색 결과가 없습니다.</p>
