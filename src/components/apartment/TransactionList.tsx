@@ -16,6 +16,7 @@ interface TransactionListProps {
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoading, error }) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -49,6 +50,17 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
     });
     return sortableTransactions;
   }, [transactions, sortField, sortDirection]);
+
+  // New filteredTransactions based on searchTerm
+  const filteredTransactions = useMemo(() => {
+    if (!searchTerm) {
+      return sortedTransactions;
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return sortedTransactions.filter(transaction =>
+      transaction.aptName.toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  }, [sortedTransactions, searchTerm]);
 
 
   if (isLoading) {
@@ -86,41 +98,59 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
   };
 
   return (
-    <div className="overflow-x-auto max-w-6xl mx-auto my-4 bg-white shadow-md rounded-lg">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('aptName')}>아파트명 {getSortIndicator('aptName')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('date')}>거래일 {getSortIndicator('date')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('price')}>거래금액 (만원) {getSortIndicator('price')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area')}>전용면적 (㎡) {getSortIndicator('area')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('floor')}>층수 {getSortIndicator('floor')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('address')}>주소 {getSortIndicator('address')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('buildYear')}>건축년도 {getSortIndicator('buildYear')}</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {sortedTransactions.map((transaction) => ( // Use sortedTransactions here
-            <tr key={transaction.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{transaction.price.toLocaleString()}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.area}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {transaction.isCancelled && (
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                    계약 해제
-                  </span>
-                )}
-              </td>
+    <div className="max-w-6xl mx-auto my-4">
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="아파트명으로 검색..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('aptName')}>아파트명 {getSortIndicator('aptName')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('date')}>거래일 {getSortIndicator('date')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('price')}>거래금액 (만원) {getSortIndicator('price')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area')}>전용면적 (㎡) {getSortIndicator('area')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('floor')}>층수 {getSortIndicator('floor')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('address')}>주소 {getSortIndicator('address')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('buildYear')}>건축년도 {getSortIndicator('buildYear')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredTransactions.map((transaction) => ( // Use filteredTransactions here
+              <tr key={transaction.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{transaction.price.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.area}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {transaction.isCancelled && (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      계약 해제
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {filteredTransactions.length === 0 && searchTerm && ( // Display message if no results after filtering
+        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4 text-center">
+          <p>'{searchTerm}'에 해당하는 검색 결과가 없습니다.</p>
+        </div>
+      )}
     </div>
   );
 };
