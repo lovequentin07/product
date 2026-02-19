@@ -6,16 +6,7 @@ import { getApartmentTransactions } from '@/lib/api/apartment';
 import { getRegionNameByCode } from '@/data/regions';
 
 import SearchForm from '@/components/apartment/SearchForm';
-import TransactionList from '@/components/apartment/TransactionList';
-
-interface RealEstatePageProps {
-  searchParams: {
-    lawdCd?: string;
-    dealYmd?: string;
-    numOfRows?: string; // New: number of rows
-    pageNo?: string;    // New: page number
-  };
-}
+import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent'; // Import the new client component
 
 // SEO를 위한 동적 메타데이터 생성
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
@@ -72,52 +63,6 @@ async function TransactionsLoader({ lawdCd, dealYmd, numOfRows, pageNo }: { lawd
       itemsPerPage={result?.numOfRows || numOfRows}
       isLoading={false}
       error={error}
-    />
-  );
-}
-
-// Client Component to handle pagination interactions
-function TransactionsClientComponent({
-  transactions,
-  totalCount,
-  currentPage,
-  itemsPerPage,
-  isLoading,
-  error,
-}: {
-  transactions: NormalizedTransaction[];
-  totalCount: number;
-  currentPage: number;
-  itemsPerPage: number;
-  isLoading: boolean;
-  error: string | null;
-}) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const handlePageChange = (newPage: number) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set('pageNo', String(newPage));
-    router.push(`?${current.toString()}`);
-  };
-
-  const handleLoadMore = () => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    const newNumOfRows = itemsPerPage + 100; // Load 100 more items
-    current.set('numOfRows', String(newNumOfRows));
-    router.push(`?${current.toString()}`);
-  };
-
-  return (
-    <TransactionList
-      transactions={transactions}
-      totalCount={totalCount}
-      currentPage={currentPage}
-      itemsPerPage={itemsPerPage}
-      isLoading={isLoading}
-      error={error}
-      onPageChange={handlePageChange}
-      onLoadMore={handleLoadMore}
     />
   );
 }
