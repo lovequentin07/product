@@ -13,11 +13,15 @@ const APARTMENT_TRADE_API_PATH = '/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTrade
  */
 export async function getApartmentTransactions(
   lawdCd: string,
-  dealYmd: string
+  dealYmd: string,
+  numOfRows: number = 100, // 기본값 100개
+  pageNo: number = 1 // 기본값 1페이지
 ): Promise<NormalizedTransaction[] | null> {
   const params: TransactionRequest = {
     LAWD_CD: lawdCd,
     DEAL_YMD: dealYmd,
+    numOfRows: numOfRows,
+    pageNo: pageNo,
     // stdt는 현재 API 명세에 없지만, 추후 확장 가능성을 위해 남겨둠
     // stdt: dealYmd.substring(0, 4) // 예를 들어, stdt가 년도를 의미한다면 이렇게 사용
   };

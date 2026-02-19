@@ -3,6 +3,8 @@
 export interface TransactionRequest {
   LAWD_CD: string; // 지역코드 (예: 11110)
   DEAL_YMD: string; // 계약월 (예: 202402)
+  numOfRows?: number; // 한 페이지 결과 수
+  pageNo?: number; // 페이지 번호
 }
 
 export interface TransactionResponse {
