@@ -5,14 +5,24 @@ export interface TransactionRequest {
   DEAL_YMD: string; // 계약월 (예: 202402)
   numOfRows?: number; // 한 페이지 결과 수
   pageNo?: number; // 페이지 번호
+  [key: string]: string | number | undefined; // Add index signature
 }
 
 export interface TransactionResponse {
-  resultCode: string;
-  resultMsg: string;
-  items: TransactionItem[];
-  pageNo?: number;
-  totalCount?: number;
+  response: {
+    header: {
+      resultCode: string;
+      resultMsg: string;
+    };
+    body: {
+      items: {
+        item: TransactionItem[]; // It can be an array due to parseXmlResponse isArray option
+      };
+      totalCount: number;
+      pageNo: number;
+      numOfRows: number;
+    };
+  };
 }
 
 export interface TransactionItem {

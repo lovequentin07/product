@@ -35,8 +35,13 @@ export async function getApartmentTransactions(
     // stdt: dealYmd.substring(0, 4) // 예를 들어, stdt가 년도를 의미한다면 이렇게 사용
   };
 
+  // Filter out undefined values
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined)
+  ) as Record<string, string | number>;
+
   try {
-    const response: TransactionResponse & { response?: { body?: { totalCount?: number } } } = await callPublicDataApi(APARTMENT_TRADE_API_PATH, params);
+    const response: TransactionResponse & { response?: { body?: { totalCount?: number } } } = await callPublicDataApi(APARTMENT_TRADE_API_PATH, filteredParams);
 
     // API 응답 구조에 따라 items 객체 접근 경로가 달라질 수 있음.
     // 여기서는 service.response.body.items.item 구조를 가정.
