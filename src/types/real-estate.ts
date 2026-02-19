@@ -4,6 +4,7 @@ export interface TransactionRequest {
   LAWD_CD: string; // 지역코드 (예: 11110)
   DEAL_YMD: string; // 계약월 (예: 202402)
   serviceKey?: string; // API 인증키
+  [key: string]: string | number | undefined; // Allow for additional properties for generic API calls
 }
 
 export interface TransactionResponse {
