@@ -8,6 +8,12 @@ import { getRegionNameByCode } from '@/data/regions';
 import SearchForm from '@/components/apartment/SearchForm';
 import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent'; // Import the new client component
 
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+interface RealEstatePageProps {
+  searchParams: SearchParams;
+}
+
 // SEO를 위한 동적 메타데이터 생성
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
   // Await searchParams before destructuring
