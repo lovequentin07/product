@@ -35,7 +35,7 @@ export default function TransactionsClientComponent({
 
   const handleLoadMore = () => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    const newNumOfRows = itemsPerPage + 100; // Load 100 more items
+    const newNumOfRows = itemsPerPage + 15; // Load 15 more items
     current.set('numOfRows', String(newNumOfRows));
     current.set('pageNo', '1'); // Reset page to 1 when loading more rows
     router.push(`?${current.toString()}`);

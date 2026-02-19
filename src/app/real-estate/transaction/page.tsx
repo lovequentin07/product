@@ -87,7 +87,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
   
   const initialLawdCd = lawdCd || '11110'; // 기본값: 종로구
   const initialDealYmd = dealYmd || defaultDealYmd;
-  const initialNumOfRows = Number(numOfRows) || 100; // Default to 100
+  const initialNumOfRows = Number(numOfRows) || 15; // Default to 15
   const initialPageNo = Number(pageNo) || 1;         // Default to 1
 
   return (

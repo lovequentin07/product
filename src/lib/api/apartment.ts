@@ -23,7 +23,7 @@ interface ApartmentTransactionsResult {
 export async function getApartmentTransactions(
   lawdCd: string,
   dealYmd: string,
-  numOfRows: number = 100, // 기본값 100개
+  numOfRows: number = 15, // 기본값 15개
   pageNo: number = 1 // 기본값 1페이지
 ): Promise<ApartmentTransactionsResult | null> {
   const params: TransactionRequest = {
