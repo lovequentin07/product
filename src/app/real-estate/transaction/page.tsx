@@ -102,7 +102,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
         <SearchForm />
         
         <Suspense fallback={<LoadingSkeleton />} key={`${initialLawdCd}-${initialDealYmd}-${initialNumOfRows}-${initialPageNo}`}>
-            <TransactionsLoader lawdCd={initialLawdCd} dealYmd={initialDealYmd} numOfRows={initialNumOfRows} pageNo={initialPageNo} /> // Pass new props
+            <TransactionsLoader lawdCd={initialLawdCd} dealYmd={initialDealYmd} numOfRows={initialNumOfRows} pageNo={initialPageNo} />
         </Suspense>
       </main>
     </div>
