@@ -27,9 +27,11 @@ export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenAp
   });
 
   const result = parser.parse(xmlString);
+  console.log('parseXmlResponse - Raw Parsed Result:', JSON.stringify(result, null, 2));
+  console.log('parseXmlResponse - result.response?.header?.resultCode:', result.response?.header?.resultCode);
 
   // 공통 에러 응답 처리 (OpenAPI 스펙에 따라 다를 수 있음)
-  if (result.response && result.response.header && result.response.header.resultCode !== '00') {
+  if (result.response && result.response.header && result.response.header.resultCode !== '0') {
     return {
       errorMessage: result.response.header.resultMsg,
       errorCode: result.response.header.resultCode,

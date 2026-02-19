@@ -17,7 +17,9 @@ interface RealEstatePageProps {
 
 // SEO를 위한 동적 메타데이터 생성
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
-  const { lawdCd, dealYmd } = searchParams;
+  // Await searchParams before destructuring
+  const awaitedSearchParams = await searchParams;
+  const { lawdCd, dealYmd } = awaitedSearchParams;
 
   if (lawdCd && dealYmd) {
     const regionName = getRegionNameByCode(lawdCd) || '선택 지역';
@@ -67,8 +69,10 @@ function LoadingSkeleton() {
     );
 }
 
-export default function RealEstatePage({ searchParams }: RealEstatePageProps) {
-  const { lawdCd, dealYmd } = searchParams;
+export default async function RealEstatePage({ searchParams }: RealEstatePageProps) {
+  // Await searchParams before destructuring
+  const awaitedSearchParams = await searchParams;
+  const { lawdCd, dealYmd } = awaitedSearchParams;
   
   const now = new Date();
   const defaultDealYmd = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}`;
