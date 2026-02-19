@@ -7,6 +7,7 @@ const API_BASE_URL = 'https://apis.data.go.kr/1613000';
 interface OpenApiError {
   errorMessage: string;
   errorCode: string;
+  isApiError: true; // Add a discriminant property
 }
 
 // XML 응답을 파싱하여 JSON 객체로 변환하는 유틸리티 함수
@@ -32,6 +33,7 @@ export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenAp
     return {
       errorMessage: result.response.header.resultMsg,
       errorCode: result.response.header.resultCode,
+      isApiError: true, // Tag it as an error
     };
   }
 
@@ -47,7 +49,7 @@ export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenAp
 export async function callPublicDataApi<T>(
   path: string,
   params: Record<string, string | number>
-): Promise<T | OpenApiError> {
+): Promise<T> { // Changed return type to Promise<T> as errors are now thrown
   // .env.local에 정의된 API 키 사용
   const serviceKey = process.env.DATA_GO_KR_API_KEY;
 
@@ -73,23 +75,29 @@ export async function callPublicDataApi<T>(
     const xmlText = await response.text();
     const parsedData = await parseXmlResponse<T>(xmlText);
 
-    // 파싱된 데이터가 에러 객체인지 확인
-    if (parsedData && typeof parsedData === 'object' && 'errorCode' in parsedData) {
-      console.error(`API Error: ${parsedData.errorCode} - ${parsedData.errorMessage}`);
-      throw new Error(`Public Data API Error: ${parsedData.errorMessage}`);
+    // Check if the returned object is an actual OpenApiError
+    if (parsedData && typeof parsedData === 'object' && 'isApiError' in parsedData && (parsedData as OpenApiError).isApiError) {
+        const error = parsedData as OpenApiError;
+        // Only throw if it's an actual error code (not '00' which means success)
+        const codeString = String(error.errorCode);
+        if (codeString !== '0' && codeString !== '00') {
+            console.error(`API Error: ${error.errorCode} - ${error.errorMessage}`);
+            throw new Error(`Public Data API Error: ${error.errorMessage}`);
+        }
+        // If errorCode is '00' with isApiError: true, it means it's a successful response
+        // that happened to be wrapped as an OpenApiError - this case should ideally not happen
+        // if parseXmlResponse is correctly returning T for success.
+        // For robustness, we will assume if errorCode is '00' and it's an OpenApiError,
+        // it means the data was valid, and we should cast and return it as T.
+        // However, given parseXmlResponse logic, this path should not be reachable for success.
+        // So we will proceed assuming if isApiError is true, it's a real error.
+        // If somehow success returns isApiError:true and errorCode '00', there's a deeper parsing issue.
     }
 
-    return parsedData;
+    return parsedData as T;
 
   } catch (error) {
     console.error('Failed to fetch public data API:', error);
-    // 에러 발생 시 OpenApiError 형식으로 반환하거나, 에러를 다시 throw 할 수 있음
-    return {
-      errorMessage: (error as Error).message || 'Unknown API error occurred',
-      errorCode: 'API_CALL_FAILED',
-    };
+    throw new Error((error as Error).message || 'Unknown API error occurred');
   }
 }
-
-// .env.local 파일에 DATA_GO_KR_API_KEY를 설정해주세요.
-// 예: DATA_GO_KR_API_KEY=YOUR_DECODED_API_KEY

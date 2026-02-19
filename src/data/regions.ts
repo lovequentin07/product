@@ -35,7 +35,6 @@ export const regions: Region[] = [
   { code: '11215', name: '광진구', parent: '서울특별시' },
   { code: '11260', name: '중랑구', parent: '서울특별시' },
   { code: '11305', name: '강북구', parent: '서울특별시' },
-  { code: '11380', name: '은평구', parent: '서울특별시' },
   // 경기도 (Gyeonggi-do) - 일부 추가
   { code: '41000', name: '경기도', parent: '' },
   { code: '41110', name: '수원시', parent: '경기도' },
