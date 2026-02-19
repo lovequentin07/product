@@ -150,7 +150,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredTransactions.map((transaction) => (
               <tr key={transaction.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-label="아파트명">{transaction.aptName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600" data-label="아파트명" onClick={() => onSearchTermChange(transaction.aptName)}>{transaction.aptName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="거래일">{transaction.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold" data-label="거래금액">{(transaction.price / 10000).toFixed(1)}억</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="전용면적">{(transaction.area * 0.3025).toFixed(1)}평</td>
