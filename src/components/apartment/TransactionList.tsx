@@ -128,7 +128,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           type="text"
           placeholder="아파트명으로 검색..."
           className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          value={searchTerm}
+          value={searchTerm || ''}
           onChange={(e) => onSearchTermChange(e.target.value)}
         />
       </div>
