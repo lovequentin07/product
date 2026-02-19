@@ -1,0 +1,7 @@
+// wrangler.jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".vercel/output/static/_worker.js", // This is the entry point for the Worker
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"]
+}
