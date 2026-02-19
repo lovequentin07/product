@@ -53,8 +53,7 @@ async function TransactionsLoader({ lawdCd, dealYmd, numOfRows, pageNo }: { lawd
     error = (e as Error).message;
   }
   
-  // onPageChange와 onLoadMore 핸들러는 클라이언트 컴포넌트에서 URL을 업데이트해야 하므로 useRouter를 사용
-  // TransactionList는 클라이언트 컴포넌트이므로 isLoading 상태를 props로 전달
+
   return (
     <TransactionsClientComponent
       transactions={result?.transactions || []}

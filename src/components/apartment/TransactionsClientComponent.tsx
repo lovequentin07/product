@@ -12,6 +12,7 @@ export default function TransactionsClientComponent({
   itemsPerPage,
   isLoading,
   error,
+  searchTerm, // New: searchTerm prop
 }: {
   transactions: NormalizedTransaction[];
   totalCount: number;
@@ -19,6 +20,7 @@ export default function TransactionsClientComponent({
   itemsPerPage: number;
   isLoading: boolean;
   error: string | null;
+  searchTerm: string; // New: searchTerm prop type
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,9 +28,11 @@ export default function TransactionsClientComponent({
   const handlePageChange = (newPage: number) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     current.set('pageNo', String(newPage));
-    // Preserve numOfRows if it exists, otherwise it will default
-    if (searchParams.has('numOfRows')) {
+    if (current.has('numOfRows')) { // Preserve numOfRows
       current.set('numOfRows', searchParams.get('numOfRows') as string);
+    }
+    if (current.has('searchTerm')) { // Preserve searchTerm
+      current.set('searchTerm', searchParams.get('searchTerm') as string);
     }
     router.push(`?${current.toString()}`);
   };
@@ -38,6 +42,20 @@ export default function TransactionsClientComponent({
     const newNumOfRows = itemsPerPage + 15; // Load 15 more items
     current.set('numOfRows', String(newNumOfRows));
     current.set('pageNo', '1'); // Reset page to 1 when loading more rows
+    if (current.has('searchTerm')) { // Preserve searchTerm
+      current.set('searchTerm', searchParams.get('searchTerm') as string);
+    }
+    router.push(`?${current.toString()}`);
+  };
+
+  const handleSearchTermChange = (term: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (term) {
+      current.set('searchTerm', term);
+    } else {
+      current.delete('searchTerm');
+    }
+    current.set('pageNo', '1'); // Reset page to 1 on new search term
     router.push(`?${current.toString()}`);
   };
 
@@ -51,6 +69,8 @@ export default function TransactionsClientComponent({
       error={error}
       onPageChange={handlePageChange}
       onLoadMore={handleLoadMore}
+      searchTerm={searchTerm} // Pass searchTerm
+      onSearchTermChange={handleSearchTermChange} // Pass callback
     />
   );
 }

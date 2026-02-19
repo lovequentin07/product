@@ -50,9 +50,16 @@ const SearchForm: React.FC = () => {
   const handleSearch = () => {
     if (selectedGu && selectedYear && selectedMonth) {
       const dealYmd = `${selectedYear}${selectedMonth}`;
+      const currentSearchParams = new URLSearchParams(Array.from(searchParams.entries()));
+      const currentSearchTerm = currentSearchParams.get('searchTerm') || '';
+
+      let queryString = `/real-estate/transaction?lawdCd=${selectedGu}&dealYmd=${dealYmd}&pageNo=1`;
+      if (currentSearchTerm) {
+        queryString += `&searchTerm=${currentSearchTerm}`;
+      }
       // 페이지를 리로드하여 서버 컴포넌트에서 데이터를 다시 가져오도록 URL 변경
       // 새 검색 시 pageNo를 1로 재설정
-      router.push(`/real-estate/transaction?lawdCd=${selectedGu}&dealYmd=${dealYmd}&pageNo=1`);
+      router.push(queryString);
     } else {
       alert('지역과 연월을 모두 선택해주세요.');
     }

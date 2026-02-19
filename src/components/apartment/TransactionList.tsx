@@ -16,6 +16,9 @@ interface TransactionListProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onLoadMore: () => void;
+  // Search props
+  searchTerm: string; // New: Receive searchTerm as prop
+  onSearchTermChange: (term: string) => void; // New: Receive callback as prop
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -27,10 +30,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
   itemsPerPage,
   onPageChange,
   onLoadMore,
+  searchTerm, // Destructure searchTerm from props
+  onSearchTermChange, // Destructure onSearchTermChange from props
 }) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  // const [searchTerm, setSearchTerm] = useState<string>(''); // Removed internal state
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -97,7 +102,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   // Determine if 'Load More' button should be shown
-  const canLoadMore = currentPage * itemsPerPage < totalCount;
+  const canLoadMore = (currentPage * itemsPerPage) < totalCount;
 
 
   if (!transactions || transactions.length === 0) { // Check original transactions for empty state
@@ -124,7 +129,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           placeholder="아파트명으로 검색..."
           className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => onSearchTermChange(e.target.value)}
         />
       </div>
 
