@@ -153,7 +153,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600" data-label="아파트명" onClick={() => onSearchTermChange(transaction.aptName)}>{transaction.aptName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="거래일">{transaction.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold" data-label="거래금액">{(transaction.price / 10000).toFixed(1)}억</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="전용면적">{(transaction.area * 0.3025).toFixed(1)}평</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="전용면적">{Math.round(transaction.area * 0.3025)}평</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="층수">{transaction.floor}층</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="주소">{transaction.address}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="건축년도">{transaction.buildYear}년</td>
