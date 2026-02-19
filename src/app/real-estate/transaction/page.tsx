@@ -12,6 +12,8 @@ interface RealEstatePageProps {
   searchParams: {
     lawdCd?: string;
     dealYmd?: string;
+    numOfRows?: string; // New: number of rows
+    pageNo?: string;    // New: page number
   };
 }
 
@@ -19,14 +21,19 @@ interface RealEstatePageProps {
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
   // Await searchParams before destructuring
   const awaitedSearchParams = await searchParams;
-  const { lawdCd, dealYmd } = awaitedSearchParams;
+  const { lawdCd, dealYmd, pageNo, numOfRows } = awaitedSearchParams; // Extract new params
 
   if (lawdCd && dealYmd) {
     const regionName = getRegionNameByCode(lawdCd) || '선택 지역';
     const year = dealYmd.substring(0, 4);
     const month = dealYmd.substring(4, 6);
-    const title = `${regionName} ${year}년 ${month}월 아파트 실거래가 조회`;
-    const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
+    let title = `${regionName} ${year}년 ${month}월 아파트 실거래가 조회`;
+    let description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
+
+    if (pageNo) {
+      title += ` (페이지 ${pageNo})`;
+      description += ` ${pageNo}페이지의 정보를 제공합니다.`;
+    }
 
     return {
       title,
@@ -45,12 +52,12 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
 }
 
 // 데이터 로딩 컴포넌트
-async function TransactionsLoader({ lawdCd, dealYmd }: { lawdCd: string; dealYmd: string }) {
+async function TransactionsLoader({ lawdCd, dealYmd, numOfRows, pageNo }: { lawdCd: string; dealYmd: string; numOfRows: number; pageNo: number }) { // Update props
   let transactions = null;
   let error = null;
 
   try {
-    transactions = await getApartmentTransactions(lawdCd, dealYmd);
+    transactions = await getApartmentTransactions(lawdCd, dealYmd, numOfRows, pageNo); // Pass new params
   } catch (e) {
     error = (e as Error).message;
   }
@@ -72,13 +79,15 @@ function LoadingSkeleton() {
 export default async function RealEstatePage({ searchParams }: RealEstatePageProps) {
   // Await searchParams before destructuring
   const awaitedSearchParams = await searchParams;
-  const { lawdCd, dealYmd } = awaitedSearchParams;
+  const { lawdCd, dealYmd, pageNo, numOfRows } = awaitedSearchParams; // Extract new params
   
   const now = new Date();
   const defaultDealYmd = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}`;
   
   const initialLawdCd = lawdCd || '11110'; // 기본값: 종로구
   const initialDealYmd = dealYmd || defaultDealYmd;
+  const initialNumOfRows = Number(numOfRows) || 100; // Default to 100
+  const initialPageNo = Number(pageNo) || 1;         // Default to 1
 
   return (
     <div className="container mx-auto p-4">
@@ -92,8 +101,8 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
       <main>
         <SearchForm />
         
-        <Suspense fallback={<LoadingSkeleton />} key={`${initialLawdCd}-${initialDealYmd}`}>
-            <TransactionsLoader lawdCd={initialLawdCd} dealYmd={initialDealYmd} />
+        <Suspense fallback={<LoadingSkeleton />} key={`${initialLawdCd}-${initialDealYmd}-${initialNumOfRows}-${initialPageNo}`}> // Update key
+            <TransactionsLoader lawdCd={initialLawdCd} dealYmd={initialDealYmd} numOfRows={initialNumOfRows} pageNo={initialPageNo} /> // Pass new props
         </Suspense>
       </main>
     </div>
