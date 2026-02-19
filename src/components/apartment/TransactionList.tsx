@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo } from 'react';
 import { NormalizedTransaction } from '@/types/real-estate';
 
