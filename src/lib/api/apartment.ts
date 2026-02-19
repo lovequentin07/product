@@ -24,12 +24,10 @@ export async function getApartmentTransactions(
 
   try {
     const response: any = await callPublicDataApi(APARTMENT_TRADE_API_PATH, params);
-    console.log('Raw API Response:', JSON.stringify(response, null, 2));
 
     // API 응답 구조에 따라 items 객체 접근 경로가 달라질 수 있음.
     // 여기서는 service.response.body.items.item 구조를 가정.
     const items: TransactionItem[] = response?.response?.body?.items?.item || [];
-    console.log('Extracted Items:', JSON.stringify(items, null, 2));
 
     if (!Array.isArray(items) || items.length === 0) {
       console.log(`No data found for LAWD_CD: ${lawdCd}, DEAL_YMD: ${dealYmd}`);
@@ -55,7 +53,6 @@ export async function getApartmentTransactions(
         isCancelled: !!item.해제사유발생일, // 해제사유발생일이 있으면 취소된 거래로 간주
       };
     });
-    console.log('Normalized Data:', JSON.stringify(normalizedData, null, 2));
 
     return normalizedData;
   } catch (error) {

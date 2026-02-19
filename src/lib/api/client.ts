@@ -4,14 +4,15 @@ import { XMLParser } from 'fast-xml-parser';
 
 const API_BASE_URL = 'https://apis.data.go.kr/1613000';
 
-interface OpenApiError {
-  errorMessage: string;
-  errorCode: string;
-  isApiError: true; // Add a discriminant property
+class OpenApiError extends Error {
+  constructor(public errorCode: string, public errorMessage: string) {
+    super(`Public Data API Error: ${errorMessage} (Code: ${errorCode})`);
+    this.name = 'OpenApiError';
+  }
 }
 
 // XML 응답을 파싱하여 JSON 객체로 변환하는 유틸리티 함수
-export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenApiError> {
+export async function parseXmlResponse<T>(xmlString: string): Promise<T> { // Changed return type to Promise<T>
   const parser = new XMLParser({
     attributeNamePrefix: '',
     ignoreAttributes: false,
@@ -27,19 +28,20 @@ export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenAp
   });
 
   const result = parser.parse(xmlString);
-  console.log('parseXmlResponse - Raw Parsed Result:', JSON.stringify(result, null, 2));
-  console.log('parseXmlResponse - result.response?.header?.resultCode:', result.response?.header?.resultCode);
+  // Remove debug logs
+  // console.log('parseXmlResponse - Raw Parsed Result:', JSON.stringify(result, null, 2));
+  // console.log('parseXmlResponse - result.response?.header?.resultCode:', result.response?.header?.resultCode);
 
-  // 공통 에러 응답 처리 (OpenAPI 스펙에 따라 다를 수 있음)
-  if (result.response && result.response.header && result.response.header.resultCode !== '0') {
-    return {
-      errorMessage: result.response.header.resultMsg,
-      errorCode: result.response.header.resultCode,
-      isApiError: true, // Tag it as an error
-    };
+  // 공통 에러 응답 처리 (API 스펙에 따라 다를 수 있음)
+  // resultCode가 '0' 또는 '00'이 아니면 에러로 간주하여 throw
+  if (result.response && result.response.header) {
+    const resultCode = String(result.response.header.resultCode);
+    if (resultCode !== '0' && resultCode !== '00') {
+        throw new OpenApiError(resultCode, result.response.header.resultMsg);
+    }
   }
 
-  return result;
+  return result as T; // On success, return the full parsed result
 }
 
 /**
@@ -47,11 +49,13 @@ export async function parseXmlResponse<T>(xmlString: string): Promise<T | OpenAp
  * @param path API 경로 (예: /RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev)
  * @param params 요청 파라미터 객체
  * @returns 파싱된 JSON 응답 데이터
+ * @throws {OpenApiError} 공공데이터 API에서 반환된 특정 오류
+ * @throws {Error} 네트워크 오류 또는 알 수 없는 오류
  */
 export async function callPublicDataApi<T>(
   path: string,
   params: Record<string, string | number>
-): Promise<T> { // Changed return type to Promise<T> as errors are now thrown
+): Promise<T> {
   // .env.local에 정의된 API 키 사용
   const serviceKey = process.env.DATA_GO_KR_API_KEY;
 
@@ -75,31 +79,15 @@ export async function callPublicDataApi<T>(
     }
 
     const xmlText = await response.text();
-    const parsedData = await parseXmlResponse<T>(xmlText);
+    const parsedData = await parseXmlResponse<T>(xmlText); // parseXmlResponse now throws on API errors
 
-    // Check if the returned object is an actual OpenApiError
-    if (parsedData && typeof parsedData === 'object' && 'isApiError' in parsedData && (parsedData as OpenApiError).isApiError) {
-        const error = parsedData as OpenApiError;
-        // Only throw if it's an actual error code (not '00' which means success)
-        const codeString = String(error.errorCode);
-        if (codeString !== '0' && codeString !== '00') {
-            console.error(`API Error: ${error.errorCode} - ${error.errorMessage}`);
-            throw new Error(`Public Data API Error: ${error.errorMessage}`);
-        }
-        // If errorCode is '00' with isApiError: true, it means it's a successful response
-        // that happened to be wrapped as an OpenApiError - this case should ideally not happen
-        // if parseXmlResponse is correctly returning T for success.
-        // For robustness, we will assume if errorCode is '00' and it's an OpenApiError,
-        // it means the data was valid, and we should cast and return it as T.
-        // However, given parseXmlResponse logic, this path should not be reachable for success.
-        // So we will proceed assuming if isApiError is true, it's a real error.
-        // If somehow success returns isApiError:true and errorCode '00', there's a deeper parsing issue.
-    }
-
-    return parsedData as T;
+    return parsedData;
 
   } catch (error) {
     console.error('Failed to fetch public data API:', error);
+    if (error instanceof OpenApiError) {
+        throw error; // Re-throw specific OpenApiError
+    }
     throw new Error((error as Error).message || 'Unknown API error occurred');
   }
 }
