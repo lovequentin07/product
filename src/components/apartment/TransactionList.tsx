@@ -150,13 +150,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredTransactions.map((transaction) => (
               <tr key={transaction.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{(transaction.price / 10000).toFixed(1)}억</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(transaction.area * 0.3025).toFixed(1)}평</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}층</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}년</td>                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{(transaction.price / 10000).toFixed(1)}억</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(transaction.area * 0.3025).toFixed(1)}평</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}층</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}년</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {transaction.isCancelled && (
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                       계약 해제
