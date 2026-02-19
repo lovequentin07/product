@@ -22,7 +22,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
 
   if (error) {
     return (
-      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-4xl mx-auto my-4">
+      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-6xl mx-auto my-4">
         <p className="font-bold">오류 발생:</p>
         <p>{error}</p>
         <p className="text-sm mt-2">API 키 확인 또는 요청 정보를 다시 확인해주세요.</p>
@@ -32,32 +32,48 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, isLoadi
 
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-4xl mx-auto my-4">
+      <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4">
         <p>선택하신 조건에 해당하는 아파트 실거래가 정보가 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto my-4">
-      {transactions.map((transaction) => (
-        <div key={transaction.id} className="bg-white shadow-md rounded-lg p-4 transition-transform transform hover:scale-105">
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">{transaction.aptName}</h3>
-          <p className="text-2xl font-bold text-blue-600 mb-3">{transaction.price.toLocaleString()}만원</p>
-          <div className="text-gray-700 text-sm">
-            <p><strong>거래일:</strong> {transaction.date}</p>
-            <p><strong>전용면적:</strong> {transaction.area}㎡</p>
-            <p><strong>층수:</strong> {transaction.floor}층</p>
-            <p><strong>주소:</strong> {transaction.address}</p>
-            <p><strong>건축년도:</strong> {transaction.buildYear}</p>
-            {transaction.isCancelled && (
-              <p className="text-red-500 font-medium mt-1">
-                <span role="img" aria-label="cancelled">❌</span> 계약 해제됨
-              </p>
-            )}
-          </div>
-        </div>
-      ))}
+    <div className="overflow-x-auto max-w-6xl mx-auto my-4 bg-white shadow-md rounded-lg">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">아파트명</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">거래일</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">거래금액 (만원)</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전용면적 (㎡)</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">층수</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">주소</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">건축년도</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {transactions.map((transaction) => (
+            <tr key={transaction.id}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{transaction.aptName}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.date}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">{transaction.price.toLocaleString()}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.area}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.floor}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.address}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.buildYear}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                {transaction.isCancelled && (
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    계약 해제
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
