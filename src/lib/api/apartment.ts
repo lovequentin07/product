@@ -50,7 +50,7 @@ export async function getApartmentTransactions(
 
 
     if (!Array.isArray(items) || items.length === 0) {
-      console.log(`No data found for LAWD_CD: ${lawdCd}, DEAL_YMD: ${dealYmd}`);
+      console.log(`No data found for LAWD_CD: ${lawdCd}, DEAL_YMD: ${dealYmd}. Total count from API: ${totalCount}`);
       return { transactions: [], totalCount: totalCount, pageNo: pageNo, numOfRows: numOfRows };
     }
 

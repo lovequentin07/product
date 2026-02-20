@@ -69,14 +69,14 @@ const SearchForm: React.FC = () => {
   const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg mb-6 max-w-4xl mx-auto">
+    <div className="p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg mb-6 max-w-4xl mx-auto border border-transparent dark:border-gray-700">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         {/* 시/도 선택 */}
         <div>
-          <label htmlFor="si-select" className="block text-sm font-medium text-gray-700 mb-1">시/도</label>
+          <label htmlFor="si-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">시/도</label>
           <select
             id="si-select"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             value={selectedSi}
             onChange={(e) => {
               setSelectedSi(e.target.value);
@@ -92,10 +92,10 @@ const SearchForm: React.FC = () => {
 
         {/* 시/군/구 선택 */}
         <div>
-          <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 mb-1">시/군/구</label>
+          <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">시/군/구</label>
           <select
             id="gu-select"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             value={selectedGu}
             onChange={(e) => setSelectedGu(e.target.value)}
             disabled={!selectedSi}
@@ -110,10 +110,10 @@ const SearchForm: React.FC = () => {
         {/* 연도 및 월 선택 */}
         <div className="flex space-x-2">
           <div className="flex-1">
-            <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 mb-1">년도</label>
+            <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">년도</label>
             <select
               id="year-select"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
             >
@@ -121,10 +121,10 @@ const SearchForm: React.FC = () => {
             </select>
           </div>
           <div className="flex-1">
-            <label htmlFor="month-select" className="block text-sm font-medium text-gray-700 mb-1">월</label>
+            <label htmlFor="month-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">월</label>
             <select
               id="month-select"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             >

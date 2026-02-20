@@ -119,7 +119,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
       <main>
         <SearchForm />
         
-        <Suspense fallback={<LoadingSkeleton />} key={`${initialLawdCd}-${initialDealYmd}-${initialNumOfRows}-${initialPageNo}-${initialSearchTerm}`}>
+        <Suspense fallback={<LoadingSkeleton />} key={`${initialLawdCd}-${initialDealYmd}-${initialNumOfRows}-${initialPageNo}`}>
             <TransactionsLoader 
                 lawdCd={initialLawdCd} 
                 dealYmd={initialDealYmd} 

@@ -39,15 +39,16 @@ export default function TransactionsClientComponent({
       // Only update URL if localSearchTerm is different from URL's searchTerm
       if (localSearchTerm !== searchTerm) {
         const current = new URLSearchParams(Array.from(searchParams.entries()));
-        if (localSearchTerm) {
-          current.set('searchTerm', localSearchTerm);
+        if (localSearchTerm && localSearchTerm.trim()) {
+          current.set('searchTerm', localSearchTerm.trim());
         } else {
           current.delete('searchTerm');
         }
-        current.set('pageNo', '1'); // Reset page to 1 on search term change
-        router.push(`?${current.toString()}`);
+        // Preserve other important params
+        current.set('pageNo', '1'); 
+        router.push(`?${current.toString()}`, { scroll: false });
       }
-    }, 300); // Debounce for 300ms
+    }, 500); // 500ms debounce to prevent too many server re-renders
 
     return () => {
       clearTimeout(handler);

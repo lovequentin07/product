@@ -45,7 +45,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     }
   };
 
-  const sortedTransactions = useMemo(() => {
+  const displayTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
     }
@@ -76,21 +76,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return sortableTransactions;
   }, [transactions, sortField, sortDirection]);
 
-  const filteredTransactions = useMemo(() => {
-    if (!searchTerm) {
-      return sortedTransactions;
-    }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return sortedTransactions.filter(transaction =>
-      transaction.aptName.toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  }, [sortedTransactions, searchTerm]);
-
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-40 text-gray-500">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex justify-center items-center h-40 text-gray-500 dark:text-gray-400">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
         <p className="ml-3 text-lg">데이터 로딩 중...</p>
       </div>
     );
@@ -98,7 +87,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-6xl mx-auto my-4">
+      <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg max-w-6xl mx-auto my-4">
         <p className="font-bold">오류 발생:</p>
         <p>{error}</p>
         <p className="text-sm mt-2">API 키 확인 또는 요청 정보를 다시 확인해주세요.</p>
@@ -115,8 +104,33 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
 
   if (!transactions || transactions.length === 0) { // Check original transactions for empty state
+    if (searchTerm) {
+        return (
+            <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
+                <div className="mb-4">
+                    <input
+                    type="text"
+                    placeholder="아파트명으로 검색..."
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    value={searchTerm || ''}
+                    onChange={(e) => onSearchTermChange(e.target.value)}
+                    />
+                </div>
+                <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg text-center">
+                    <p>'{searchTerm}'에 해당하는 검색 결과가 없습니다.</p>
+                    <button 
+                        onClick={() => onSearchTermChange('')}
+                        className="mt-2 text-blue-600 dark:text-blue-400 underline"
+                    >
+                        검색 초기화
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4">
+      <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg max-w-6xl mx-auto my-4">
         <p>선택하신 조건에 해당하는 아파트 실거래가 정보가 없습니다.</p>
       </div>
     );
@@ -130,44 +144,44 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto my-4">
+    <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
       {/* Search Input */}
       <div className="mb-4">
         <input
           type="text"
           placeholder="아파트명으로 검색..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           value={searchTerm || ''}
           onChange={(e) => onSearchTermChange(e.target.value)}
         />
       </div>
 
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+      <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg border border-transparent dark:border-gray-700">
         {/* Added responsive-table class. Removed comments inside table tag to prevent hydration error */}
-        <table className="min-w-full divide-y divide-gray-200 responsive-table">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 responsive-table">
+          <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('aptName')}>아파트명 {getSortIndicator('aptName')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('date')}>거래일 {getSortIndicator('date')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('price')}>거래금액 (만원) {getSortIndicator('price')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('pricePerPyeong')}>평당 금액 {getSortIndicator('pricePerPyeong')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area')}>전용면적 (㎡) {getSortIndicator('area')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('floor')}>층수 {getSortIndicator('floor')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('address')}>주소 {getSortIndicator('address')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('buildYear')}>건축년도 {getSortIndicator('buildYear')}</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('aptName')}>아파트명 {getSortIndicator('aptName')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('date')}>거래일 {getSortIndicator('date')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('price')}>거래금액 (억) {getSortIndicator('price')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('pricePerPyeong')}>평당 금액 (억) {getSortIndicator('pricePerPyeong')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area')}>전용면적 (평) {getSortIndicator('area')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('floor')}>층수 {getSortIndicator('floor')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('address')}>주소 {getSortIndicator('address')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('buildYear')}>건축년도 {getSortIndicator('buildYear')}</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">상태</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredTransactions.map((transaction) => {
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {displayTransactions.map((transaction) => {
               const areaInPyeong = transaction.area * 0.3025;
               const pricePerPyeong = areaInPyeong > 0 ? transaction.price / areaInPyeong : 0;
-              const isSelected = searchTerm === transaction.aptName; // Check if currently selected
+              const isSelected = searchTerm && transaction.aptName.toLowerCase().includes(searchTerm.toLowerCase());
 
               return (
-                <tr key={transaction.id} className={isSelected ? 'bg-blue-50' : ''}>
+                <tr key={transaction.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                   <td 
-                    className={`px-6 py-4 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 ${isSelected ? 'text-blue-800 font-bold' : 'text-gray-900'}`} 
+                    className={`px-6 py-4 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${isSelected ? 'text-blue-800 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'}`} 
                     data-label="아파트명" 
                     onClick={() => {
                       if (isSelected) {
@@ -179,16 +193,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   >
                     {transaction.aptName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="거래일">{transaction.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold" data-label="거래금액">{(transaction.price / 10000).toFixed(1)}억</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold" data-label="평당 금액">{(pricePerPyeong / 10000).toFixed(1)}억</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="전용면적">{Math.round(transaction.area * 0.3025)}평</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="층수">{transaction.floor}층</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="주소">{transaction.address}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="건축년도">{transaction.buildYear}년</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="거래일">{transaction.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-semibold" data-label="거래금액">{(transaction.price / 10000).toFixed(1)}억</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-bold" data-label="평당 금액">{(pricePerPyeong / 10000).toFixed(1)}억</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="전용면적">{Math.round(transaction.area * 0.3025)}평</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="층수">{transaction.floor}층</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="주소">{transaction.address}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="건축년도">{transaction.buildYear}년</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm" data-label="상태">
                     {transaction.isCancelled && (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                         계약 해제
                       </span>
                     )}
@@ -200,20 +214,20 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </table>
       </div>
       {/* CSS for .responsive-table should be handled in globals.css */}
-      {filteredTransactions.length === 0 && searchTerm && (
-        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg max-w-6xl mx-auto my-4 text-center">
+      {displayTransactions.length === 0 && searchTerm && (
+        <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg max-w-6xl mx-auto my-4 text-center">
           <p>'{searchTerm}'에 해당하는 검색 결과가 없습니다.</p>
         </div>
       )}
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-md mt-4">
+        <nav className="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6 rounded-lg shadow-md mt-4">
           <div className="flex-1 flex justify-between sm:justify-end">
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               이전
             </button>
@@ -222,8 +236,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <button
                   key={page}
                   onClick={() => onPageChange(page)}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                    page === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
+                    page === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                   }`}
                 >
                   {page}
@@ -233,7 +247,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               다음
             </button>
