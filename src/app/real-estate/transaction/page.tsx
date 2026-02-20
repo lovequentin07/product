@@ -2,8 +2,10 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
-import { getApartmentTransactions } from '@/lib/api/apartment';
+import { getTransactions } from '@/lib/db/transactions';
+import { TransactionRow } from '@/lib/db/types';
 import { getRegionNameByCode } from '@/data/regions';
+import { NormalizedTransaction } from '@/types/real-estate';
 
 import SearchForm from '@/components/apartment/SearchForm';
 import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent';
@@ -17,6 +19,21 @@ interface RealEstatePageProps {
 function ensureString(param: string | string[] | undefined): string | undefined {
   if (Array.isArray(param)) return param[0];
   return param;
+}
+
+/** TransactionRow(DB) → NormalizedTransaction(UI 컴포넌트) 변환 */
+function toNormalized(row: TransactionRow): NormalizedTransaction {
+  return {
+    id: String(row.id),
+    aptName: row.apt_nm,
+    price: row.deal_amount,
+    area: row.exclu_use_ar,
+    date: row.deal_date,
+    address: `${row.umd_nm} ${row.jibun ?? ''}`.trim(),
+    floor: row.floor,
+    buildYear: row.build_year,
+    isCancelled: !!row.cdeal_type,
+  };
 }
 
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
@@ -52,21 +69,29 @@ async function TransactionsLoader({
   pageNo: number;
   searchTerm: string;
 }) {
-  let result = null;
-  let error = null;
+  let transactions: NormalizedTransaction[] = [];
+  let totalCount = 0;
+  let error: string | null = null;
 
   try {
-    result = await getApartmentTransactions(lawdCd, dealYmd, numOfRows);
+    const result = await getTransactions({
+      sgg_cd: lawdCd,
+      deal_ymd: dealYmd,
+      page: pageNo,
+      limit: numOfRows,
+    });
+    transactions = result.transactions.map(toNormalized);
+    totalCount = result.totalCount;
   } catch (e) {
     error = (e as Error).message;
   }
 
   return (
     <TransactionsClientComponent
-      transactions={result?.transactions || []}
-      totalCount={result?.totalCount || 0}
-      currentPage={result?.pageNo || pageNo}
-      itemsPerPage={result?.numOfRows || numOfRows}
+      transactions={transactions}
+      totalCount={totalCount}
+      currentPage={pageNo}
+      itemsPerPage={numOfRows}
       isLoading={false}
       error={error}
       searchTerm={searchTerm}
