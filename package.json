@@ -15,7 +15,8 @@
     "fast-xml-parser": "^5.3.6",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "recharts": "^3.7.0"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.16.5",

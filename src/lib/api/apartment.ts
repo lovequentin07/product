@@ -121,8 +121,12 @@ export async function getRawApartmentTransactions(
       pageNo: currentPage,
     };
 
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    ) as Record<string, string | number>;
+
     try {
-      const response: TransactionResponse = await callPublicDataApi(APARTMENT_TRADE_API_PATH, params);
+      const response: TransactionResponse = await callPublicDataApi(APARTMENT_TRADE_API_PATH, filteredParams);
 
       const items: TransactionItem[] = response?.response?.body?.items?.item || [];
       totalCount = response?.response?.body?.totalCount || 0;
