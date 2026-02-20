@@ -94,3 +94,58 @@ export async function getApartmentTransactions(
     numOfRows: perPage,
   };
 }
+
+interface RawApartmentTransactionsResult {
+  transactions: TransactionItem[];
+  totalCount: number;
+}
+
+/**
+ * 아파트 실거래가 원천 데이터를 공공데이터포털에서 가져옵니다. (정규화 없음)
+ */
+export async function getRawApartmentTransactions(
+  lawdCd: string,
+  dealYmd: string,
+  perPage: number = 1000
+): Promise<RawApartmentTransactionsResult | null> {
+  let allTransactions: TransactionItem[] = [];
+  let currentPage = 1;
+  let hasMore = true;
+  let totalCount = 0;
+
+  while (hasMore) {
+    const params: TransactionRequest = {
+      LAWD_CD: lawdCd,
+      DEAL_YMD: dealYmd,
+      numOfRows: perPage,
+      pageNo: currentPage,
+    };
+
+    try {
+      const response: TransactionResponse = await callPublicDataApi(APARTMENT_TRADE_API_PATH, params);
+
+      const items: TransactionItem[] = response?.response?.body?.items?.item || [];
+      totalCount = response?.response?.body?.totalCount || 0;
+
+      if (!Array.isArray(items) || items.length === 0) {
+        hasMore = false;
+      } else {
+        allTransactions = allTransactions.concat(items);
+        
+        if (allTransactions.length < totalCount) {
+          currentPage++;
+        } else {
+          hasMore = false;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching raw apartment transactions:', error);
+      return null;
+    }
+  }
+
+  return {
+    transactions: allTransactions,
+    totalCount: totalCount,
+  };
+}

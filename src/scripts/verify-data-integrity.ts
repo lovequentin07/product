@@ -3,7 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import readline from 'readline';
 import { getApartmentTransactions } from '../lib/api/apartment';
-import { NormalizedTransaction } from '@/types/real-estate';
+import { NormalizedTransaction, TransactionItem } from '@/types/real-estate';
 
 // .env.local 또는 .env 파일에서 환경 변수 로드
 dotenv.config({ path: '.env.local' });
@@ -19,13 +19,13 @@ async function sleep(ms: number) {
 }
 
 // 로컬 파일에서 특정 regionCode와 yearMonth에 해당하는 모든 트랜잭션을 가져옵니다.
-async function getLocalTransactionsForRegion(regionCode: string, year: string, yearMonth: string): Promise<NormalizedTransaction[]> {
+async function getLocalTransactionsForRegion(regionCode: string, year: string, yearMonth: string): Promise<TransactionItem[]> {
   const filePath = path.join(BASE_DATA_DIR, year, `${yearMonth}.jsonl`);
   if (!fs.existsSync(filePath)) {
     return [];
   }
 
-  const transactions: NormalizedTransaction[] = [];
+  const transactions: TransactionItem[] = [];
   const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -35,15 +35,13 @@ async function getLocalTransactionsForRegion(regionCode: string, year: string, y
   for await (const line of rl) {
     if (line.trim()) {
       try {
-        const data: NormalizedTransaction = JSON.parse(line);
-        // data.id 포맷: ${lawdCd}-${dealYmd}-${pageNo}-${index}
-        // id에서 regionCode를 추출하여 필터링합니다.
-        const idRegionCode = data.id.split('-')[0];
-        if (idRegionCode === regionCode) {
+        const data: TransactionItem = JSON.parse(line);
+        // 원천 데이터의 sggCd를 사용하여 필터링합니다.
+        if (data.sggCd === regionCode) {
           transactions.push(data);
         }
       } catch (e) {
-        // 파싱 오류는 건너뜁니다.
+        // 파싱 오류는 건너뜜
       }
     }
   }
@@ -79,7 +77,8 @@ async function verifyDataIntegrity() {
     console.log(`[${i + 1}/${SAMPLE_SIZE}] 검증 중: ${regionName} (${regionCode}), ${yearMonth}`);
 
     try {
-      // 1. API로부터 해당 조합의 모든 트랜잭션 가져오기
+      // 1. API로부터 해당 조합의 모든 트랜잭션 가져오기 (비교를 위해 여전히 getApartmentTransactions 사용 가능하나 건수만 비교하거나 정규화 로직이 동일한지 확인)
+      // 여기서는 건수와 핵심 데이터 일치 여부를 위해 API에서 다시 가져와 정규화된 것과 로컬 원천 데이터를 정규화한 것을 비교
       const apiResult = await getApartmentTransactions(regionCode, yearMonth);
       if (!apiResult || !apiResult.transactions) {
         console.warn(`   -> 경고: API 호출 실패 또는 결과 없음. 스킵합니다.`);
@@ -87,30 +86,32 @@ async function verifyDataIntegrity() {
         continue;
       }
       const apiTransactions = apiResult.transactions;
-      const apiTotalCount = apiTransactions.length; // 실제 API에서 가져온 트랜잭션 건수
+      const apiTotalCount = apiTransactions.length;
 
-      // 2. 로컬 파일에서 해당 조합의 트랜잭션 가져오기
-      const localTransactions = await getLocalTransactionsForRegion(regionCode, year, yearMonth);
-      const localCount = localTransactions.length;
+      // 2. 로컬 파일(원천 데이터)에서 해당 조합의 트랜잭션 가져오기
+      const localRawTransactions = await getLocalTransactionsForRegion(regionCode, year, yearMonth);
+      const localCount = localRawTransactions.length;
 
       // 3. 건수 비교
       if (apiTotalCount === localCount) {
         console.log(`   -> 건수 일치: API ${apiTotalCount}건, 로컬 ${localCount}건`);
         
-        // 4. 내용 상세 비교 (ID를 기준으로 정렬 후 비교)
-        const getTransactionId = (tx: NormalizedTransaction) => `${tx.aptName}-${tx.price}-${tx.area}-${tx.date}-${tx.floor}-${tx.buildYear}`;
-        const sortedApiIds = apiTransactions.map(getTransactionId).sort();
-        const sortedLocalIds = localTransactions.map(getTransactionId).sort();
+        // 4. 내용 상세 비교를 위해 로컬 원천 데이터를 정규화
+        const localNormalized = localRawTransactions.map((item) => {
+          const price = parseInt(String(item.dealAmount).replace(/,/g, ''), 10);
+          const dealDate = `${item.dealYear}-${String(item.dealMonth).padStart(2, '0')}-${String(item.dealDay).padStart(2, '0')}`;
+          return `${item.aptNm}-${price}-${item.excluUseAr}-${dealDate}-${item.floor}-${item.buildYear}`;
+        }).sort();
+
+        const apiNormalized = apiTransactions.map((tx) => 
+          `${tx.aptName}-${tx.price}-${tx.area}-${tx.date}-${tx.floor}-${tx.buildYear}`
+        ).sort();
 
         let contentMismatch = false;
-        if (sortedApiIds.length !== sortedLocalIds.length) {
-          contentMismatch = true;
-        } else {
-          for (let k = 0; k < sortedApiIds.length; k++) {
-            if (sortedApiIds[k] !== sortedLocalIds[k]) {
-              contentMismatch = true;
-              break;
-            }
+        for (let k = 0; k < apiNormalized.length; k++) {
+          if (apiNormalized[k] !== localNormalized[k]) {
+            contentMismatch = true;
+            break;
           }
         }
 
@@ -130,7 +131,7 @@ async function verifyDataIntegrity() {
       console.error(`   -> 에러 발생 (${regionName}, ${yearMonth}):`, error);
       discrepanciesFound++;
     }
-    await sleep(DELAY_MS); // API 호출 간격 유지
+    await sleep(DELAY_MS);
   }
 
   console.log(`\n--- 데이터 정합성 검증 완료 ---`);

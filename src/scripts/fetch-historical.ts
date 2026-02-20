@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { getApartmentTransactions } from '../lib/api/apartment';
+import { getRawApartmentTransactions } from '../lib/api/apartment';
 
 // .env.local 또는 .env 파일에서 환경 변수 로드
 dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env' });
 
 const COMBINATIONS_PATH = path.join(process.cwd(), 'raw-data/combinations.json');
-const OUTPUT_PATH = path.join(process.cwd(), 'raw-data/seoul_real_estate_2021_2026.jsonl');
+const BASE_OUTPUT_DIR = path.join(process.cwd(), 'raw-data/seoul');
 const DELAY_MS = 500; // API 호출 간격 (0.5초)
 
 async function sleep(ms: number) {
@@ -28,23 +28,34 @@ async function fetchHistoricalData() {
 
   for (let i = 0; i < pendingItems.length; i++) {
     const item = pendingItems[i];
+    const year = item.yearMonth.substring(0, 4);
+    const month = item.yearMonth.substring(4, 6);
+    
+    // 저장 경로 설정: raw-data/seoul/YYYY/MM.jsonl
+    const yearDir = path.join(BASE_OUTPUT_DIR, year);
+    const filePath = path.join(yearDir, `${month}.jsonl`);
+
     console.log(`[${i + 1}/${pendingItems.length}] 수집 중: ${item.regionName} (${item.regionCode}), ${item.yearMonth}`);
 
     try {
-      // 한 번에 최대한 많이 가져오기 위해 numOfRows를 1000으로 설정
-      const result = await getApartmentTransactions(item.regionCode, item.yearMonth, 1000, 1);
+      // 폴더가 없으면 생성
+      if (!fs.existsSync(yearDir)) {
+        fs.mkdirSync(yearDir, { recursive: true });
+      }
+
+      // 원천 데이터 가져오기 (모든 컬럼 포함)
+      const result = await getRawApartmentTransactions(item.regionCode, item.yearMonth, 1000);
 
       if (result && result.transactions) {
-        // 결과가 있으면 JSONL 파일에 추가
+        // 결과가 있으면 해당 월의 파일에 추가 (JSONL 형식)
         for (const tx of result.transactions) {
-          fs.appendFileSync(OUTPUT_PATH, JSON.stringify(tx) + '\n');
+          fs.appendFileSync(filePath, JSON.stringify(tx) + '\n');
         }
         
         item.status = 'completed';
         item.count = result.transactions.length;
-        console.log(`   -> 성공: ${result.transactions.length}건 저장 완료`);
+        console.log(`   -> 성공: ${result.transactions.length}건을 ${year}/${month}.jsonl에 저장 완료`);
       } else {
-        // 결과가 비어있는 경우 (데이터가 없는 월일 수 있음)
         item.status = 'completed';
         item.count = 0;
         console.log(`   -> 완료: 데이터가 없습니다.`);
@@ -63,7 +74,7 @@ async function fetchHistoricalData() {
     }
   }
 
-  console.log('수집 작업이 완료되었습니다.');
+  console.log('모든 수집 및 구조화 작업이 완료되었습니다.');
 }
 
 fetchHistoricalData();

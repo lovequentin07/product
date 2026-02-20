@@ -27,9 +27,10 @@ async function splitData() {
 
     try {
       const data = JSON.parse(line);
-      const dateStr = data.date; // "2006-01-28"
-      const year = dateStr.split('-')[0];
-      const month = dateStr.split('-')[1];
+      
+      // 원천 데이터 필드(dealYear, dealMonth) 사용
+      const year = String(data.dealYear);
+      const month = String(data.dealMonth).padStart(2, '0');
       const yearMonth = `${year}${month}`;
       
       const yearDir = path.join(BASE_OUTPUT_DIR, year);

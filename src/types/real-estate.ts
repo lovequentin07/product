@@ -32,6 +32,7 @@ export interface TransactionItem {
   dealMonth: number;
   dealDay: number;
   umdNm: string; // 예: "거여동" (법정동명)
+  umdCd?: string; // 법정동읍면동코드
   aptNm: string; // 아파트명 (예: "현대1차")
   excluUseAr: number; // 전용면적
   jibun: string; // 지번
@@ -41,12 +42,12 @@ export interface TransactionItem {
   cdealType?: string; // 계약 해제 유형
   aptDong?: string; // 아파트 법정동
   aptSeq?: string; // 아파트 일련번호
-  bonbun?: number; // 본번
-  bubun?: number; // 부번
+  bonbun?: string | number; // 본번 (문자열 또는 숫자)
+  bubun?: string | number; // 부번 (문자열 또는 숫자)
   buyerGbn?: string; // 매수자 구분
   dealingGbn?: string; // 거래 유형
   estateAgentSggNm?: string; // 공인중개사 시군구명
-  landCd?: number; // 토지코드
+  landCd?: string | number; // 토지코드
   landLeaseholdGbn?: string; // 토지임대구분
   rgstDate?: string; // 등기일자
   roadNm?: string; // 도로명

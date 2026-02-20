@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+raw-data_old
 
 # next.js
 /.next/
