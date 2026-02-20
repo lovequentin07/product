@@ -49,7 +49,7 @@ for (const region of regions) {
   }
 }
 
-const dirPath = path.join(process.cwd(), 'temp/raw-data');
+const dirPath = path.join(process.cwd(), 'raw-data');
 if (!fs.existsSync(dirPath)) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
