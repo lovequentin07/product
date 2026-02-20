@@ -31,6 +31,19 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
     filtered = filtered.filter((t) => t.sgg_cd === params.sgg_cd);
   }
 
+  // deal_ymd 길이에 따라 날짜 필터 분기
+  // 'YYYYMM' → 연+월 필터 / 'YYYY' → 연도만 / 없음 → 전체 기간
+  const { deal_ymd } = params;
+  if (deal_ymd && deal_ymd.length === 6) {
+    const year = parseInt(deal_ymd.substring(0, 4), 10);
+    const month = parseInt(deal_ymd.substring(4, 6), 10);
+    filtered = filtered.filter((t) => t.deal_year === year && t.deal_month === month);
+  } else if (deal_ymd && deal_ymd.length === 4) {
+    const year = parseInt(deal_ymd, 10);
+    filtered = filtered.filter((t) => t.deal_year === year);
+  }
+  // deal_ymd가 없거나 빈 값이면 날짜 필터 없음 (전체 기간)
+
   if (apt_nm) {
     filtered = filtered.filter((t) => t.apt_nm.includes(apt_nm));
   }

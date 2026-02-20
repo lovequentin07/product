@@ -37,24 +37,27 @@ function toNormalized(row: TransactionRow): NormalizedTransaction {
   };
 }
 
+/** dealYmd(YYYYMM | YYYY | 없음)를 사람이 읽기 좋은 문자열로 변환 */
+function formatPeriodLabel(dealYmd?: string): string {
+  if (!dealYmd) return '전체 기간';
+  if (dealYmd.length === 6) return `${dealYmd.substring(0, 4)}년 ${dealYmd.substring(4, 6)}월`;
+  if (dealYmd.length === 4) return `${dealYmd}년`;
+  return '';
+}
+
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
   const awaitedSearchParams = await searchParams;
   const lawdCdString = ensureString(awaitedSearchParams.lawdCd);
   const dealYmdString = ensureString(awaitedSearchParams.dealYmd);
 
-  if (lawdCdString && dealYmdString) {
-    const regionName = getRegionNameByCode(lawdCdString) || '선택 지역';
-    const year = dealYmdString.substring(0, 4);
-    const month = dealYmdString.substring(4, 6);
-    const title = `${regionName} ${year}년 ${month}월 아파트 실거래가 조회`;
-    const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
-    return { title, description, openGraph: { title, description } };
-  }
-
-  return {
-    title: '아파트 실거래가 조회',
-    description: '지역과 날짜를 선택하여 아파트 실거래가를 조회할 수 있습니다.',
-  };
+  const regionName =
+    !lawdCdString || lawdCdString === '11000'
+      ? '서울'
+      : (getRegionNameByCode(lawdCdString) || '선택 지역');
+  const period = formatPeriodLabel(dealYmdString);
+  const title = `${regionName} ${period} 아파트 실거래가 조회`;
+  const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
+  return { title, description, openGraph: { title, description } };
 }
 
 async function TransactionsLoader({
@@ -65,7 +68,7 @@ async function TransactionsLoader({
   searchTerm,
 }: {
   lawdCd: string;
-  dealYmd: string;
+  dealYmd: string; // '' = 전체 기간, 'YYYY' = 연도만, 'YYYYMM' = 연+월
   numOfRows: number;
   pageNo: number;
   searchTerm: string;
@@ -114,11 +117,9 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
   const awaitedSearchParams = await searchParams;
   const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm } = awaitedSearchParams;
 
-  const now = new Date();
-  const defaultDealYmd = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-
-  const initialLawdCd = ensureString(lawdCd) || '11110';
-  const initialDealYmd = ensureString(dealYmd) || defaultDealYmd;
+  const initialLawdCd = ensureString(lawdCd) || '11000';
+  // dealYmd: 없으면 undefined → 전체 기간 조회 (SearchForm 기본값과 일치)
+  const initialDealYmd = ensureString(dealYmd) || '';
   const initialNumOfRows = Number(numOfRows) || 15;
   const initialPageNo = Number(pageNo) || 1;
   const initialSearchTerm = ensureString(searchTerm) || '';
@@ -137,7 +138,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
 
         <Suspense
           fallback={<LoadingSkeleton />}
-          key={`${initialLawdCd}-${initialDealYmd}-${initialNumOfRows}-${initialPageNo}`}
+          key={`${initialLawdCd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}`}
         >
           <TransactionsLoader
             lawdCd={initialLawdCd}
