@@ -64,10 +64,11 @@ export interface NormalizedTransaction {
   id: string; // 고유 식별자 (생성)
   aptName: string;
   price: number; // 만원 단위 숫자 (쉼표 제거됨)
-  area: number; // 전용면적
+  area: number; // 전용면적 (㎡)
   date: string; // YYYY-MM-DD 형식
-  address: string; // 법정동 + 지번
+  address: string; // 법정동명
   floor: number;
   buildYear: number;
   isCancelled: boolean; // 해제 여부
+  sggNm?: string; // 시군구명 (예: 송파구) — 전체 조회 시 표시용
 }

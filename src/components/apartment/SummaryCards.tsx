@@ -29,8 +29,8 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ transactions, totalCount })
   const cards = [
     { label: '총 거래', value: `${totalCount}건`, sub: '해당 조건 전체', color: 'text-gray-800 dark:text-gray-100' },
     { label: '평균 거래가', value: `${toBillion(avgPrice)}억`, sub: '만원 기준', color: 'text-blue-600 dark:text-blue-400' },
-    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '이번 달 최고', color: 'text-red-600 dark:text-red-400' },
-    { label: '평균 평당가', value: `${toBillion(avgPricePerPyeong)}억`, sub: '평당 기준', color: 'text-red-600 dark:text-red-400' },
+    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '이번 달 최고', color: 'text-amber-600 dark:text-amber-400' },
+    { label: '평균 평당가', value: `${toBillion(avgPricePerPyeong)}억`, sub: '평당 기준', color: 'text-amber-600 dark:text-amber-400' },
   ];
 
   return (

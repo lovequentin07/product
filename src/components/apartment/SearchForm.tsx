@@ -1,46 +1,28 @@
-// src/components/apartment/SearchForm.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getParentRegions, getRegionsByParent, getRegionNameByCode } from '@/data/regions';
+import { getRegionsByParent } from '@/data/regions';
+
+const SEOUL_DISTRICTS = getRegionsByParent('서울특별시');
+const ALL_SEOUL_CODE = '11000';
 
 const SearchForm: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [selectedSi, setSelectedSi] = useState<string>('');
-  const [selectedGu, setSelectedGu] = useState<string>('');
+  const [selectedGu, setSelectedGu] = useState<string>(ALL_SEOUL_CODE);
   const [selectedYear, setSelectedYear] = useState<string>(() => new Date().getFullYear().toString());
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => (new Date().getMonth() + 1).toString().padStart(2, '0'));
-  
-  const parentRegions = getParentRegions();
-  const subRegions = selectedSi ? getRegionsByParent(getRegionNameByCode(selectedSi) || '') : [];
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    (new Date().getMonth() + 1).toString().padStart(2, '0')
+  );
 
   useEffect(() => {
-    // URL 쿼리 파라미터로부터 초기 상태 설정
     const lawdCd = searchParams.get('lawdCd');
     const dealYmd = searchParams.get('dealYmd');
 
-    if (lawdCd) {
-      const siCode = lawdCd.substring(0, 2) + '000';
-      const si = parentRegions.find(r => r.code === siCode);
-      if (si) {
-        setSelectedSi(si.code);
-        setSelectedGu(lawdCd);
-      }
-    } else {
-        // 기본값: 서울특별시 종로구
-        const defaultSi = parentRegions.find(region => region.name === '서울특별시');
-        if (defaultSi) {
-          setSelectedSi(defaultSi.code);
-          const defaultGu = getRegionsByParent(defaultSi.name).find(region => region.name === '종로구');
-          if (defaultGu) {
-            setSelectedGu(defaultGu.code);
-          }
-        }
-    }
-    
+    setSelectedGu(lawdCd || ALL_SEOUL_CODE);
+
     if (dealYmd) {
       setSelectedYear(dealYmd.substring(0, 4));
       setSelectedMonth(dealYmd.substring(4, 6));
@@ -48,87 +30,71 @@ const SearchForm: React.FC = () => {
   }, [searchParams]);
 
   const handleSearch = () => {
-    if (selectedGu && selectedYear && selectedMonth) {
-      const dealYmd = `${selectedYear}${selectedMonth}`;
-      const currentSearchParams = new URLSearchParams(Array.from(searchParams.entries()));
-      const currentSearchTerm = currentSearchParams.get('searchTerm') || '';
+    const dealYmd = `${selectedYear}${selectedMonth}`;
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    const searchTerm = current.get('searchTerm') || '';
 
-      let queryString = `/real-estate/transaction?lawdCd=${selectedGu}&dealYmd=${dealYmd}&pageNo=1`;
-      if (currentSearchTerm) {
-        queryString += `&searchTerm=${currentSearchTerm}`;
-      }
-      // 페이지를 리로드하여 서버 컴포넌트에서 데이터를 다시 가져오도록 URL 변경
-      // 새 검색 시 pageNo를 1로 재설정
-      router.push(queryString);
-    } else {
-      alert('지역과 연월을 모두 선택해주세요.');
-    }
+    let query = `/real-estate/transaction?lawdCd=${selectedGu}&dealYmd=${dealYmd}&pageNo=1`;
+    if (searchTerm) query += `&searchTerm=${searchTerm}`;
+    router.push(query);
   };
 
-  const years = Array.from({ length: 20 }, (_, i) => (new Date().getFullYear() - i).toString()); // 지난 20년
+  const years = Array.from({ length: 20 }, (_, i) => (new Date().getFullYear() - i).toString());
   const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
 
   return (
     <div className="p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg mb-6 max-w-4xl mx-auto border border-transparent dark:border-gray-700">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {/* 시/도 선택 */}
+        {/* 시군구 선택 */}
         <div>
-          <label htmlFor="si-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">시/도</label>
-          <select
-            id="si-select"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
-            value={selectedSi}
-            onChange={(e) => {
-              setSelectedSi(e.target.value);
-              setSelectedGu('');
-            }}
-          >
-            <option value="">시/도 선택</option>
-            {parentRegions.map((region) => (
-              <option key={region.code} value={region.code}>{region.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* 시/군/구 선택 */}
-        <div>
-          <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">시/군/구</label>
+          <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            시군구
+          </label>
           <select
             id="gu-select"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             value={selectedGu}
             onChange={(e) => setSelectedGu(e.target.value)}
-            disabled={!selectedSi}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
           >
-            <option value="">시/군/구 선택</option>
-            {subRegions.map((region) => (
-              <option key={region.code} value={region.code}>{region.name}</option>
+            <option value={ALL_SEOUL_CODE}>서울 전체</option>
+            {SEOUL_DISTRICTS.map((region) => (
+              <option key={region.code} value={region.code}>
+                {region.name}
+              </option>
             ))}
           </select>
         </div>
 
-        {/* 연도 및 월 선택 */}
-        <div className="flex space-x-2">
+        {/* 연도·월 선택 */}
+        <div className="flex space-x-2 md:col-span-2">
           <div className="flex-1">
-            <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">년도</label>
+            <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              년도
+            </label>
             <select
               id="year-select"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             >
-              {years.map((year) => <option key={year} value={year}>{year}년</option>)}
+              {years.map((y) => (
+                <option key={y} value={y}>{y}년</option>
+              ))}
             </select>
           </div>
           <div className="flex-1">
-            <label htmlFor="month-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">월</label>
+            <label htmlFor="month-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              월
+            </label>
             <select
               id="month-select"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             >
-              {months.map((month) => <option key={month} value={month}>{month}월</option>)}
+              {months.map((m) => (
+                <option key={m} value={m}>{m}월</option>
+              ))}
             </select>
           </div>
         </div>
@@ -136,8 +102,7 @@ const SearchForm: React.FC = () => {
 
       <button
         onClick={handleSearch}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
-        disabled={!selectedGu || !selectedYear || !selectedMonth}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
       >
         아파트 실거래가 조회
       </button>

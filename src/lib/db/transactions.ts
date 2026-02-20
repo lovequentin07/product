@@ -26,6 +26,11 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
   // --- Mock: 필터링 ---
   let filtered = [...MOCK_TRANSACTIONS];
 
+  // sgg_cd가 '11000'(서울 전체)이 아닌 경우에만 구 필터 적용
+  if (params.sgg_cd && params.sgg_cd !== '11000') {
+    filtered = filtered.filter((t) => t.sgg_cd === params.sgg_cd);
+  }
+
   if (apt_nm) {
     filtered = filtered.filter((t) => t.apt_nm.includes(apt_nm));
   }

@@ -4,8 +4,11 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { NormalizedTransaction } from '@/types/real-estate';
 
-type SortField = keyof NormalizedTransaction | 'pricePerPyeong';
+type SortField = 'aptName' | 'date' | 'price' | 'pricePerPyeong' | 'area' | 'floor' | 'buildYear' | 'sggNm';
 type SortDirection = 'asc' | 'desc';
+
+/** sggCd가 '11000'이면 서울 전체 조회 모드 */
+const isAllSeoul = (sggCd: string) => sggCd === '11000';
 
 interface TransactionListProps {
   transactions: NormalizedTransaction[];
@@ -18,12 +21,9 @@ interface TransactionListProps {
   onLoadMore: () => void;
   searchTerm: string;
   onSearchTermChange: (term: string) => void;
-  /** 시군구 코드 — 상세보기 URL 구성에 사용 */
   sggCd: string;
-  /** 면적 필터 (평 단위, undefined=전체) */
   areaMin?: number;
   areaMax?: number;
-  /** 가격 필터 (억 단위, undefined=전체) */
   priceMin?: number;
   priceMax?: number;
 }
@@ -47,10 +47,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
 }) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const showGuColumn = isAllSeoul(sggCd);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDirection('desc');
@@ -62,7 +63,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
     let list = [...transactions];
 
-    // 면적 필터 (평 단위)
+    // 면적 필터 (평 단위, area는 ㎡ → 평 변환)
     if (areaMin !== undefined) list = list.filter((t) => t.area * 0.3025 >= areaMin);
     if (areaMax !== undefined) list = list.filter((t) => t.area * 0.3025 <= areaMax);
     // 가격 필터 (억 단위)
@@ -70,32 +71,39 @@ const TransactionList: React.FC<TransactionListProps> = ({
     if (priceMax !== undefined) list = list.filter((t) => t.price / 10000 <= priceMax);
 
     list.sort((a, b) => {
-      let aValue: number | string;
-      let bValue: number | string;
+      let av: number | string;
+      let bv: number | string;
 
       if (sortField === 'pricePerPyeong') {
-        aValue = a.area * 0.3025 > 0 ? a.price / (a.area * 0.3025) : 0;
-        bValue = b.area * 0.3025 > 0 ? b.price / (b.area * 0.3025) : 0;
+        av = a.area * 0.3025 > 0 ? a.price / (a.area * 0.3025) : 0;
+        bv = b.area * 0.3025 > 0 ? b.price / (b.area * 0.3025) : 0;
+      } else if (sortField === 'date') {
+        av = a.date; bv = b.date;
+      } else if (sortField === 'price') {
+        av = a.price; bv = b.price;
+      } else if (sortField === 'area') {
+        av = a.area; bv = b.area;
+      } else if (sortField === 'floor') {
+        av = a.floor; bv = b.floor;
+      } else if (sortField === 'buildYear') {
+        av = a.buildYear; bv = b.buildYear;
+      } else if (sortField === 'aptName') {
+        av = a.aptName; bv = b.aptName;
+      } else if (sortField === 'sggNm') {
+        av = a.sggNm ?? ''; bv = b.sggNm ?? '';
       } else {
-        aValue = a[sortField as keyof NormalizedTransaction] as number | string;
-        bValue = b[sortField as keyof NormalizedTransaction] as number | string;
+        return 0;
       }
 
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-      }
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-      }
+      if (av < bv) return sortDirection === 'asc' ? -1 : 1;
+      if (av > bv) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
 
     return list;
   }, [transactions, sortField, sortDirection, areaMin, areaMax, priceMin, priceMax]);
 
-  const getSortIndicator = (field: SortField) =>
-    sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
-
+  const ind = (f: SortField) => (sortField === f ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '');
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const canLoadMore = currentPage * itemsPerPage < totalCount;
 
@@ -113,7 +121,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
       <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg max-w-6xl mx-auto my-4">
         <p className="font-bold">오류 발생:</p>
         <p>{error}</p>
-        <p className="text-sm mt-2">API 키 확인 또는 요청 정보를 다시 확인해주세요.</p>
       </div>
     );
   }
@@ -143,74 +150,70 @@ const TransactionList: React.FC<TransactionListProps> = ({
       <SearchInput value={searchTerm} onChange={onSearchTermChange} />
 
       <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg border border-transparent dark:border-gray-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 responsive-table">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
-              <Th onClick={() => handleSort('aptName')}>아파트명{getSortIndicator('aptName')}</Th>
-              <Th onClick={() => handleSort('date')}>거래일{getSortIndicator('date')}</Th>
-              <Th onClick={() => handleSort('price')}>거래금액(억){getSortIndicator('price')}</Th>
-              <Th onClick={() => handleSort('pricePerPyeong')}>평당금액(억){getSortIndicator('pricePerPyeong')}</Th>
-              <Th onClick={() => handleSort('area')}>전용면적(평){getSortIndicator('area')}</Th>
-              <Th onClick={() => handleSort('floor')}>층{getSortIndicator('floor')}</Th>
-              <Th onClick={() => handleSort('address')}>법정동{getSortIndicator('address')}</Th>
-              <Th onClick={() => handleSort('buildYear')}>건축년도{getSortIndicator('buildYear')}</Th>
-              <Th>상태</Th>
+              {showGuColumn && <Th onClick={() => handleSort('sggNm')}>구{ind('sggNm')}</Th>}
+              <Th onClick={() => handleSort('aptName')}>아파트명{ind('aptName')}</Th>
+              <Th onClick={() => handleSort('date')}>거래일{ind('date')}</Th>
+              <Th onClick={() => handleSort('price')}>가격(억){ind('price')}</Th>
+              <Th onClick={() => handleSort('pricePerPyeong')}>평당가(억){ind('pricePerPyeong')}</Th>
+              <Th onClick={() => handleSort('area')}>면적(평){ind('area')}</Th>
+              <Th onClick={() => handleSort('floor')}>층{ind('floor')}</Th>
+              <Th>동</Th>
+              <Th onClick={() => handleSort('buildYear')}>건축년도{ind('buildYear')}</Th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 상세
               </th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {displayTransactions.map((transaction) => {
-              const pyeong = transaction.area * 0.3025;
-              const pricePerPyeong = pyeong > 0 ? transaction.price / pyeong : 0;
-              const isSelected = searchTerm && transaction.aptName.toLowerCase().includes(searchTerm.toLowerCase());
-              const detailHref = `/real-estate/apt/${sggCd}/${encodeURIComponent(transaction.aptName)}`;
+            {displayTransactions.map((t) => {
+              const pyeong = t.area * 0.3025;
+              const pricePerPyeong = pyeong > 0 ? t.price / pyeong : 0;
+              const isSelected = searchTerm && t.aptName.toLowerCase().includes(searchTerm.toLowerCase());
+              const detailHref = `/real-estate/apt/${sggCd}/${encodeURIComponent(t.aptName)}`;
 
               return (
-                <tr key={transaction.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
+                <tr key={t.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}>
+                  {showGuColumn && (
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {t.sggNm ?? '—'}
+                    </td>
+                  )}
                   <td
-                    className={`px-4 py-4 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
-                      isSelected ? 'text-blue-800 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'
+                    className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
+                      isSelected ? 'text-blue-700 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'
                     }`}
-                    data-label="아파트명"
-                    onClick={() => onSearchTermChange(isSelected ? '' : transaction.aptName)}
+                    onClick={() => onSearchTermChange(isSelected ? '' : t.aptName)}
                   >
-                    {transaction.aptName}
+                    {t.aptName}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="거래일">
-                    {transaction.date}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {t.date}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 dark:text-blue-400" data-label="거래금액">
-                    {(transaction.price / 10000).toFixed(1)}억
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    {(t.price / 10000).toFixed(1)}억
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-red-600 dark:text-red-400" data-label="평당금액">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-amber-600 dark:text-amber-400">
                     {(pricePerPyeong / 10000).toFixed(1)}억
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="전용면적">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {Math.round(pyeong)}평
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="층">
-                    {transaction.floor}층
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {t.floor}층
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="법정동">
-                    {transaction.address}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {t.address}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" data-label="건축년도">
-                    {transaction.buildYear}년
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {t.buildYear}년
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm" data-label="상태">
-                    {transaction.isCancelled && (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
-                        해제
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm" data-label="상세">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <Link
                       href={detailHref}
                       className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                      title={`${transaction.aptName} 상세 보기`}
                     >
                       상세 →
                     </Link>
@@ -228,7 +231,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </div>
       )}
 
-      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <nav className="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6 rounded-lg shadow-md mt-4">
           <div className="flex-1 flex justify-between sm:justify-end gap-2">
@@ -265,7 +267,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </nav>
       )}
 
-      {/* 더보기 */}
       {canLoadMore && (
         <div className="text-center mt-4">
           <button
@@ -279,8 +280,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
     </div>
   );
 };
-
-// ── 작은 헬퍼 컴포넌트 ──────────────────────────────────────────────────────
 
 function Th({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (

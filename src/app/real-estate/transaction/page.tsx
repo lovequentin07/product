@@ -29,10 +29,11 @@ function toNormalized(row: TransactionRow): NormalizedTransaction {
     price: row.deal_amount,
     area: row.exclu_use_ar,
     date: row.deal_date,
-    address: `${row.umd_nm} ${row.jibun ?? ''}`.trim(),
+    address: row.umd_nm,
     floor: row.floor,
     buildYear: row.build_year,
     isCancelled: !!row.cdeal_type,
+    sggNm: row.sgg_nm ?? undefined,
   };
 }
 
