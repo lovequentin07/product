@@ -8,7 +8,7 @@ dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env' });
 
 const COMBINATIONS_PATH = path.join(process.cwd(), 'raw-data/combinations.json');
-const OUTPUT_PATH = path.join(process.cwd(), 'raw-data/seoul_real_estate_2006_2010.jsonl');
+const OUTPUT_PATH = path.join(process.cwd(), 'raw-data/seoul_real_estate_2021_2026.jsonl');
 const DELAY_MS = 500; // API 호출 간격 (0.5초)
 
 async function sleep(ms: number) {

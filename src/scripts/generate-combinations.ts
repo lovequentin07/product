@@ -27,34 +27,49 @@ const regions = [
   { code: '11215', name: '광진구' },
   { code: '11260', name: '중랑구' },
   { code: '11305', name: '강북구' },
-  { code: '11140', name: '중구' } // 누락된 중구 추가
+  { code: '11140', name: '중구' }
 ];
 
-const startYear = 2006;
-const durationYears = 5;
-const combinations: any[] = [];
+/**
+ * 특정 기간의 조합을 생성합니다.
+ * @param startYear 시작 연도
+ * @param durationYears 수집 기간(년)
+ */
+function generateCombinations(startYear: number, durationYears: number) {
+  const combinations: any[] = [];
 
-for (const region of regions) {
-  for (let year = startYear; year < startYear + durationYears; year++) {
-    for (let month = 1; month <= 12; month++) {
-      const monthStr = month.toString().padStart(2, '0');
-      combinations.push({
-        regionCode: region.code,
-        regionName: region.name,
-        yearMonth: `${year}${monthStr}`,
-        status: 'pending',
-        attempt: 0
-      });
+  for (const region of regions) {
+    for (let year = startYear; year < startYear + durationYears; year++) {
+      // 2026년일 경우 2월까지만 수집 (현재 시점 기준)
+      const endMonth = (year === 2026) ? 2 : 12;
+      
+      for (let month = 1; month <= endMonth; month++) {
+        const monthStr = month.toString().padStart(2, '0');
+        combinations.push({
+          regionCode: region.code,
+          regionName: region.name,
+          yearMonth: `${year}${monthStr}`,
+          status: 'pending',
+          attempt: 0
+        });
+      }
     }
   }
+
+  const dirPath = path.join(process.cwd(), 'raw-data');
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+
+  const filePath = path.join(dirPath, 'combinations.json');
+  fs.writeFileSync(filePath, JSON.stringify(combinations, null, 2));
+
+  console.log(`\n[${startYear} ~ ${startYear + durationYears - 1}] 기간에 대한 ${combinations.length}개의 조합이 생성되었습니다.`);
+  console.log(`저장 위치: ${filePath}`);
 }
 
-const dirPath = path.join(process.cwd(), 'raw-data');
-if (!fs.existsSync(dirPath)) {
-  fs.mkdirSync(dirPath, { recursive: true });
-}
+// 명령행 인자에서 시작 연도와 기간을 받아오거나 기본값 사용
+const startYear = parseInt(process.argv[2]) || 2011;
+const durationYears = parseInt(process.argv[3]) || 5;
 
-const filePath = path.join(dirPath, 'combinations.json');
-fs.writeFileSync(filePath, JSON.stringify(combinations, null, 2));
-
-console.log(`총 ${combinations.length}개의 조합이 생성되어 ${filePath}에 저장되었습니다.`);
+generateCombinations(startYear, durationYears);

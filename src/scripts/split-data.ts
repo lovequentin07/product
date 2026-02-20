@@ -2,18 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 
-const INPUT_PATH = path.join(process.cwd(), 'raw-data/seoul_real_estate_2006_2010.jsonl');
+const INPUT_PATH = path.join(process.cwd(), 'raw-data/seoul_real_estate_2021_2026.jsonl');
 const BASE_OUTPUT_DIR = path.join(process.cwd(), 'raw-data/seoul');
 
 async function splitData() {
   if (!fs.existsSync(INPUT_PATH)) {
     console.error('원본 데이터 파일이 없습니다.');
     return;
-  }
-
-  // 기존 출력 디렉토리 초기화 (데이터 중복 방지)
-  if (fs.existsSync(BASE_OUTPUT_DIR)) {
-    fs.rmSync(BASE_OUTPUT_DIR, { recursive: true, force: true });
   }
 
   const fileStream = fs.createReadStream(INPUT_PATH);
