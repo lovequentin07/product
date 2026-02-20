@@ -153,15 +153,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
-              {showGuColumn && <Th onClick={() => handleSort('sggNm')}>구{ind('sggNm')}</Th>}
               <Th onClick={() => handleSort('aptName')}>아파트명{ind('aptName')}</Th>
-              <Th onClick={() => handleSort('date')}>거래일{ind('date')}</Th>
-              <Th onClick={() => handleSort('price')}>가격(억){ind('price')}</Th>
-              <Th onClick={() => handleSort('pricePerPyeong')}>평당가(억){ind('pricePerPyeong')}</Th>
-              <Th onClick={() => handleSort('area')}>면적(평){ind('area')}</Th>
-              <Th onClick={() => handleSort('floor')}>층{ind('floor')}</Th>
+              {showGuColumn && <Th onClick={() => handleSort('sggNm')}>구{ind('sggNm')}</Th>}
               <Th>동</Th>
-              <Th onClick={() => handleSort('buildYear')}>건축년도{ind('buildYear')}</Th>
+              <Th onClick={() => handleSort('date')}>거래일{ind('date')}</Th>
+              <Th onClick={() => handleSort('price')} right>가격(억){ind('price')}</Th>
+              <Th onClick={() => handleSort('pricePerPyeong')} right>평당가(억){ind('pricePerPyeong')}</Th>
+              <Th onClick={() => handleSort('area')} right>면적(평){ind('area')}</Th>
+              <Th onClick={() => handleSort('floor')} right>층{ind('floor')}</Th>
+              <Th onClick={() => handleSort('buildYear')} right>건축년도{ind('buildYear')}</Th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 상세
               </th>
@@ -176,11 +176,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
               return (
                 <tr key={t.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}>
-                  {showGuColumn && (
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {t.sggNm ?? '—'}
-                    </td>
-                  )}
                   <td
                     className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
                       isSelected ? 'text-blue-700 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'
@@ -189,25 +184,30 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   >
                     {t.aptName}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {t.date}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    {(t.price / 10000).toFixed(1)}억
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-amber-600 dark:text-amber-400">
-                    {(pricePerPyeong / 10000).toFixed(1)}억
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {Math.round(pyeong)}평
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {t.floor}층
-                  </td>
+                  {showGuColumn && (
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {t.sggNm ?? '—'}
+                    </td>
+                  )}
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {t.address}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {t.date}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-200 text-right">
+                    {(t.price / 10000).toFixed(1)}억
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-amber-600 dark:text-amber-400 text-right">
+                    {(pricePerPyeong / 10000).toFixed(1)}억
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                    {Math.round(pyeong)}평
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                    {t.floor}층
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
                     {t.buildYear}년
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -281,12 +281,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
   );
 };
 
-function Th({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function Th({ children, onClick, right }: { children: React.ReactNode; onClick?: () => void; right?: boolean }) {
   return (
     <th
       scope="col"
       onClick={onClick}
-      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider${onClick ? ' cursor-pointer hover:text-gray-700 dark:hover:text-gray-200' : ''}`}
+      className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider${right ? ' text-right' : ' text-left'}${onClick ? ' cursor-pointer hover:text-gray-700 dark:hover:text-gray-200' : ''}`}
     >
       {children}
     </th>
