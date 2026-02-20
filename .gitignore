@@ -33,9 +33,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-.todo.md
-.summary
-.prompt
+.claude/todo.md
+.claude/summary
+.claude/prompts
 
 # vercel
 .vercel
