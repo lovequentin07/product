@@ -43,6 +43,9 @@ yarn-error.log*
 # open-next build artifacts
 .open-next/
 
+# temp data
+/temp/raw-data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
