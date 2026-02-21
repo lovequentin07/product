@@ -35,7 +35,7 @@ UI 디자인, 레이아웃, 데이터와 무관한 로직 개발
 
 ---
 
-## npm run preview (⚠️ 제한 있음)
+## npm run preview (⚠️ 사용 불가)
 
 ```bash
 npm run preview
@@ -43,19 +43,35 @@ npm run preview
 
 **내부 동작**: `opennextjs-cloudflare build && wrangler dev --remote`
 
-**알려진 문제**: `wrangler dev --remote`는 Worker 코드를 로컬 CPU에서 실행하면서 Cloudflare의 CPU 제한(50ms)을 동일하게 적용합니다. Next.js SSR + D1 응답 처리가 합쳐져 CPU 제한을 초과하는 경우가 있습니다.
+**알려진 문제**: Free 플랜에서는 `wrangler dev --remote`가 로컬 CPU에 Cloudflare CPU 제한(10ms)을 동일하게 적용합니다. Next.js SSR + D1 응답 처리가 합쳐져 CPU 제한을 초과하여 동작하지 않습니다.
 
-- `Worker exceeded CPU time limit` 오류가 발생하더라도 페이지 자체는 로드될 수 있음
-- 이 오류는 **로컬 preview 한정** — 실제 Cloudflare 서버에서는 더 최적화된 런타임으로 정상 동작
+**대안**: 브랜치 push를 통한 Cloudflare Preview URL 사용 (아래 참고).
+
+---
+
+## Cloudflare Branch Preview
+
+비프로덕션 브랜치에 push하면 Cloudflare가 자동으로 Preview URL을 생성합니다.
+
+**활성화 방법** (1회 설정):
+1. [Cloudflare 대시보드](https://dash.cloudflare.com) → Workers & Pages → `product`
+2. Settings → Build → Branch control
+3. **"Enable non-production branch deployments"** 활성화
+
+**Preview URL 형식**: `<브랜치명>-product.lovequentin07.workers.dev`
+- 예) `staging-product.lovequentin07.workers.dev`
+- 예) `feature-sort-product.lovequentin07.workers.dev`
+
+실제 Cloudflare 런타임에서 실행 → CPU 제한 없음, 실제 D1(131만건) 연결.
 
 ---
 
 ## 권장 개발 흐름
 
 ```
-1. npm run dev    → UI/로직 개발 (빠른 반복)
+1. npm run dev      → UI/로직 개발 (빠른 반복, mock 17건)
         ↓
-2. git push       → Cloudflare 자동 배포 후 실제 서비스에서 확인
+2. 브랜치에 push   → Cloudflare Preview URL에서 실제 D1 데이터로 확인
+        ↓
+3. main에 merge    → 프로덕션 자동배포
 ```
-
-실제 데이터 기반 기능(정렬·필터·페이지네이션)은 **프로덕션 배포 후** 확인하는 것이 가장 안정적입니다.

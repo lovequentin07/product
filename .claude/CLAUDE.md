@@ -17,7 +17,7 @@
 ```bash
 npm install              # 의존성 설치
 npm run dev              # 로컬 개발 서버 (Next.js, mock 데이터 17건)
-npm run preview          # Cloudflare Workers 빌드 후 원격 D1 연결 로컬 실행 (localhost:8787, CPU 제한으로 불안정할 수 있음)
+npm run preview          # ⚠️ Free 플랜 CPU 제한(10ms)으로 동작하지 않음 — 브랜치 push로 Cloudflare Preview URL 사용
 npm run build            # 표준 Next.js 빌드
 npm run build:cloudflare # Cloudflare 최적화 빌드 (OpenNext)
 npm run lint             # ESLint 실행
@@ -57,13 +57,16 @@ npm run lint             # ESLint 실행
 ## 데이터 저장
 
 - **프로덕션 DB**: Cloudflare D1 (`apt-trade-db`, ID: `a65766e9-f184-4771-bbf6-4139d0f7b6a8`). 바인딩명 `DB`, 스키마: `src/data/schema.sql`. 131만건 (2006~2026). 사전 계산 컬럼: `deal_amount_billion`, `area_pyeong`, `price_per_pyeong`
-- **로컬 개발**: D1 연결 불가 → `src/lib/db/mock-data.ts` mock 17건으로 폴백. 실제 데이터 테스트는 `npm run preview` 사용
+- **로컬 개발**: D1 연결 불가 → `src/lib/db/mock-data.ts` mock 17건으로 폴백. 실제 데이터 테스트는 비프로덕션 브랜치 push → Cloudflare Preview URL 사용
 - **원본 JSONL**: `raw-data/seoul/YYYY/MM.jsonl` (~423MB, git 제외) — 마이그레이션 완료, 이후 신규 데이터 추가 시에만 사용
 - **데이터 스크립트** (`src/scripts/`): `fetch-historical.ts`(원시 데이터 다운로드), `migrate-to-d1.ts`(D1 마이그레이션), `verify-data-integrity.ts`(데이터 검증)
 
 ## Cloudflare 배포
 
 **자동배포**: GitHub `main` 브랜치에 push하면 Cloudflare가 자동으로 빌드·배포. `npm run deploy`는 사용하지 않음.
+
+**Branch Preview**: 비프로덕션 브랜치에 push하면 Preview URL 자동 생성 (`<브랜치명>-product.lovequentin07.workers.dev`).
+활성화: Cloudflare 대시보드 → Workers & Pages → `product` → Settings → Build → Branch control → "Enable non-production branch deployments"
 
 설정 파일은 `wrangler.jsonc` (`.toml` 아님). D1 바인딩명은 `DB`. 빌드 결과물은 `.open-next/worker.js`. `.wrangler/` 캐시 디렉토리는 git 제외.
 
