@@ -2,35 +2,28 @@
 
 import React from 'react';
 import { NormalizedTransaction } from '@/types/real-estate';
+import { TransactionSummary } from '@/lib/db/types';
 
 interface SummaryCardsProps {
   transactions: NormalizedTransaction[];
   totalCount: number;
+  summary: TransactionSummary;
 }
 
 function toBillion(manwon: number): string {
   return (manwon / 10000).toFixed(1);
 }
 
-const SummaryCards: React.FC<SummaryCardsProps> = ({ transactions, totalCount }) => {
+const SummaryCards: React.FC<SummaryCardsProps> = ({ transactions, totalCount, summary }) => {
   if (transactions.length === 0) return null;
 
-  const prices = transactions.map((t) => t.price);
-  const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-  const maxPrice = Math.max(...prices);
-  const minPrice = Math.min(...prices);
-
-  const avgPricePerPyeong =
-    transactions.reduce((sum, t) => {
-      const pyeong = t.area * 0.3025;
-      return sum + (pyeong > 0 ? t.price / pyeong : 0);
-    }, 0) / transactions.length;
+  const { avgPrice, maxPrice, avgPricePerPyeong } = summary;
 
   const cards = [
     { label: '총 거래', value: `${totalCount}건`, sub: '해당 조건 전체', color: 'text-gray-800 dark:text-gray-100' },
-    { label: '평균 거래가', value: `${toBillion(avgPrice)}억`, sub: '만원 기준', color: 'text-blue-600 dark:text-blue-400' },
-    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '이번 달 최고', color: 'text-amber-600 dark:text-amber-400' },
-    { label: '평균 평당가', value: `${toBillion(avgPricePerPyeong)}억`, sub: '평당 기준', color: 'text-amber-600 dark:text-amber-400' },
+    { label: '평균 거래가', value: `${toBillion(avgPrice)}억`, sub: '조건 전체 평균', color: 'text-blue-600 dark:text-blue-400' },
+    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '조건 전체 최고', color: 'text-amber-600 dark:text-amber-400' },
+    { label: '평균 평당가', value: `${avgPricePerPyeong.toFixed(1)}억`, sub: '조건 전체 평균', color: 'text-amber-600 dark:text-amber-400' },
   ];
 
   return (

@@ -19,10 +19,6 @@ interface TransactionListProps {
   searchTerm: string;
   onSearchTermChange: (term: string) => void;
   sggCd: string;
-  areaMin?: number;
-  areaMax?: number;
-  priceMin?: number;
-  priceMax?: number;
   sortBy: string;
   sortDir: 'asc' | 'desc';
   onSortChange: (dbField: string) => void;
@@ -40,10 +36,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
   searchTerm,
   onSearchTermChange,
   sggCd,
-  areaMin,
-  areaMax,
-  priceMin,
-  priceMax,
   sortBy,
   sortDir,
   onSortChange,
@@ -52,18 +44,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   const displayTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
-
-    let list = [...transactions];
-
-    // 면적 필터 (평 단위, area는 ㎡ → 평 변환)
-    if (areaMin !== undefined) list = list.filter((t) => t.area * 0.3025 >= areaMin);
-    if (areaMax !== undefined) list = list.filter((t) => t.area * 0.3025 <= areaMax);
-    // 가격 필터 (억 단위)
-    if (priceMin !== undefined) list = list.filter((t) => t.price / 10000 >= priceMin);
-    if (priceMax !== undefined) list = list.filter((t) => t.price / 10000 <= priceMax);
-
-    return list;
-  }, [transactions, areaMin, areaMax, priceMin, priceMax]);
+    return [...transactions];
+  }, [transactions]);
 
   const ind = (f: string) => (sortBy === f ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
   const totalPages = Math.ceil(totalCount / itemsPerPage);

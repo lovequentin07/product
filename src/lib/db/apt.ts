@@ -2,7 +2,7 @@
 // 아파트 상세 이력 조회 (Page 2용)
 
 import { AptHistoryResult, MonthlyStats, AreaStats, TransactionRow } from './types';
-import { MOCK_APT_HISTORY } from './mock-data';
+import { MOCK_APT_HISTORY, MOCK_TRANSACTIONS } from './mock-data';
 
 // -------------------------
 // Mock 폴백 (로컬 개발용)
@@ -117,6 +117,35 @@ async function getD1AptHistory(
 // -------------------------
 // 공개 API (함수 시그니처 불변)
 // -------------------------
+export async function getDistinctApartments(): Promise<{ sgg_cd: string; apt_nm: string }[]> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) {
+    const seen = new Set<string>();
+    return MOCK_TRANSACTIONS.reduce<{ sgg_cd: string; apt_nm: string }[]>((acc, row) => {
+      const key = `${row.sgg_cd}|${row.apt_nm}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        acc.push({ sgg_cd: row.sgg_cd, apt_nm: row.apt_nm });
+      }
+      return acc;
+    }, []);
+  }
+
+  const result = await db
+    .prepare('SELECT DISTINCT sgg_cd, apt_nm FROM transactions ORDER BY sgg_cd, apt_nm')
+    .all<{ sgg_cd: string; apt_nm: string }>();
+
+  return result.results ?? [];
+}
+
 export async function getAptHistory(
   sgg_cd: string,
   apt_nm: string,

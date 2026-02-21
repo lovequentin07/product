@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { getTransactions } from '@/lib/db/transactions';
-import { TransactionRow, TransactionQueryParams } from '@/lib/db/types';
+import { TransactionRow, TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
 import { getRegionNameByCode } from '@/data/regions';
 import { NormalizedTransaction } from '@/types/real-estate';
 
@@ -57,7 +57,12 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
   const period = formatPeriodLabel(dealYmdString);
   const title = `${regionName} ${period} 아파트 실거래가 조회`;
   const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
-  return { title, description, openGraph: { title, description } };
+  return {
+    title,
+    description,
+    alternates: { canonical: "/real-estate/transaction" },
+    openGraph: { title, description, url: "/real-estate/transaction" },
+  };
 }
 
 async function TransactionsLoader({
@@ -68,6 +73,10 @@ async function TransactionsLoader({
   searchTerm,
   sortBy,
   sortDir,
+  areaMin,
+  areaMax,
+  priceMin,
+  priceMax,
 }: {
   lawdCd: string;
   dealYmd: string; // '' = 전체 기간, 'YYYY' = 연도만, 'YYYYMM' = 연+월
@@ -76,9 +85,14 @@ async function TransactionsLoader({
   searchTerm: string;
   sortBy: string;
   sortDir: 'asc' | 'desc';
+  areaMin?: number;
+  areaMax?: number;
+  priceMin?: number;
+  priceMax?: number;
 }) {
   let transactions: NormalizedTransaction[] = [];
   let totalCount = 0;
+  let summary: TransactionSummary = { avgPrice: 0, maxPrice: 0, minPrice: 0, avgPricePerPyeong: 0 };
   let error: string | null = null;
 
   try {
@@ -90,9 +104,14 @@ async function TransactionsLoader({
       apt_nm: searchTerm || undefined,
       sort_by: sortBy as TransactionQueryParams['sort_by'],
       sort_order: sortDir,
+      area_min: areaMin,
+      area_max: areaMax,
+      price_min: priceMin,
+      price_max: priceMax,
     });
     transactions = result.transactions.map(toNormalized);
     totalCount = result.totalCount;
+    summary = result.summary;
   } catch (e) {
     error = (e as Error).message;
   }
@@ -109,6 +128,11 @@ async function TransactionsLoader({
       sggCd={lawdCd}
       sortBy={sortBy}
       sortDir={sortDir}
+      summary={summary}
+      areaMin={areaMin}
+      areaMax={areaMax}
+      priceMin={priceMin}
+      priceMax={priceMax}
     />
   );
 }
@@ -124,7 +148,7 @@ function LoadingSkeleton() {
 
 export default async function RealEstatePage({ searchParams }: RealEstatePageProps) {
   const awaitedSearchParams = await searchParams;
-  const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir } = awaitedSearchParams;
+  const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir, areaMin, areaMax, priceMin, priceMax } = awaitedSearchParams;
 
   const initialLawdCd = ensureString(lawdCd) || '11000';
   // dealYmd: 없으면 undefined → 전체 기간 조회 (SearchForm 기본값과 일치)
@@ -134,9 +158,32 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
   const initialSearchTerm = ensureString(searchTerm) || '';
   const initialSortBy = ensureString(sortBy) || 'deal_date';
   const initialSortDir = (ensureString(sortDir) || 'desc') as 'asc' | 'desc';
+  const initialAreaMin = Number(ensureString(areaMin)) || undefined;
+  const initialAreaMax = Number(ensureString(areaMax)) || undefined;
+  const initialPriceMin = Number(ensureString(priceMin)) || undefined;
+  const initialPriceMax = Number(ensureString(priceMax)) || undefined;
+
+  const searchActionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'DataZip 아파트 실거래가',
+    url: 'https://datazip.net',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://datazip.net/real-estate/transaction?searchTerm={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
 
   return (
     <div className="container mx-auto p-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(searchActionJsonLd) }}
+      />
       <header className="text-center my-6">
         <h1 className="text-3xl font-bold">아파트 실거래가 조회 서비스</h1>
         <p className="text-gray-500 mt-2">
@@ -149,7 +196,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
 
         <Suspense
           fallback={<LoadingSkeleton />}
-          key={`${initialLawdCd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}`}
+          key={`${initialLawdCd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}-${initialAreaMin ?? ''}-${initialAreaMax ?? ''}-${initialPriceMin ?? ''}-${initialPriceMax ?? ''}`}
         >
           <TransactionsLoader
             lawdCd={initialLawdCd}
@@ -159,6 +206,10 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
             searchTerm={initialSearchTerm}
             sortBy={initialSortBy}
             sortDir={initialSortDir}
+            areaMin={initialAreaMin}
+            areaMax={initialAreaMax}
+            priceMin={initialPriceMin}
+            priceMax={initialPriceMax}
           />
         </Suspense>
       </main>

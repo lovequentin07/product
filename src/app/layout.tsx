@@ -14,11 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://datazip.net"),
   title: {
     default: "서울 아파트 실거래가 조회",
-    template: "%s | 서울 아파트 실거래가",
+    template: "%s | DataZip",
   },
   description: "서울 아파트 실거래가를 지역·기간별로 조회하세요. 공공데이터 기반 최신 거래 정보를 제공합니다.",
+  openGraph: {
+    siteName: "DataZip",
+    locale: "ko_KR",
+    type: "website",
+  },
 };
 
 const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;

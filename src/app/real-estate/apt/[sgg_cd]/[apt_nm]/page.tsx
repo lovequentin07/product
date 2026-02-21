@@ -19,10 +19,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const regionName = getRegionNameByCode(sgg_cd) || '';
   const title = `${aptName} 실거래가 추이 | ${regionName} 아파트 시세 분석`;
   const description = `${aptName}의 전체 실거래가 추이, 면적별 가격, 최근 거래 이력을 한눈에 확인하세요.`;
+  const canonicalUrl = `/real-estate/apt/${sgg_cd}/${apt_nm}`;
   return {
     title,
     description,
-    openGraph: { title, description },
+    alternates: { canonical: canonicalUrl },
+    openGraph: { title, description, url: canonicalUrl },
   };
 }
 
@@ -90,8 +92,22 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
     ? `/real-estate/transaction?lawdCd=${sgg_cd}&dealYmd=${deal_ymd}`
     : `/real-estate/transaction?lawdCd=${sgg_cd}`;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: 'https://datazip.net' },
+      { '@type': 'ListItem', position: 2, name: '실거래가 조회', item: 'https://datazip.net/real-estate/transaction' },
+      { '@type': 'ListItem', position: 3, name: `${aptName} 실거래가` },
+    ],
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <header className="sr-only">
         <h1>{aptName} 실거래가 분석 — {regionName}</h1>
       </header>

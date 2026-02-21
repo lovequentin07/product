@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { NormalizedTransaction } from '@/types/real-estate';
+import { TransactionSummary } from '@/lib/db/types';
 import TransactionList from '@/components/apartment/TransactionList';
 import SummaryCards from '@/components/apartment/SummaryCards';
 
@@ -35,6 +36,11 @@ export default function TransactionsClientComponent({
   sggCd,
   sortBy,
   sortDir,
+  summary,
+  areaMin,
+  areaMax,
+  priceMin,
+  priceMax,
 }: {
   transactions: NormalizedTransaction[];
   totalCount: number;
@@ -46,19 +52,23 @@ export default function TransactionsClientComponent({
   sggCd: string;
   sortBy: string;
   sortDir: 'asc' | 'desc';
+  summary: TransactionSummary;
+  areaMin?: number;
+  areaMax?: number;
+  priceMin?: number;
+  priceMax?: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  const [areaOptionIndex, setAreaOptionIndex] = useState(0);
-  const [priceOptionIndex, setPriceOptionIndex] = useState(0);
+
+  // URL props 기반으로 현재 선택된 필터 버튼 인덱스 결정
+  const areaOptionIndex = AREA_OPTIONS.findIndex((o) => o.min === areaMin && o.max === areaMax);
+  const priceOptionIndex = PRICE_OPTIONS.findIndex((o) => o.min === priceMin && o.max === priceMax);
 
   const urlSortBy = searchParams.get('sortBy') || sortBy;
   const urlSortDir = (searchParams.get('sortDir') || sortDir) as 'asc' | 'desc';
-
-  const areaOption = AREA_OPTIONS[areaOptionIndex];
-  const priceOption = PRICE_OPTIONS[priceOptionIndex];
 
   // URL의 searchTerm이 바뀌면 로컬 상태 동기화
   useEffect(() => {
@@ -117,24 +127,40 @@ export default function TransactionsClientComponent({
 
   const displayTotalCount = totalCount;
 
+  const handleAreaFilter = (min: number | undefined, max: number | undefined) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    min !== undefined ? current.set('areaMin', String(min)) : current.delete('areaMin');
+    max !== undefined ? current.set('areaMax', String(max)) : current.delete('areaMax');
+    current.set('pageNo', '1');
+    router.push(`?${current.toString()}`, { scroll: false });
+  };
+
+  const handlePriceFilter = (min: number | undefined, max: number | undefined) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    min !== undefined ? current.set('priceMin', String(min)) : current.delete('priceMin');
+    max !== undefined ? current.set('priceMax', String(max)) : current.delete('priceMax');
+    current.set('pageNo', '1');
+    router.push(`?${current.toString()}`, { scroll: false });
+  };
+
   return (
     <div>
       {/* 요약 카드 */}
-      <SummaryCards transactions={transactions} totalCount={totalCount} />
+      <SummaryCards transactions={transactions} totalCount={totalCount} summary={summary} />
 
       {/* 면적 / 가격 필터 */}
       <div className="max-w-6xl mx-auto mb-3 flex flex-wrap gap-3 px-4 sm:px-0">
         <FilterBar
           label="면적"
           options={AREA_OPTIONS.map((o) => o.label)}
-          selected={areaOptionIndex}
-          onChange={setAreaOptionIndex}
+          selected={areaOptionIndex < 0 ? 0 : areaOptionIndex}
+          onChange={(i) => handleAreaFilter(AREA_OPTIONS[i].min, AREA_OPTIONS[i].max)}
         />
         <FilterBar
           label="가격"
           options={PRICE_OPTIONS.map((o) => o.label)}
-          selected={priceOptionIndex}
-          onChange={setPriceOptionIndex}
+          selected={priceOptionIndex < 0 ? 0 : priceOptionIndex}
+          onChange={(i) => handlePriceFilter(PRICE_OPTIONS[i].min, PRICE_OPTIONS[i].max)}
         />
       </div>
 
@@ -150,10 +176,6 @@ export default function TransactionsClientComponent({
         searchTerm={localSearchTerm}
         onSearchTermChange={setLocalSearchTerm}
         sggCd={sggCd}
-        areaMin={areaOption.min}
-        areaMax={areaOption.max}
-        priceMin={priceOption.min}
-        priceMax={priceOption.max}
         sortBy={urlSortBy}
         sortDir={urlSortDir}
         onSortChange={handleSortChange}
