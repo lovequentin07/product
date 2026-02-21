@@ -7,7 +7,7 @@ export interface TransactionQueryParams {
   apt_nm?: string;
   page?: number;
   limit?: number;
-  sort_by?: 'deal_date' | 'deal_amount_billion' | 'price_per_pyeong' | 'area_pyeong' | 'floor' | 'build_year';
+  sort_by?: 'deal_date' | 'deal_amount_billion' | 'price_per_pyeong' | 'area_pyeong' | 'floor' | 'build_year' | 'apt_nm' | 'sgg_nm';
   sort_order?: 'asc' | 'desc';
   area_min?: number; // 평 단위
   area_max?: number;

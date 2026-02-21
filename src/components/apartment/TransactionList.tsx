@@ -1,11 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { NormalizedTransaction } from '@/types/real-estate';
-
-type SortField = 'aptName' | 'date' | 'price' | 'pricePerPyeong' | 'area' | 'floor' | 'buildYear' | 'sggNm';
-type SortDirection = 'asc' | 'desc';
 
 /** sggCd가 '11000'이면 서울 전체 조회 모드 */
 const isAllSeoul = (sggCd: string) => sggCd === '11000';
@@ -26,6 +23,9 @@ interface TransactionListProps {
   areaMax?: number;
   priceMin?: number;
   priceMax?: number;
+  sortBy: string;
+  sortDir: 'asc' | 'desc';
+  onSortChange: (dbField: string) => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -44,19 +44,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
   areaMax,
   priceMin,
   priceMax,
+  sortBy,
+  sortDir,
+  onSortChange,
 }) => {
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const showGuColumn = isAllSeoul(sggCd);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
 
   const displayTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
@@ -70,40 +62,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
     if (priceMin !== undefined) list = list.filter((t) => t.price / 10000 >= priceMin);
     if (priceMax !== undefined) list = list.filter((t) => t.price / 10000 <= priceMax);
 
-    list.sort((a, b) => {
-      let av: number | string;
-      let bv: number | string;
-
-      if (sortField === 'pricePerPyeong') {
-        av = a.area * 0.3025 > 0 ? a.price / (a.area * 0.3025) : 0;
-        bv = b.area * 0.3025 > 0 ? b.price / (b.area * 0.3025) : 0;
-      } else if (sortField === 'date') {
-        av = a.date; bv = b.date;
-      } else if (sortField === 'price') {
-        av = a.price; bv = b.price;
-      } else if (sortField === 'area') {
-        av = a.area; bv = b.area;
-      } else if (sortField === 'floor') {
-        av = a.floor; bv = b.floor;
-      } else if (sortField === 'buildYear') {
-        av = a.buildYear; bv = b.buildYear;
-      } else if (sortField === 'aptName') {
-        av = a.aptName; bv = b.aptName;
-      } else if (sortField === 'sggNm') {
-        av = a.sggNm ?? ''; bv = b.sggNm ?? '';
-      } else {
-        return 0;
-      }
-
-      if (av < bv) return sortDirection === 'asc' ? -1 : 1;
-      if (av > bv) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
     return list;
-  }, [transactions, sortField, sortDirection, areaMin, areaMax, priceMin, priceMax]);
+  }, [transactions, areaMin, areaMax, priceMin, priceMax]);
 
-  const ind = (f: SortField) => (sortField === f ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '');
+  const ind = (f: string) => (sortBy === f ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const canLoadMore = currentPage * itemsPerPage < totalCount;
 
@@ -153,15 +115,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
-              <Th onClick={() => handleSort('aptName')}>아파트명{ind('aptName')}</Th>
-              {showGuColumn && <Th onClick={() => handleSort('sggNm')}>구{ind('sggNm')}</Th>}
+              <Th onClick={() => onSortChange('apt_nm')}>아파트명{ind('apt_nm')}</Th>
+              {showGuColumn && <Th onClick={() => onSortChange('sgg_nm')}>구{ind('sgg_nm')}</Th>}
               <Th>동</Th>
-              <Th onClick={() => handleSort('date')}>거래일{ind('date')}</Th>
-              <Th onClick={() => handleSort('price')} right>가격(억){ind('price')}</Th>
-              <Th onClick={() => handleSort('pricePerPyeong')} right>평당가(억){ind('pricePerPyeong')}</Th>
-              <Th onClick={() => handleSort('area')} right>면적(평){ind('area')}</Th>
-              <Th onClick={() => handleSort('floor')} right>층{ind('floor')}</Th>
-              <Th onClick={() => handleSort('buildYear')} right>건축년도{ind('buildYear')}</Th>
+              <Th onClick={() => onSortChange('deal_date')}>거래일{ind('deal_date')}</Th>
+              <Th onClick={() => onSortChange('deal_amount_billion')} right>가격(억){ind('deal_amount_billion')}</Th>
+              <Th onClick={() => onSortChange('price_per_pyeong')} right>평당가(억){ind('price_per_pyeong')}</Th>
+              <Th onClick={() => onSortChange('area_pyeong')} right>면적(평){ind('area_pyeong')}</Th>
+              <Th onClick={() => onSortChange('floor')} right>층{ind('floor')}</Th>
+              <Th onClick={() => onSortChange('build_year')} right>건축년도{ind('build_year')}</Th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 상세
               </th>

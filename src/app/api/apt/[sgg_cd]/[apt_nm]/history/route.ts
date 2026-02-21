@@ -13,6 +13,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { searchParams } = request.nextUrl;
 
   const months = searchParams.has('months') ? Number(searchParams.get('months')) : 24;
+  const area_bucket = searchParams.has('area_bucket') ? Number(searchParams.get('area_bucket')) : undefined;
 
   if (!sgg_cd || !apt_nm) {
     return NextResponse.json(
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const result = await getAptHistory(sgg_cd, decodeURIComponent(apt_nm), months);
+    const result = await getAptHistory(sgg_cd, decodeURIComponent(apt_nm), months, area_bucket);
     if (!result) {
       return NextResponse.json({ error: '아파트 데이터를 찾을 수 없습니다.' }, { status: 404 });
     }

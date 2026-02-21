@@ -44,7 +44,12 @@ async function AptDetailContent({ sgg_cd, apt_nm, backHref }: { sgg_cd: string; 
 
       {/* 차트 행 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <PriceTrendChart monthly={data.monthly} />
+        <PriceTrendChart
+          monthly={data.monthly}
+          byArea={data.byArea}
+          sggCd={sgg_cd}
+          aptNm={decodeURIComponent(apt_nm)}
+        />
         <AreaBarChart byArea={data.byArea} />
       </div>
 

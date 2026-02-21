@@ -90,7 +90,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams)
   } = params;
 
   // 허용된 정렬 컬럼만 통과 (SQL 인젝션 방지)
-  const ALLOWED_SORT = new Set(['deal_date', 'deal_amount_billion', 'price_per_pyeong', 'area_pyeong', 'floor', 'build_year']);
+  const ALLOWED_SORT = new Set(['deal_date', 'deal_amount_billion', 'price_per_pyeong', 'area_pyeong', 'floor', 'build_year', 'apt_nm', 'sgg_nm']);
   const safeSort = ALLOWED_SORT.has(sort_by) ? sort_by : 'deal_date';
   const safeOrder = sort_order === 'asc' ? 'ASC' : 'DESC';
 

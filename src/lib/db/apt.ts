@@ -21,7 +21,8 @@ async function getD1AptHistory(
   db: D1Database,
   sgg_cd: string,
   apt_nm: string,
-  months: number
+  months: number,
+  area_bucket?: number
 ): Promise<AptHistoryResult | null> {
   const decodedAptNm = decodeURIComponent(apt_nm);
 
@@ -36,6 +37,11 @@ async function getD1AptHistory(
   if (sgg_cd && sgg_cd !== '11000') {
     conditions.push('sgg_cd = ?');
     bindings.push(sgg_cd);
+  }
+
+  if (area_bucket !== undefined) {
+    conditions.push('(area_pyeong / 10) * 10 = ?');
+    bindings.push(area_bucket);
   }
 
   const where = `WHERE ${conditions.join(' AND ')}`;
@@ -88,7 +94,7 @@ async function getD1AptHistory(
     const min = r.bucket;
     const max = r.bucket + 9;
     return {
-      label: `${min}평대`,
+      label: min === 0 ? '10평 미만' : `${min}평대`,
       minPyeong: min,
       maxPyeong: max,
       count: r.cnt,
@@ -114,7 +120,8 @@ async function getD1AptHistory(
 export async function getAptHistory(
   sgg_cd: string,
   apt_nm: string,
-  months: number = 24
+  months: number = 24,
+  area_bucket?: number
 ): Promise<AptHistoryResult | null> {
   let db: D1Database | null = null;
   try {
@@ -127,5 +134,5 @@ export async function getAptHistory(
 
   if (!db) return getMockAptHistory(apt_nm);
 
-  return getD1AptHistory(db, sgg_cd, apt_nm, months);
+  return getD1AptHistory(db, sgg_cd, apt_nm, months, area_bucket);
 }

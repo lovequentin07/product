@@ -33,6 +33,8 @@ export default function TransactionsClientComponent({
   error,
   searchTerm,
   sggCd,
+  sortBy,
+  sortDir,
 }: {
   transactions: NormalizedTransaction[];
   totalCount: number;
@@ -42,6 +44,8 @@ export default function TransactionsClientComponent({
   error: string | null;
   searchTerm: string;
   sggCd: string;
+  sortBy: string;
+  sortDir: 'asc' | 'desc';
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,6 +53,9 @@ export default function TransactionsClientComponent({
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [areaOptionIndex, setAreaOptionIndex] = useState(0);
   const [priceOptionIndex, setPriceOptionIndex] = useState(0);
+
+  const urlSortBy = searchParams.get('sortBy') || sortBy;
+  const urlSortDir = (searchParams.get('sortDir') || sortDir) as 'asc' | 'desc';
 
   const areaOption = AREA_OPTIONS[areaOptionIndex];
   const priceOption = PRICE_OPTIONS[priceOptionIndex];
@@ -74,6 +81,15 @@ export default function TransactionsClientComponent({
     }, 500);
     return () => clearTimeout(handler);
   }, [localSearchTerm, searchTerm, router, searchParams]);
+
+  const handleSortChange = (dbField: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    const newDir = urlSortBy === dbField && urlSortDir === 'desc' ? 'asc' : 'desc';
+    current.set('sortBy', dbField);
+    current.set('sortDir', newDir);
+    current.set('pageNo', '1');
+    router.push(`?${current.toString()}`, { scroll: false });
+  };
 
   const handlePageChange = (newPage: number) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -138,6 +154,9 @@ export default function TransactionsClientComponent({
         areaMax={areaOption.max}
         priceMin={priceOption.min}
         priceMax={priceOption.max}
+        sortBy={urlSortBy}
+        sortDir={urlSortDir}
+        onSortChange={handleSortChange}
       />
     </div>
   );

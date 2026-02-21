@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { getTransactions } from '@/lib/db/transactions';
-import { TransactionRow } from '@/lib/db/types';
+import { TransactionRow, TransactionQueryParams } from '@/lib/db/types';
 import { getRegionNameByCode } from '@/data/regions';
 import { NormalizedTransaction } from '@/types/real-estate';
 
@@ -66,12 +66,16 @@ async function TransactionsLoader({
   numOfRows,
   pageNo,
   searchTerm,
+  sortBy,
+  sortDir,
 }: {
   lawdCd: string;
   dealYmd: string; // '' = 전체 기간, 'YYYY' = 연도만, 'YYYYMM' = 연+월
   numOfRows: number;
   pageNo: number;
   searchTerm: string;
+  sortBy: string;
+  sortDir: 'asc' | 'desc';
 }) {
   let transactions: NormalizedTransaction[] = [];
   let totalCount = 0;
@@ -83,6 +87,9 @@ async function TransactionsLoader({
       deal_ymd: dealYmd,
       page: pageNo,
       limit: numOfRows,
+      apt_nm: searchTerm || undefined,
+      sort_by: sortBy as TransactionQueryParams['sort_by'],
+      sort_order: sortDir,
     });
     transactions = result.transactions.map(toNormalized);
     totalCount = result.totalCount;
@@ -100,6 +107,8 @@ async function TransactionsLoader({
       error={error}
       searchTerm={searchTerm}
       sggCd={lawdCd}
+      sortBy={sortBy}
+      sortDir={sortDir}
     />
   );
 }
@@ -115,7 +124,7 @@ function LoadingSkeleton() {
 
 export default async function RealEstatePage({ searchParams }: RealEstatePageProps) {
   const awaitedSearchParams = await searchParams;
-  const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm } = awaitedSearchParams;
+  const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir } = awaitedSearchParams;
 
   const initialLawdCd = ensureString(lawdCd) || '11000';
   // dealYmd: 없으면 undefined → 전체 기간 조회 (SearchForm 기본값과 일치)
@@ -123,6 +132,8 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
   const initialNumOfRows = Number(numOfRows) || 15;
   const initialPageNo = Number(pageNo) || 1;
   const initialSearchTerm = ensureString(searchTerm) || '';
+  const initialSortBy = ensureString(sortBy) || 'deal_date';
+  const initialSortDir = (ensureString(sortDir) || 'desc') as 'asc' | 'desc';
 
   return (
     <div className="container mx-auto p-4">
@@ -138,7 +149,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
 
         <Suspense
           fallback={<LoadingSkeleton />}
-          key={`${initialLawdCd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}`}
+          key={`${initialLawdCd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}`}
         >
           <TransactionsLoader
             lawdCd={initialLawdCd}
@@ -146,6 +157,8 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
             numOfRows={initialNumOfRows}
             pageNo={initialPageNo}
             searchTerm={initialSearchTerm}
+            sortBy={initialSortBy}
+            sortDir={initialSortDir}
           />
         </Suspense>
       </main>

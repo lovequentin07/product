@@ -8,6 +8,7 @@
     "build:cloudflare": "opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint",
+    "preview": "opennextjs-cloudflare build && wrangler dev --remote",
     "deploy": "opennextjs-cloudflare build && npx wrangler deploy"
   },
   "dependencies": {
