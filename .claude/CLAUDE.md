@@ -17,7 +17,7 @@
 ```bash
 npm install              # 의존성 설치
 npm run dev              # 로컬 개발 서버 (Next.js, mock 데이터 17건)
-npm run preview          # Cloudflare Workers 빌드 후 원격 D1 연결 로컬 실행 (localhost:8787)
+npm run preview          # Cloudflare Workers 빌드 후 원격 D1 연결 로컬 실행 (localhost:8787, CPU 제한으로 불안정할 수 있음)
 npm run build            # 표준 Next.js 빌드
 npm run build:cloudflare # Cloudflare 최적화 빌드 (OpenNext)
 npm run lint             # ESLint 실행
