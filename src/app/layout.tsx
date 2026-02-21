@@ -60,6 +60,13 @@ export default function RootLayout({
             })(window, document, "clarity", "script", "${clarityId}");
           `}</Script>
         )}
+
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7470215059416865"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
