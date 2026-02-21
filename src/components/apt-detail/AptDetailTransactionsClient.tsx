@@ -68,6 +68,7 @@ export default function AptDetailTransactionsClient({
       sortDir={sortDir}
       onSortChange={handleSortChange}
       hideSearch={true}
+      hideDetailLink={true}
     />
   );
 }

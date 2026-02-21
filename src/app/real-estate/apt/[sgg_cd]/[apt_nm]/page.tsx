@@ -17,6 +17,7 @@ interface PageProps {
     numOfRows?: string;
     sortBy?: string;
     sortDir?: string;
+    areaBucket?: string;
   }>;
 }
 
@@ -58,6 +59,7 @@ async function AptDetailContent({
   numOfRows,
   sortBy,
   sortDir,
+  areaBucket,
 }: {
   sgg_cd: string;
   apt_nm: string;
@@ -66,8 +68,9 @@ async function AptDetailContent({
   numOfRows: number;
   sortBy: string;
   sortDir: 'asc' | 'desc';
+  areaBucket?: number;
 }) {
-  const data = await getAptHistory(sgg_cd, apt_nm, { page, numOfRows, sortBy, sortDir });
+  const data = await getAptHistory(sgg_cd, apt_nm, { page, numOfRows, sortBy, sortDir, areaBucket });
 
   if (!data) {
     return (
@@ -125,12 +128,13 @@ function LoadingSkeleton() {
 
 export default async function AptDetailPage({ params, searchParams }: PageProps) {
   const { sgg_cd, apt_nm } = await params;
-  const { deal_ymd, pageNo, numOfRows, sortBy, sortDir } = await searchParams;
+  const { deal_ymd, pageNo, numOfRows, sortBy, sortDir, areaBucket } = await searchParams;
 
   const page = Math.max(1, parseInt(pageNo || '1', 10));
   const rows = Math.min(100, Math.max(10, parseInt(numOfRows || '20', 10)));
   const safeSortBy = sortBy || 'deal_date';
   const safeSortDir: 'asc' | 'desc' = sortDir === 'asc' ? 'asc' : 'desc';
+  const parsedAreaBucket = areaBucket ? Number(areaBucket) : undefined;
 
   const aptName = decodeURIComponent(apt_nm);
   const regionName = getRegionNameByCode(sgg_cd) || sgg_cd;
@@ -169,6 +173,7 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
           numOfRows={rows}
           sortBy={safeSortBy}
           sortDir={safeSortDir}
+          areaBucket={parsedAreaBucket}
         />
       </Suspense>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   LineChart,
   Line,
@@ -57,30 +58,26 @@ function toChartData(monthly: MonthlyStats[]) {
   }));
 }
 
-const PriceTrendChart: React.FC<Props> = ({ monthly, byArea, sggCd, aptNm }) => {
-  const [selectedBucket, setSelectedBucket] = useState<number | null>(null);
-  const [displayData, setDisplayData] = useState(() => toChartData(monthly));
-  const [loading, setLoading] = useState(false);
+const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const handleTabSelect = async (bucket: number | null) => {
-    setSelectedBucket(bucket);
+  const selectedBucketParam = searchParams.get('areaBucket');
+  const selectedBucket = selectedBucketParam !== null ? Number(selectedBucketParam) : null;
+
+  const handleTabSelect = (bucket: number | null) => {
+    const params = new URLSearchParams(searchParams.toString());
     if (bucket === null) {
-      setDisplayData(toChartData(monthly));
-      return;
+      params.delete('areaBucket');
+    } else {
+      params.set('areaBucket', String(bucket));
     }
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/apt/${sggCd}/${encodeURIComponent(aptNm)}/history?area_bucket=${bucket}`
-      );
-      const json = await res.json() as { monthly?: MonthlyStats[] };
-      setDisplayData(toChartData(json.monthly ?? []));
-    } catch {
-      // 실패 시 전체 데이터 유지
-    } finally {
-      setLoading(false);
-    }
+    params.set('pageNo', '1');
+    router.push(`${pathname}?${params.toString()}`);
   };
+
+  const displayData = toChartData(monthly);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-4">
@@ -116,52 +113,50 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea, sggCd, aptNm }) => 
         </div>
       </div>
 
-      <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={displayData} margin={{ top: 5, right: 55, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="yearMonth"
-              tick={{ fontSize: 11, fill: '#6b7280' }}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              yAxisId="left"
-              tick={{ fontSize: 11, fill: '#2563eb' }}
-              tickFormatter={(v: number) => `${v}억`}
-              width={50}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tick={{ fontSize: 11, fill: '#dc2626' }}
-              tickFormatter={(v: number) => `${v}억`}
-              width={50}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="평균거래가"
-              stroke="#2563eb"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="평균평당가"
-              stroke="#dc2626"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-              strokeDasharray="4 2"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={displayData} margin={{ top: 5, right: 55, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="yearMonth"
+            tick={{ fontSize: 11, fill: '#6b7280' }}
+            interval="preserveStartEnd"
+          />
+          <YAxis
+            yAxisId="left"
+            tick={{ fontSize: 11, fill: '#2563eb' }}
+            tickFormatter={(v: number) => `${v}억`}
+            width={50}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            tick={{ fontSize: 11, fill: '#dc2626' }}
+            tickFormatter={(v: number) => `${v}억`}
+            width={50}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Line
+            yAxisId="left"
+            type="monotone"
+            dataKey="평균거래가"
+            stroke="#2563eb"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="평균평당가"
+            stroke="#dc2626"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+            strokeDasharray="4 2"
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };

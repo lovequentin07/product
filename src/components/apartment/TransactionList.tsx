@@ -23,6 +23,7 @@ interface TransactionListProps {
   sortDir: 'asc' | 'desc';
   onSortChange: (dbField: string) => void;
   hideSearch?: boolean;
+  hideDetailLink?: boolean;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -41,6 +42,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   sortDir,
   onSortChange,
   hideSearch = false,
+  hideDetailLink = false,
 }) => {
   const showGuColumn = isAllSeoul(sggCd);
 
@@ -108,9 +110,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
               <Th onClick={() => onSortChange('area_pyeong')} right>면적(평){ind('area_pyeong')}</Th>
               <Th onClick={() => onSortChange('floor')} right>층{ind('floor')}</Th>
               <Th onClick={() => onSortChange('build_year')} right>건축년도{ind('build_year')}</Th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                상세
-              </th>
+              {!hideDetailLink && (
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  상세
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -156,14 +160,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
                     {t.buildYear}년
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    <Link
-                      href={detailHref}
-                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                    >
-                      상세 →
-                    </Link>
-                  </td>
+                  {!hideDetailLink && (
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <Link
+                        href={detailHref}
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        상세 →
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               );
             })}

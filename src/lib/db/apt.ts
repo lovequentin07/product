@@ -28,50 +28,60 @@ async function getD1AptHistory(
   page: number,
   numOfRows: number,
   sortBy: string,
-  sortDir: 'asc' | 'desc'
+  sortDir: 'asc' | 'desc',
+  areaBucket?: number
 ): Promise<AptHistoryResult | null> {
   const decodedAptNm = decodeURIComponent(apt_nm);
 
-  const conditions = ['apt_nm = ?'];
-  const bindings: (string | number)[] = [decodedAptNm];
-
+  // 기본 조건 (byArea 탭 목록은 항상 전체 표시)
+  const baseConditions = ['apt_nm = ?'];
+  const baseBindings: (string | number)[] = [decodedAptNm];
   if (sgg_cd && sgg_cd !== '11000') {
-    conditions.push('sgg_cd = ?');
-    bindings.push(sgg_cd);
+    baseConditions.push('sgg_cd = ?');
+    baseBindings.push(sgg_cd);
   }
 
-  const where = `WHERE ${conditions.join(' AND ')}`;
+  // 필터 조건 (areaBucket 적용 — meta, monthly, 거래 목록에 사용)
+  const filteredConditions = [...baseConditions];
+  const filteredBindings = [...baseBindings];
+  if (areaBucket !== undefined) {
+    filteredConditions.push('(area_pyeong / 10) * 10 = ?');
+    filteredBindings.push(areaBucket);
+  }
+
+  const baseWhere = `WHERE ${baseConditions.join(' AND ')}`;
+  const filteredWhere = `WHERE ${filteredConditions.join(' AND ')}`;
   const safeSortBy = VALID_SORT_COLS.has(sortBy) ? sortBy : 'deal_date';
   const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC';
   const offset = (page - 1) * numOfRows;
 
-  // 기본 정보 + 전체 건수
+  // 기본 정보 + 필터된 건수
   const metaStmt = db
     .prepare(
-      `SELECT sgg_nm, umd_nm, build_year, COUNT(*) as total_count FROM transactions ${where} LIMIT 1`
+      `SELECT sgg_nm, umd_nm, build_year, COUNT(*) as total_count FROM transactions ${filteredWhere} LIMIT 1`
     )
-    .bind(...bindings);
+    .bind(...filteredBindings);
 
-  // 월별 집계
+  // 월별 집계 (areaBucket 필터 적용)
   const monthlyStmt = db
     .prepare(
-      `SELECT deal_year || '-' || printf('%02d', deal_month) as year_month, AVG(deal_amount) as avg_price, AVG(price_per_pyeong) as avg_ppp, COUNT(*) as cnt FROM transactions ${where} GROUP BY deal_year, deal_month ORDER BY deal_year DESC, deal_month DESC`
+      `SELECT deal_year || '-' || printf('%02d', deal_month) as year_month, AVG(deal_amount) as avg_price, AVG(price_per_pyeong) as avg_ppp, COUNT(*) as cnt FROM transactions ${filteredWhere} GROUP BY deal_year, deal_month ORDER BY deal_year DESC, deal_month DESC`
     )
-    .bind(...bindings);
+    .bind(...filteredBindings);
 
-  // 평형별 집계 (10평 단위 버킷)
+  // 평형별 집계 — 항상 전체 평형 표시 (탭 목록이 사라지지 않도록)
   const areaStmt = db
     .prepare(
-      `SELECT (area_pyeong / 10) * 10 as bucket, COUNT(*) as cnt, AVG(deal_amount) as avg_price FROM transactions ${where} GROUP BY bucket ORDER BY bucket`
+      `SELECT (area_pyeong / 10) * 10 as bucket, COUNT(*) as cnt, AVG(deal_amount) as avg_price FROM transactions ${baseWhere} GROUP BY bucket ORDER BY bucket`
     )
-    .bind(...bindings);
+    .bind(...baseBindings);
 
-  // 페이지네이션된 거래 목록
+  // 페이지네이션된 거래 목록 (areaBucket 필터 적용)
   const recentStmt = db
     .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${where} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${filteredWhere} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
     )
-    .bind(...bindings, numOfRows, offset);
+    .bind(...filteredBindings, numOfRows, offset);
 
   const [metaRow, monthlyResult, areaResult, recentResult] = await Promise.all([
     metaStmt.first<{ sgg_nm: string; umd_nm: string; build_year: number; total_count: number }>(),
@@ -157,9 +167,10 @@ export async function getAptHistory(
     numOfRows?: number;
     sortBy?: string;
     sortDir?: 'asc' | 'desc';
+    areaBucket?: number;
   } = {}
 ): Promise<AptHistoryResult | null> {
-  const { page = 1, numOfRows = 20, sortBy = 'deal_date', sortDir = 'desc' } = options;
+  const { page = 1, numOfRows = 20, sortBy = 'deal_date', sortDir = 'desc', areaBucket } = options;
 
   let db: D1Database | null = null;
   try {
@@ -172,5 +183,5 @@ export async function getAptHistory(
 
   if (!db) return getMockAptHistory(apt_nm);
 
-  return getD1AptHistory(db, sgg_cd, apt_nm, page, numOfRows, sortBy, sortDir);
+  return getD1AptHistory(db, sgg_cd, apt_nm, page, numOfRows, sortBy, sortDir, areaBucket);
 }
