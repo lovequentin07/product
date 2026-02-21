@@ -16,27 +16,29 @@
 
 ```bash
 npm install              # 의존성 설치
-npm run dev              # 로컬 개발 서버 (Next.js)
+npm run dev              # 로컬 개발 서버 (Next.js, mock 데이터 17건)
+npm run preview          # Cloudflare Workers 빌드 후 원격 D1 연결 로컬 실행 (localhost:8787)
 npm run build            # 표준 Next.js 빌드
 npm run build:cloudflare # Cloudflare 최적화 빌드 (OpenNext)
-npm run deploy           # Cloudflare 빌드 + wrangler 배포
 npm run lint             # ESLint 실행
 ```
+
+**배포는 `git push`로 자동 실행** — Cloudflare가 GitHub 푸시를 감지해 자동 빌드·배포. `npm run deploy`는 사용하지 않음.
 
 테스트 명령어는 없음. `src/scripts/`의 데이터 스크립트는 `npx tsx`로 실행.
 
 ## 아키텍처
 
-**기술 스택**: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4, `@opennextjs/cloudflare`를 통해 **Cloudflare Workers**에 배포. 데이터는 공공데이터포털 API(XML, `fast-xml-parser` 파싱)에서 가져오며, 프로덕션 DB는 Cloudflare D1(SQLite) 도입 예정.
+**기술 스택**: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4, `@opennextjs/cloudflare`를 통해 **Cloudflare Workers**에 배포. 데이터는 Cloudflare D1(SQLite, 131만건)에서 조회하며, 로컬 개발 시 mock 폴백 사용.
 
 **데이터 플로우**:
-1. `SearchForm`(클라이언트)에서 지역·날짜 선택 → URL 쿼리 파라미터 (`lawdCd`, `dealYmd`, `pageNo`) push
-2. 서버 컴포넌트(`src/app/real-estate/transaction/page.tsx`)가 `searchParams`를 읽고 `getApartmentTransactions()` 호출
-3. `src/lib/api/apartment.ts`가 `src/lib/api/client.ts`의 `callPublicDataApi()`를 호출 → 공공 API에서 XML fetch 및 파싱
-4. 원시 `TransactionItem[]`을 `NormalizedTransaction[]`으로 정규화 (가격 쉼표 제거, 날짜 포맷, 면적 계산)
-5. 정규화된 데이터를 `TransactionsClientComponent`에 전달 → 클라이언트 필터링·정렬·페이지네이션
+1. `SearchForm`(클라이언트)에서 지역·날짜 선택 → URL 쿼리 파라미터 (`lawdCd`, `dealYmd`, `pageNo`, `sortBy`, `sortDir`, `searchTerm`) push
+2. 서버 컴포넌트(`src/app/real-estate/transaction/page.tsx`)가 `searchParams`를 읽고 `getTransactions()` 호출
+3. `src/lib/db/transactions.ts`가 D1에 SQL 쿼리 (정렬·필터·페이지네이션 모두 서버사이드)
+4. `TransactionRow[]`를 `NormalizedTransaction[]`으로 변환 후 `TransactionsClientComponent`에 전달
+5. 클라이언트는 면적·가격 필터(클라이언트 로컬)만 추가 처리
 
-**클라이언트 상태**: `TransactionsClientComponent`가 아파트명 필터(500ms 디바운스 URL 업데이트), 정렬 상태를 관리하고 `TransactionList`(표현 컴포넌트)에 전달.
+**클라이언트 상태**: `TransactionsClientComponent`가 아파트명 검색(500ms 디바운스 URL 업데이트), 정렬(URL 기반) 상태를 관리하고 `TransactionList`(표현 컴포넌트)에 전달.
 
 ## 개발 컨벤션
 
@@ -54,11 +56,14 @@ npm run lint             # ESLint 실행
 
 ## 데이터 저장
 
-- **로컬 개발**: `raw-data/seoul/YYYY/MM.jsonl` — 대량 다운로드된 실거래 데이터 (~423MB, git 제외). 진행 상황은 `raw-data/combinations.json`으로 추적
-- **프로덕션 목표**: Cloudflare D1 (`apt-trade-db` 바인딩, `wrangler.jsonc`). 스키마 위치: `src/data/schema.sql`. 사전 계산 컬럼: `deal_amount_billion`, `area_pyeong`, `price_per_pyeong`
-- **데이터 스크립트** (`src/scripts/`): `fetch-historical.ts`(원시 데이터 다운로드), `verify-data-integrity.ts`(데이터 검증)
+- **프로덕션 DB**: Cloudflare D1 (`apt-trade-db`, ID: `a65766e9-f184-4771-bbf6-4139d0f7b6a8`). 바인딩명 `DB`, 스키마: `src/data/schema.sql`. 131만건 (2006~2026). 사전 계산 컬럼: `deal_amount_billion`, `area_pyeong`, `price_per_pyeong`
+- **로컬 개발**: D1 연결 불가 → `src/lib/db/mock-data.ts` mock 17건으로 폴백. 실제 데이터 테스트는 `npm run preview` 사용
+- **원본 JSONL**: `raw-data/seoul/YYYY/MM.jsonl` (~423MB, git 제외) — 마이그레이션 완료, 이후 신규 데이터 추가 시에만 사용
+- **데이터 스크립트** (`src/scripts/`): `fetch-historical.ts`(원시 데이터 다운로드), `migrate-to-d1.ts`(D1 마이그레이션), `verify-data-integrity.ts`(데이터 검증)
 
 ## Cloudflare 배포
+
+**자동배포**: GitHub `main` 브랜치에 push하면 Cloudflare가 자동으로 빌드·배포. `npm run deploy`는 사용하지 않음.
 
 설정 파일은 `wrangler.jsonc` (`.toml` 아님). D1 바인딩명은 `DB`. 빌드 결과물은 `.open-next/worker.js`. `.wrangler/` 캐시 디렉토리는 git 제외.
 
