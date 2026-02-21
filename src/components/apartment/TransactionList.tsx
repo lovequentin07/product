@@ -22,6 +22,7 @@ interface TransactionListProps {
   sortBy: string;
   sortDir: 'asc' | 'desc';
   onSortChange: (dbField: string) => void;
+  hideSearch?: boolean;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -39,6 +40,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   sortBy,
   sortDir,
   onSortChange,
+  hideSearch = false,
 }) => {
   const showGuColumn = isAllSeoul(sggCd);
 
@@ -72,7 +74,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   if (!transactions || transactions.length === 0) {
     return (
       <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
-        <SearchInput value={searchTerm} onChange={onSearchTermChange} />
+        {!hideSearch && <SearchInput value={searchTerm} onChange={onSearchTermChange} />}
         <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg text-center">
           <p>
             {searchTerm
@@ -91,7 +93,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
-      <SearchInput value={searchTerm} onChange={onSearchTermChange} />
+      {!hideSearch && <SearchInput value={searchTerm} onChange={onSearchTermChange} />}
 
       <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg border border-transparent dark:border-gray-700">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

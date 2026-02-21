@@ -6,11 +6,18 @@ import { getRegionNameByCode } from '@/data/regions';
 import AptDetailHeader from '@/components/apt-detail/AptDetailHeader';
 import PriceTrendChart from '@/components/apt-detail/PriceTrendChart';
 import AreaBarChart from '@/components/apt-detail/AreaBarChart';
-import AptTransactionList from '@/components/apt-detail/AptTransactionList';
+import AptDetailTransactionsClient from '@/components/apt-detail/AptDetailTransactionsClient';
+import { NormalizedTransaction } from '@/types/real-estate';
 
 interface PageProps {
   params: Promise<{ sgg_cd: string; apt_nm: string }>;
-  searchParams: Promise<{ deal_ymd?: string }>;
+  searchParams: Promise<{
+    deal_ymd?: string;
+    pageNo?: string;
+    numOfRows?: string;
+    sortBy?: string;
+    sortDir?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -28,8 +35,39 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-async function AptDetailContent({ sgg_cd, apt_nm, backHref }: { sgg_cd: string; apt_nm: string; backHref: string }) {
-  const data = await getAptHistory(sgg_cd, apt_nm);
+function toNormalized(row: import('@/lib/db/types').TransactionRow): NormalizedTransaction {
+  return {
+    id: String(row.id),
+    aptName: row.apt_nm,
+    price: row.deal_amount,
+    area: row.exclu_use_ar,
+    date: row.deal_date,
+    address: row.umd_nm,
+    floor: row.floor,
+    buildYear: row.build_year,
+    isCancelled: !!row.cdeal_type,
+    sggNm: row.sgg_nm,
+  };
+}
+
+async function AptDetailContent({
+  sgg_cd,
+  apt_nm,
+  backHref,
+  page,
+  numOfRows,
+  sortBy,
+  sortDir,
+}: {
+  sgg_cd: string;
+  apt_nm: string;
+  backHref: string;
+  page: number;
+  numOfRows: number;
+  sortBy: string;
+  sortDir: 'asc' | 'desc';
+}) {
+  const data = await getAptHistory(sgg_cd, apt_nm, { page, numOfRows, sortBy, sortDir });
 
   if (!data) {
     return (
@@ -39,6 +77,8 @@ async function AptDetailContent({ sgg_cd, apt_nm, backHref }: { sgg_cd: string; 
       </div>
     );
   }
+
+  const normalizedTransactions = data.recentTransactions.map(toNormalized);
 
   return (
     <div>
@@ -55,14 +95,17 @@ async function AptDetailContent({ sgg_cd, apt_nm, backHref }: { sgg_cd: string; 
         <AreaBarChart byArea={data.byArea} />
       </div>
 
-      {/* 최근 거래 목록 */}
-      <AptTransactionList transactions={data.recentTransactions} title="최근 거래" />
-
-      {data.totalCount > data.recentTransactions.length && (
-        <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-3">
-          * 최근 {data.recentTransactions.length}건 표시 중 (전체 {data.totalCount}건)
-        </p>
-      )}
+      {/* 전체 거래 목록 (페이지네이션) */}
+      <AptDetailTransactionsClient
+        transactions={normalizedTransactions}
+        totalCount={data.totalCount}
+        currentPage={data.transactionPage}
+        totalPages={data.transactionTotalPages}
+        itemsPerPage={numOfRows}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        sggCd={sgg_cd}
+      />
     </div>
   );
 }
@@ -82,7 +125,12 @@ function LoadingSkeleton() {
 
 export default async function AptDetailPage({ params, searchParams }: PageProps) {
   const { sgg_cd, apt_nm } = await params;
-  const { deal_ymd } = await searchParams;
+  const { deal_ymd, pageNo, numOfRows, sortBy, sortDir } = await searchParams;
+
+  const page = Math.max(1, parseInt(pageNo || '1', 10));
+  const rows = Math.min(100, Math.max(10, parseInt(numOfRows || '20', 10)));
+  const safeSortBy = sortBy || 'deal_date';
+  const safeSortDir: 'asc' | 'desc' = sortDir === 'asc' ? 'asc' : 'desc';
 
   const aptName = decodeURIComponent(apt_nm);
   const regionName = getRegionNameByCode(sgg_cd) || sgg_cd;
@@ -113,7 +161,15 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
       </header>
 
       <Suspense fallback={<LoadingSkeleton />}>
-        <AptDetailContent sgg_cd={sgg_cd} apt_nm={apt_nm} backHref={backHref} />
+        <AptDetailContent
+          sgg_cd={sgg_cd}
+          apt_nm={apt_nm}
+          backHref={backHref}
+          page={page}
+          numOfRows={rows}
+          sortBy={safeSortBy}
+          sortDir={safeSortDir}
+        />
       </Suspense>
     </div>
   );

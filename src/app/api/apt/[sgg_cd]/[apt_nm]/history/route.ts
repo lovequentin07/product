@@ -12,8 +12,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { sgg_cd, apt_nm } = await params;
   const { searchParams } = request.nextUrl;
 
-  const months = searchParams.has('months') ? Number(searchParams.get('months')) : 24;
-  const area_bucket = searchParams.has('area_bucket') ? Number(searchParams.get('area_bucket')) : undefined;
+  const page = searchParams.has('page') ? Number(searchParams.get('page')) : 1;
+  const numOfRows = searchParams.has('numOfRows') ? Number(searchParams.get('numOfRows')) : 20;
+  const sortBy = searchParams.get('sortBy') || 'deal_date';
+  const sortDir = searchParams.get('sortDir') === 'asc' ? 'asc' : 'desc' as 'asc' | 'desc';
 
   if (!sgg_cd || !apt_nm) {
     return NextResponse.json(
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const result = await getAptHistory(sgg_cd, decodeURIComponent(apt_nm), months, area_bucket);
+    const result = await getAptHistory(sgg_cd, decodeURIComponent(apt_nm), { page, numOfRows, sortBy, sortDir });
     if (!result) {
       return NextResponse.json({ error: '아파트 데이터를 찾을 수 없습니다.' }, { status: 404 });
     }

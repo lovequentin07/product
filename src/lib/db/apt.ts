@@ -17,36 +17,35 @@ function getMockAptHistory(apt_nm: string): AptHistoryResult {
 // -------------------------
 // D1 쿼리
 // -------------------------
+const VALID_SORT_COLS = new Set([
+  'deal_date', 'deal_amount_billion', 'price_per_pyeong', 'area_pyeong', 'floor', 'build_year',
+]);
+
 async function getD1AptHistory(
   db: D1Database,
   sgg_cd: string,
   apt_nm: string,
-  months: number,
-  area_bucket?: number
+  page: number,
+  numOfRows: number,
+  sortBy: string,
+  sortDir: 'asc' | 'desc'
 ): Promise<AptHistoryResult | null> {
   const decodedAptNm = decodeURIComponent(apt_nm);
 
-  // 기준 날짜: months개월 전
-  const since = new Date();
-  since.setMonth(since.getMonth() - months);
-  const sinceDate = since.toISOString().slice(0, 10); // YYYY-MM-DD
-
-  const conditions = ['apt_nm = ?', 'deal_date >= ?'];
-  const bindings: (string | number)[] = [decodedAptNm, sinceDate];
+  const conditions = ['apt_nm = ?'];
+  const bindings: (string | number)[] = [decodedAptNm];
 
   if (sgg_cd && sgg_cd !== '11000') {
     conditions.push('sgg_cd = ?');
     bindings.push(sgg_cd);
   }
 
-  if (area_bucket !== undefined) {
-    conditions.push('(area_pyeong / 10) * 10 = ?');
-    bindings.push(area_bucket);
-  }
-
   const where = `WHERE ${conditions.join(' AND ')}`;
+  const safeSortBy = VALID_SORT_COLS.has(sortBy) ? sortBy : 'deal_date';
+  const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC';
+  const offset = (page - 1) * numOfRows;
 
-  // 기본 정보 + 집계
+  // 기본 정보 + 전체 건수
   const metaStmt = db
     .prepare(
       `SELECT sgg_nm, umd_nm, build_year, COUNT(*) as total_count FROM transactions ${where} LIMIT 1`
@@ -67,12 +66,12 @@ async function getD1AptHistory(
     )
     .bind(...bindings);
 
-  // 최근 거래 100건
+  // 페이지네이션된 거래 목록
   const recentStmt = db
     .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${where} ORDER BY deal_date DESC LIMIT 100`
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${where} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
     )
-    .bind(...bindings);
+    .bind(...bindings, numOfRows, offset);
 
   const [metaRow, monthlyResult, areaResult, recentResult] = await Promise.all([
     metaStmt.first<{ sgg_nm: string; umd_nm: string; build_year: number; total_count: number }>(),
@@ -102,12 +101,16 @@ async function getD1AptHistory(
     };
   });
 
+  const totalCount = metaRow.total_count ?? 0;
+
   return {
     aptName: decodedAptNm,
     sggNm: metaRow.sgg_nm ?? '',
     umdNm: metaRow.umd_nm ?? '',
     buildYear: metaRow.build_year ?? 0,
-    totalCount: metaRow.total_count ?? 0,
+    totalCount,
+    transactionPage: page,
+    transactionTotalPages: Math.max(1, Math.ceil(totalCount / numOfRows)),
     monthly,
     byArea,
     recentTransactions: recentResult.results ?? [],
@@ -149,9 +152,15 @@ export async function getDistinctApartments(): Promise<{ sgg_cd: string; apt_nm:
 export async function getAptHistory(
   sgg_cd: string,
   apt_nm: string,
-  months: number = 24,
-  area_bucket?: number
+  options: {
+    page?: number;
+    numOfRows?: number;
+    sortBy?: string;
+    sortDir?: 'asc' | 'desc';
+  } = {}
 ): Promise<AptHistoryResult | null> {
+  const { page = 1, numOfRows = 20, sortBy = 'deal_date', sortDir = 'desc' } = options;
+
   let db: D1Database | null = null;
   try {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
@@ -163,5 +172,5 @@ export async function getAptHistory(
 
   if (!db) return getMockAptHistory(apt_nm);
 
-  return getD1AptHistory(db, sgg_cd, apt_nm, months, area_bucket);
+  return getD1AptHistory(db, sgg_cd, apt_nm, page, numOfRows, sortBy, sortDir);
 }

@@ -74,6 +74,8 @@ export interface AptHistoryResult {
   umdNm: string;
   buildYear: number;
   totalCount: number;
+  transactionPage: number;
+  transactionTotalPages: number;
   monthly: MonthlyStats[];
   byArea: AreaStats[];
   recentTransactions: TransactionRow[];

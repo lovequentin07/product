@@ -38,6 +38,8 @@ export const MOCK_APT_HISTORY: AptHistoryResult = {
   umdNm: '위례동',
   buildYear: 2021,
   totalCount: 47,
+  transactionPage: 1,
+  transactionTotalPages: 3,
   monthly: [
     { yearMonth: '2023-02', avgPrice: 118000, avgPricePerPyeong: 4.72, count: 2 },
     { yearMonth: '2023-04', avgPrice: 122000, avgPricePerPyeong: 4.88, count: 3 },
