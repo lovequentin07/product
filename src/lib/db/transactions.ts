@@ -1,16 +1,15 @@
 // src/lib/db/transactions.ts
-// D1 거래 목록 조회 (현재: Mock / 추후: 실제 D1 쿼리로 교체)
+// D1 거래 목록 조회
 
-import { TransactionQueryParams, TransactionsResult, TransactionSummary } from './types';
+import { TransactionQueryParams, TransactionsResult, TransactionSummary, TransactionRow } from './types';
 import { MOCK_TRANSACTIONS } from './mock-data';
 
 const DEFAULT_LIMIT = 15;
 
-/**
- * 거래 목록 조회 (Page 1용)
- * D1 연결 후 이 함수 내부만 교체하면 됨
- */
-export async function getTransactions(params: TransactionQueryParams): Promise<TransactionsResult> {
+// -------------------------
+// Mock 폴백 (로컬 개발용)
+// -------------------------
+function getMockTransactions(params: TransactionQueryParams): TransactionsResult {
   const {
     apt_nm,
     page = 1,
@@ -23,16 +22,12 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
     price_max,
   } = params;
 
-  // --- Mock: 필터링 ---
   let filtered = [...MOCK_TRANSACTIONS];
 
-  // sgg_cd가 '11000'(서울 전체)이 아닌 경우에만 구 필터 적용
   if (params.sgg_cd && params.sgg_cd !== '11000') {
     filtered = filtered.filter((t) => t.sgg_cd === params.sgg_cd);
   }
 
-  // deal_ymd 길이에 따라 날짜 필터 분기
-  // 'YYYYMM' → 연+월 필터 / 'YYYY' → 연도만 / 없음 → 전체 기간
   const { deal_ymd } = params;
   if (deal_ymd && deal_ymd.length === 6) {
     const year = parseInt(deal_ymd.substring(0, 4), 10);
@@ -42,25 +37,13 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
     const year = parseInt(deal_ymd, 10);
     filtered = filtered.filter((t) => t.deal_year === year);
   }
-  // deal_ymd가 없거나 빈 값이면 날짜 필터 없음 (전체 기간)
 
-  if (apt_nm) {
-    filtered = filtered.filter((t) => t.apt_nm.includes(apt_nm));
-  }
-  if (area_min !== undefined) {
-    filtered = filtered.filter((t) => t.area_pyeong >= area_min);
-  }
-  if (area_max !== undefined) {
-    filtered = filtered.filter((t) => t.area_pyeong <= area_max);
-  }
-  if (price_min !== undefined) {
-    filtered = filtered.filter((t) => t.deal_amount_billion >= price_min);
-  }
-  if (price_max !== undefined) {
-    filtered = filtered.filter((t) => t.deal_amount_billion <= price_max);
-  }
+  if (apt_nm) filtered = filtered.filter((t) => t.apt_nm.includes(apt_nm));
+  if (area_min !== undefined) filtered = filtered.filter((t) => t.area_pyeong >= area_min);
+  if (area_max !== undefined) filtered = filtered.filter((t) => t.area_pyeong <= area_max);
+  if (price_min !== undefined) filtered = filtered.filter((t) => t.deal_amount_billion >= price_min);
+  if (price_max !== undefined) filtered = filtered.filter((t) => t.deal_amount_billion <= price_max);
 
-  // --- Mock: 정렬 ---
   filtered.sort((a, b) => {
     const aVal = a[sort_by as keyof typeof a] as number | string;
     const bVal = b[sort_by as keyof typeof b] as number | string;
@@ -69,7 +52,6 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
     return 0;
   });
 
-  // --- Mock: 요약 통계 ---
   const summary: TransactionSummary =
     filtered.length === 0
       ? { avgPrice: 0, maxPrice: 0, minPrice: 0, avgPricePerPyeong: 0 }
@@ -81,11 +63,121 @@ export async function getTransactions(params: TransactionQueryParams): Promise<T
             Math.round((filtered.reduce((s, t) => s + t.price_per_pyeong, 0) / filtered.length) * 100) / 100,
         };
 
-  // --- Mock: 페이지네이션 ---
   const totalCount = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
   const offset = (page - 1) * limit;
   const paginated = filtered.slice(offset, offset + limit);
 
   return { transactions: paginated, totalCount, page, totalPages, summary };
+}
+
+// -------------------------
+// D1 쿼리
+// -------------------------
+async function getD1Transactions(db: D1Database, params: TransactionQueryParams): Promise<TransactionsResult> {
+  const {
+    sgg_cd,
+    deal_ymd,
+    apt_nm,
+    page = 1,
+    limit = DEFAULT_LIMIT,
+    sort_by = 'deal_date',
+    sort_order = 'desc',
+    area_min,
+    area_max,
+    price_min,
+    price_max,
+  } = params;
+
+  // 허용된 정렬 컬럼만 통과 (SQL 인젝션 방지)
+  const ALLOWED_SORT = new Set(['deal_date', 'deal_amount_billion', 'price_per_pyeong', 'area_pyeong', 'floor', 'build_year']);
+  const safeSort = ALLOWED_SORT.has(sort_by) ? sort_by : 'deal_date';
+  const safeOrder = sort_order === 'asc' ? 'ASC' : 'DESC';
+
+  const conditions: string[] = [];
+  const bindings: (string | number)[] = [];
+
+  // 지역 필터 (서울 전체 = '11000'이면 생략)
+  if (sgg_cd && sgg_cd !== '11000') {
+    conditions.push('sgg_cd = ?');
+    bindings.push(sgg_cd);
+  }
+
+  // 날짜 필터
+  if (deal_ymd && deal_ymd.length === 6) {
+    conditions.push('deal_year = ? AND deal_month = ?');
+    bindings.push(parseInt(deal_ymd.substring(0, 4), 10));
+    bindings.push(parseInt(deal_ymd.substring(4, 6), 10));
+  } else if (deal_ymd && deal_ymd.length === 4) {
+    conditions.push('deal_year = ?');
+    bindings.push(parseInt(deal_ymd, 10));
+  }
+
+  // 아파트명 검색
+  if (apt_nm) {
+    conditions.push('apt_nm LIKE ?');
+    bindings.push(`%${apt_nm}%`);
+  }
+
+  // 면적·가격 필터
+  if (area_min !== undefined) { conditions.push('area_pyeong >= ?'); bindings.push(area_min); }
+  if (area_max !== undefined) { conditions.push('area_pyeong <= ?'); bindings.push(area_max); }
+  if (price_min !== undefined) { conditions.push('deal_amount_billion >= ?'); bindings.push(price_min); }
+  if (price_max !== undefined) { conditions.push('deal_amount_billion <= ?'); bindings.push(price_max); }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  // 집계 쿼리
+  const summaryStmt = db
+    .prepare(`SELECT COUNT(*) as cnt, AVG(deal_amount) as avg_amount, MAX(deal_amount) as max_amount, MIN(deal_amount) as min_amount, AVG(price_per_pyeong) as avg_ppp FROM transactions ${whereClause}`)
+    .bind(...bindings);
+
+  // 목록 쿼리
+  const offset = (page - 1) * limit;
+  const listStmt = db
+    .prepare(
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${whereClause} ORDER BY ${safeSort} ${safeOrder} LIMIT ? OFFSET ?`
+    )
+    .bind(...bindings, limit, offset);
+
+  const [summaryResult, listResult] = await Promise.all([
+    summaryStmt.first<{ cnt: number; avg_amount: number; max_amount: number; min_amount: number; avg_ppp: number }>(),
+    listStmt.all<TransactionRow>(),
+  ]);
+
+  const totalCount = summaryResult?.cnt ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+  const summary: TransactionSummary = {
+    avgPrice: Math.round(summaryResult?.avg_amount ?? 0),
+    maxPrice: summaryResult?.max_amount ?? 0,
+    minPrice: summaryResult?.min_amount ?? 0,
+    avgPricePerPyeong: Math.round((summaryResult?.avg_ppp ?? 0) * 100) / 100,
+  };
+
+  return {
+    transactions: listResult.results ?? [],
+    totalCount,
+    page,
+    totalPages,
+    summary,
+  };
+}
+
+// -------------------------
+// 공개 API (함수 시그니처 불변)
+// -------------------------
+export async function getTransactions(params: TransactionQueryParams): Promise<TransactionsResult> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경 — getCloudflareContext 불가
+  }
+
+  if (!db) return getMockTransactions(params);
+
+  return getD1Transactions(db, params);
 }
