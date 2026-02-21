@@ -58,7 +58,7 @@ async function AptDetailContent({ sgg_cd, apt_nm, backHref }: { sgg_cd: string; 
 
       {data.totalCount > data.recentTransactions.length && (
         <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-3">
-          * D1 연결 후 전체 {data.totalCount}건의 거래 이력을 표시합니다.
+          * 최근 {data.recentTransactions.length}건 표시 중 (전체 {data.totalCount}건)
         </p>
       )}
     </div>

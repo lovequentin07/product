@@ -67,10 +67,10 @@ async function getD1AptHistory(
     )
     .bind(...bindings);
 
-  // 최근 거래 20건
+  // 최근 거래 100건
   const recentStmt = db
     .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${where} ORDER BY deal_date DESC LIMIT 20`
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${where} ORDER BY deal_date DESC LIMIT 100`
     )
     .bind(...bindings);
 

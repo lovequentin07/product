@@ -115,7 +115,7 @@ export default function TransactionsClientComponent({
     return transactions.filter((t) => t.aptName.toLowerCase().includes(lower));
   }, [transactions, localSearchTerm]);
 
-  const displayTotalCount = localSearchTerm ? clientFilteredTransactions.length : totalCount;
+  const displayTotalCount = totalCount;
 
   return (
     <div>

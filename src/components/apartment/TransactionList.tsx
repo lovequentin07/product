@@ -203,20 +203,24 @@ const TransactionList: React.FC<TransactionListProps> = ({
             >
               이전
             </button>
-            <div className="hidden sm:flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => onPageChange(page)}
-                  className={`px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-md ${
-                    page === currentPage
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+            <div className="hidden sm:flex gap-1 items-center">
+              {getPageWindow(currentPage, totalPages).map((page, i) =>
+                page === '…' ? (
+                  <span key={`ellipsis-${i}`} className="px-2 py-2 text-sm text-gray-400 dark:text-gray-500 select-none">…</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    className={`px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-md ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
             <button
               onClick={() => onPageChange(currentPage + 1)}
@@ -253,6 +257,22 @@ function Th({ children, onClick, right }: { children: React.ReactNode; onClick?:
       {children}
     </th>
   );
+}
+
+/** 현재 페이지 기준 윈도우 페이지 번호 목록 반환 (최대 9개 + 생략부호) */
+function getPageWindow(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages: (number | '…')[] = [1];
+  const start = Math.max(2, current - 2);
+  const end = Math.min(total - 1, current + 2);
+
+  if (start > 2) pages.push('…');
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push('…');
+  pages.push(total);
+
+  return pages;
 }
 
 function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
