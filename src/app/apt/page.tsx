@@ -1,5 +1,6 @@
 // app/apt/page.tsx
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { getTransactions } from '@/lib/db/transactions';
@@ -151,6 +152,22 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
   const { lawdCd, dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir, areaMin, areaMax, priceMin, priceMax } = awaitedSearchParams;
 
   const initialLawdCd = ensureString(lawdCd) || '11000';
+
+  // lawdCd가 특정 구(11000 제외)이면 /apt/{sggNm}으로 redirect (하위 호환성)
+  if (initialLawdCd !== '11000') {
+    const sggNm = getRegionNameByCode(initialLawdCd);
+    if (sggNm) {
+      const qs = new URLSearchParams();
+      for (const [key, val] of Object.entries(awaitedSearchParams)) {
+        if (key !== 'lawdCd' && typeof val === 'string') {
+          qs.set(key, val);
+        }
+      }
+      const qsStr = qs.toString();
+      redirect(`/apt/${encodeURIComponent(sggNm)}${qsStr ? `?${qsStr}` : ''}`);
+    }
+  }
+
   // dealYmd: 없으면 undefined → 전체 기간 조회 (SearchForm 기본값과 일치)
   const initialDealYmd = ensureString(dealYmd) || '';
   const initialNumOfRows = Number(numOfRows) || 15;

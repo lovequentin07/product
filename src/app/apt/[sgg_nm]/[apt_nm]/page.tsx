@@ -191,10 +191,10 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
 
   const aptName = decodeURIComponent(apt_nm);
 
-  // 목록 페이지 복귀 링크 생성
+  // 목록 페이지 복귀 링크 생성 (sgg_nm 경로 파라미터 직접 사용)
   const backHref = deal_ymd
-    ? `/apt?lawdCd=${sgg_cd}&dealYmd=${deal_ymd}`
-    : `/apt?lawdCd=${sgg_cd}`;
+    ? `/apt/${sgg_nm}?dealYmd=${deal_ymd}`
+    : `/apt/${sgg_nm}`;
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',

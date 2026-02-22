@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getRegionsByParent } from '@/data/regions';
+import { getRegionsByParent, getRegionNameByCode } from '@/data/regions';
 
 const SEOUL_DISTRICTS = getRegionsByParent('서울특별시');
 const ALL_SEOUL_CODE = '11000';
@@ -10,7 +10,11 @@ const ALL_SEOUL_CODE = '11000';
 const YEAR_ALL = 'all';
 const MONTH_ALL = 'all';
 
-const SearchForm: React.FC = () => {
+interface SearchFormProps {
+  initialLawdCd?: string; // 경로에서 미리 선택된 지역 코드 (예: '11680')
+}
+
+const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -20,9 +24,9 @@ const SearchForm: React.FC = () => {
     (new Date().getMonth() + 1).toString().padStart(2, '0')
   );
 
-  // URL → 폼 상태 동기화
+  // URL → 폼 상태 동기화 (initialLawdCd prop 우선, 없으면 searchParams 폴백)
   useEffect(() => {
-    const lawdCd = searchParams.get('lawdCd');
+    const lawdCd = initialLawdCd || searchParams.get('lawdCd');
     const dealYmd = searchParams.get('dealYmd');
 
     setSelectedGu(lawdCd || ALL_SEOUL_CODE);
@@ -40,12 +44,12 @@ const SearchForm: React.FC = () => {
       setSelectedYear(dealYmd);
       setSelectedMonth(MONTH_ALL);
     }
-  }, [searchParams]);
+  }, [searchParams, initialLawdCd]);
 
   const handleSearch = () => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
-    current.set('lawdCd', selectedGu);
+    current.delete('lawdCd'); // 경로로 이동하므로 쿼리에서 제거
     current.set('pageNo', '1');
 
     if (selectedYear !== YEAR_ALL) {
@@ -57,7 +61,12 @@ const SearchForm: React.FC = () => {
       current.delete('dealYmd');
     }
 
-    router.push(`/apt?${current.toString()}`);
+    if (selectedGu === ALL_SEOUL_CODE) {
+      router.push(`/apt?${current.toString()}`);
+    } else {
+      const sggNm = getRegionNameByCode(selectedGu);
+      router.push(`/apt/${encodeURIComponent(sggNm!)}?${current.toString()}`);
+    }
   };
 
   const isYearAll = selectedYear === YEAR_ALL;
