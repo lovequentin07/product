@@ -1,0 +1,29 @@
+name: Daily apt data update
+
+on:
+  schedule:
+    - cron: '30 21 * * *'  # 매일 06:30 KST (UTC+9)
+  workflow_dispatch:         # 수동 실행 가능
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update recent apartment data
+        run: npx tsx src/scripts/update-recent.ts
+        env:
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          UPDATE_MONTHS: '3'
