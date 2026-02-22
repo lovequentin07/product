@@ -178,6 +178,11 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
     },
   };
 
+  const regionName =
+    !initialLawdCd || initialLawdCd === '11000'
+      ? '서울'
+      : (getRegionNameByCode(initialLawdCd) || '선택 지역');
+
   return (
     <div className="container mx-auto p-4">
       <script
@@ -185,7 +190,9 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
         dangerouslySetInnerHTML={{ __html: JSON.stringify(searchActionJsonLd) }}
       />
       <header className="text-center my-6">
-        <h1 className="text-3xl font-bold">아파트 실거래가 조회 서비스</h1>
+        <h1 className="text-3xl font-bold">
+          {regionName} {formatPeriodLabel(initialDealYmd)} 아파트 실거래가
+        </h1>
         <p className="text-gray-500 mt-2">
           조회하고 싶은 지역과 기간을 선택하여 실시간 매매 정보를 확인하세요.
         </p>
@@ -212,6 +219,17 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
             priceMax={initialPriceMax}
           />
         </Suspense>
+
+        <section className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-500 space-y-2">
+          <p>
+            {regionName} 아파트 실거래가 데이터를 국토교통부 공공데이터 기반으로 제공합니다.
+            2006년부터 현재까지 서울 전체 131만건 이상의 매매 거래 이력을 조회할 수 있습니다.
+          </p>
+          <p>
+            지역(구)과 거래 연월을 선택하여 원하는 조건의 실거래 정보를 확인하고,
+            아파트명 검색으로 특정 단지의 시세를 빠르게 찾을 수 있습니다.
+          </p>
+        </section>
       </main>
     </div>
   );

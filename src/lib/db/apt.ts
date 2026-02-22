@@ -130,6 +130,25 @@ async function getD1AptHistory(
 // -------------------------
 // 공개 API (함수 시그니처 불변)
 // -------------------------
+export async function getLatestDealDate(): Promise<Date> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) return new Date('2026-02-20');
+
+  const row = await db
+    .prepare('SELECT MAX(deal_date) as latest FROM transactions')
+    .first<{ latest: string }>();
+
+  return row?.latest ? new Date(row.latest) : new Date();
+}
+
 export async function getDistinctApartments(): Promise<{ sgg_cd: string; sgg_nm: string; apt_nm: string }[]> {
   let db: D1Database | null = null;
   try {

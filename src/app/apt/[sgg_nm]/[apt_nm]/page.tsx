@@ -111,6 +111,20 @@ async function AptDetailContent({
     <div>
       <AptDetailHeader data={data} backHref={backHref} />
 
+      <section className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+        <p>
+          {data.aptName}은 서울 {data.sggNm} {data.umdNm}에 위치한 아파트로,
+          {data.buildYear > 0 ? ` ${data.buildYear}년에 준공되었습니다.` : ' 준공 연도 미상입니다.'}
+          {' '}국토교통부 실거래가 공개 자료 기준 총{' '}
+          <strong className="text-gray-800 dark:text-gray-200">
+            {data.totalCount.toLocaleString()}건
+          </strong>
+          의 매매 거래 이력이 있습니다.
+          {data.byArea.length > 0 &&
+            ` 거래된 면적은 ${data.byArea.map(a => a.label).join(', ')} 등 다양한 평형대로 구성되어 있습니다.`}
+        </p>
+      </section>
+
       {/* 차트 행 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <PriceTrendChart
@@ -187,10 +201,6 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <header className="sr-only">
-        <h1>{aptName} 실거래가 분석 — {decodedSggNm}</h1>
-      </header>
-
       <Suspense fallback={<LoadingSkeleton />}>
         <AptDetailContent
           sgg_cd={sgg_cd}

@@ -1,25 +1,27 @@
 import type { MetadataRoute } from "next";
-import { getDistinctApartments } from "@/lib/db/apt";
+import { getDistinctApartments, getLatestDealDate } from "@/lib/db/apt";
 
 const BASE_URL = "https://datazip.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const latestDate = await getLatestDealDate();
+
   const staticUrls: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: latestDate,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${BASE_URL}/apt`,
-      lastModified: new Date(),
+      lastModified: latestDate,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/privacy-policy`,
-      lastModified: new Date(),
+      lastModified: new Date("2026-02-21"),
       changeFrequency: "yearly",
       priority: 0.3,
     },
@@ -30,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter(({ sgg_nm }) => sgg_nm)
     .map(({ sgg_nm, apt_nm }) => ({
       url: `${BASE_URL}/apt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
-      lastModified: new Date(),
+      lastModified: latestDate,
       changeFrequency: "monthly" as const,
       priority: 0.8,
     }));
