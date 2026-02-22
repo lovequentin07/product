@@ -44,21 +44,20 @@ const SearchForm: React.FC = () => {
 
   const handleSearch = () => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    const searchTerm = current.get('searchTerm') || '';
 
-    let query = `/apt?lawdCd=${selectedGu}&pageNo=1`;
+    current.set('lawdCd', selectedGu);
+    current.set('pageNo', '1');
 
     if (selectedYear !== YEAR_ALL) {
-      if (selectedMonth !== MONTH_ALL) {
-        query += `&dealYmd=${selectedYear}${selectedMonth}`;
-      } else {
-        query += `&dealYmd=${selectedYear}`;
-      }
+      const dealYmd = selectedMonth !== MONTH_ALL
+        ? `${selectedYear}${selectedMonth}`
+        : selectedYear;
+      current.set('dealYmd', dealYmd);
+    } else {
+      current.delete('dealYmd');
     }
-    // selectedYear === YEAR_ALL → dealYmd 생략 (전체 기간)
 
-    if (searchTerm) query += `&searchTerm=${searchTerm}`;
-    router.push(query);
+    router.push(`/apt?${current.toString()}`);
   };
 
   const isYearAll = selectedYear === YEAR_ALL;
