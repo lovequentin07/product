@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { NormalizedTransaction } from '@/types/real-estate';
+import { getRegionNameByCode } from '@/data/regions';
 
 /** sggCd가 '11000'이면 서울 전체 조회 모드 */
 const isAllSeoul = (sggCd: string) => sggCd === '11000';
@@ -122,8 +123,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
               const pyeong = t.area * 0.3025;
               const pricePerPyeong = pyeong > 0 ? t.price / pyeong : 0;
               const isSelected = searchTerm && t.aptName.toLowerCase().includes(searchTerm.toLowerCase());
-              const detailHref = t.sggNm
-                ? `/apt/${encodeURIComponent(t.sggNm)}/${encodeURIComponent(t.aptName)}`
+              const effectiveSggNm = t.sggNm || getRegionNameByCode(sggCd);
+              const detailHref = effectiveSggNm
+                ? `/apt/${encodeURIComponent(effectiveSggNm)}/${encodeURIComponent(t.aptName)}`
                 : `/apt?lawdCd=${sggCd}`;
 
               return (
