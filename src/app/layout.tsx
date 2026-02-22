@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     template: "%s | DataZip",
   },
   description: "서울 아파트 실거래가를 지역·기간별로 조회하세요. 공공데이터 기반 최신 거래 정보를 제공합니다.",
+  keywords: ['아파트 실거래가', '서울 아파트', '아파트 시세', '매매가', '실거래가 조회'],
   openGraph: {
     siteName: "DataZip",
     locale: "ko_KR",

@@ -49,12 +49,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { sgg_nm, apt_nm } = await params;
   const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
-  const title = `${aptName} 실거래가 추이 | ${decodedSggNm} 아파트 시세 분석`;
-  const description = `${aptName}의 전체 실거래가 추이, 면적별 가격, 최근 거래 이력을 한눈에 확인하세요.`;
+  const title = `${aptName} 아파트 실거래가 | ${decodedSggNm} 시세 추이 분석`;
+  const description = `${aptName} 아파트의 전체 실거래가 추이, 면적별 가격, 최근 거래 이력을 한눈에 확인하세요.`;
   const canonicalUrl = `/apt/${sgg_nm}/${apt_nm}`;
   return {
     title,
     description,
+    keywords: [`${aptName} 아파트`, `${aptName} 실거래가`, `${decodedSggNm} 아파트`, `${aptName} 시세`, `${aptName} 매매가`],
     alternates: { canonical: canonicalUrl },
     openGraph: { title, description, url: canonicalUrl },
   };
@@ -112,10 +113,20 @@ async function AptDetailContent({
       <AptDetailHeader data={data} backHref={backHref} />
 
       <section className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+        <h2 className="sr-only">{data.aptName} 아파트 개요</h2>
         <p>
-          {data.aptName}은 서울 {data.sggNm} {data.umdNm}에 위치한 아파트로,
+          {data.aptName} 아파트는 서울 {data.sggNm} {data.umdNm}에 위치하며,
           {data.buildYear > 0 ? ` ${data.buildYear}년에 준공되었습니다.` : ' 준공 연도 미상입니다.'}
-          {' '}국토교통부 실거래가 공개 자료 기준 총{' '}
+          {' '}
+          <a
+            href="https://rtdown.molit.go.kr"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="underline hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            국토교통부 실거래가 공개시스템
+          </a>
+          {' '}기준 총{' '}
           <strong className="text-gray-800 dark:text-gray-200">
             {data.totalCount.toLocaleString()}건
           </strong>

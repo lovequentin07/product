@@ -34,7 +34,7 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
       {/* 아파트 정보 */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{data.aptName}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{data.aptName} 아파트</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {data.sggNm} · {data.umdNm} · 건축 {data.buildYear}년
           </p>
