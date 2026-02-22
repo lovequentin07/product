@@ -55,7 +55,7 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
       ? '서울'
       : (getRegionNameByCode(lawdCdString) || '선택 지역');
   const period = formatPeriodLabel(dealYmdString);
-  const title = `${regionName} ${period} 아파트 실거래가 조회`;
+  const title = period ? `${regionName} ${period} 아파트 실거래가 조회` : `${regionName} 아파트 실거래가 조회`;
   const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
   return {
     title,
@@ -191,7 +191,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
       />
       <header className="text-center my-6">
         <h1 className="text-3xl font-bold">
-          {regionName} {formatPeriodLabel(initialDealYmd)} 아파트 실거래가
+          {regionName} {initialDealYmd ? `${formatPeriodLabel(initialDealYmd)} ` : ''}아파트 실거래가
         </h1>
         <p className="text-gray-500 mt-2">
           조회하고 싶은 지역과 기간을 선택하여 실시간 매매 정보를 확인하세요.
