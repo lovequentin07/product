@@ -180,9 +180,7 @@ async function updateMonth(year: number, month: number, yyyymm: string): Promise
     const batchNo = Math.floor(i / BATCH_SIZE) + 1;
     const insertSql = `INSERT INTO transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
     await runSQL(insertSql, `INSERT ${yyyymm} 배치 ${batchNo}/${totalBatches} (${batch.length}건)`);
-    process.stdout.write(`\r  INSERT 배치: ${batchNo}/${totalBatches}`);
   }
-  console.log('');
 
   return valueRows.length;
 }
