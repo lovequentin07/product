@@ -115,6 +115,7 @@ async function runSQL(sql: string, label: string, attempt = 1): Promise<void> {
     process.stdout.write(`  [dry-run] ${label}\n`);
     return;
   }
+  process.stdout.write(`  ${label}\n`);
   fs.writeFileSync(TMP_SQL_FILE, sql, 'utf-8');
   try {
     execSync(
