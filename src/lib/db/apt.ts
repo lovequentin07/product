@@ -149,6 +149,64 @@ export async function getLatestDealDate(): Promise<Date> {
   return row?.latest ? new Date(row.latest) : new Date();
 }
 
+export interface RegionApartmentStat {
+  apt_nm: string;
+  umd_nm: string;
+  total_count: number;
+  avg_billion: number;
+  latest_date: string;
+}
+
+export async function getRegionApartmentStats(sgg_cd: string): Promise<RegionApartmentStat[]> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) {
+    const grouped = new Map<string, { umd_nm: string; count: number; totalBillion: number; latest: string }>();
+    for (const r of MOCK_TRANSACTIONS.filter(row => row.sgg_cd === sgg_cd)) {
+      const existing = grouped.get(r.apt_nm);
+      if (!existing) {
+        grouped.set(r.apt_nm, { umd_nm: r.umd_nm, count: 1, totalBillion: r.deal_amount_billion, latest: r.deal_date });
+      } else {
+        existing.count++;
+        existing.totalBillion += r.deal_amount_billion;
+        if (r.deal_date > existing.latest) existing.latest = r.deal_date;
+      }
+    }
+    return Array.from(grouped.entries())
+      .map(([apt_nm, v]) => ({
+        apt_nm,
+        umd_nm: v.umd_nm,
+        total_count: v.count,
+        avg_billion: Math.round(v.totalBillion / v.count * 10) / 10,
+        latest_date: v.latest,
+      }))
+      .sort((a, b) => b.total_count - a.total_count);
+  }
+
+  const result = await db
+    .prepare(
+      `SELECT apt_nm, umd_nm, COUNT(*) as total_count,
+              ROUND(AVG(deal_amount_billion), 1) as avg_billion,
+              MAX(deal_date) as latest_date
+       FROM transactions
+       WHERE sgg_cd = ?
+       GROUP BY apt_nm
+       ORDER BY total_count DESC
+       LIMIT 300`
+    )
+    .bind(sgg_cd)
+    .all<RegionApartmentStat>();
+
+  return result.results ?? [];
+}
+
 export async function getDistinctApartments(): Promise<{ sgg_cd: string; sgg_nm: string; apt_nm: string }[]> {
   let db: D1Database | null = null;
   try {

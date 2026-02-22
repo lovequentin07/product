@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getDistinctApartments, getLatestDealDate } from "@/lib/db/apt";
+import { regions } from "@/data/regions";
 
 const BASE_URL = "https://datazip.net";
 
@@ -27,6 +28,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  const regionUrls: MetadataRoute.Sitemap = regions
+    .filter((r) => r.parent === '서울특별시')
+    .map((r) => ({
+      url: `${BASE_URL}/apt/${encodeURIComponent(r.name)}`,
+      lastModified: latestDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    }));
+
   const apartments = await getDistinctApartments();
   const aptUrls: MetadataRoute.Sitemap = apartments
     .filter(({ sgg_nm }) => sgg_nm)
@@ -37,5 +47,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  return [...staticUrls, ...aptUrls];
+  return [...staticUrls, ...regionUrls, ...aptUrls];
 }
