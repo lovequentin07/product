@@ -19,6 +19,7 @@ interface TransactionListProps {
   onLoadMore: () => void;
   searchTerm: string;
   onSearchTermChange: (term: string) => void;
+  onSearchTermSelect?: (term: string) => void;
   sggCd: string;
   sortBy: string;
   sortDir: 'asc' | 'desc';
@@ -38,6 +39,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onLoadMore,
   searchTerm,
   onSearchTermChange,
+  onSearchTermSelect,
   sggCd,
   sortBy,
   sortDir,
@@ -134,7 +136,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
                       isSelected ? 'text-blue-700 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'
                     }`}
-                    onClick={() => onSearchTermChange(isSelected ? '' : t.aptName)}
+                    onClick={() => onSearchTermSelect
+                      ? onSearchTermSelect(t.aptName)
+                      : onSearchTermChange(isSelected ? '' : t.aptName)
+                    }
                   >
                     {t.aptName}
                   </td>

@@ -62,6 +62,7 @@ export default function TransactionsClientComponent({
   const searchParams = useSearchParams();
 
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const [selectMode, setSelectMode] = useState(false);
 
   // URL props 기반으로 현재 선택된 필터 버튼 인덱스 결정
   const areaOptionIndex = AREA_OPTIONS.findIndex((o) => o.min === areaMin && o.max === areaMax);
@@ -70,9 +71,10 @@ export default function TransactionsClientComponent({
   const urlSortBy = searchParams.get('sortBy') || sortBy;
   const urlSortDir = (searchParams.get('sortDir') || sortDir) as 'asc' | 'desc';
 
-  // URL의 searchTerm이 바뀌면 로컬 상태 동기화
+  // URL의 searchTerm이 바뀌면 로컬 상태 동기화 + selectMode 해제
   useEffect(() => {
     setLocalSearchTerm(searchTerm);
+    setSelectMode(false);
   }, [searchTerm]);
 
   // 500ms 디바운스로 URL 업데이트
@@ -118,12 +120,27 @@ export default function TransactionsClientComponent({
     router.push(`?${current.toString()}`);
   };
 
-  // 아파트명 검색어로 클라이언트 필터링 (즉각 반응)
+  // 행 클릭으로 아파트명 선택 시 즉시 URL 업데이트 (디바운스 없음)
+  const handleSearchTermSelect = (term: string) => {
+    const nextTerm = localSearchTerm === term ? '' : term;
+    setLocalSearchTerm(nextTerm);
+    setSelectMode(true);
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (nextTerm) {
+      current.set('searchTerm', nextTerm);
+    } else {
+      current.delete('searchTerm');
+    }
+    current.set('pageNo', '1');
+    router.push(`?${current.toString()}`, { scroll: false });
+  };
+
+  // 아파트명 검색어로 클라이언트 필터링 (타이핑 시 즉각 반응, 행 클릭 시 비활성화)
   const clientFilteredTransactions = useMemo(() => {
-    if (!localSearchTerm) return transactions;
+    if (selectMode || !localSearchTerm) return transactions;
     const lower = localSearchTerm.toLowerCase();
     return transactions.filter((t) => t.aptName.toLowerCase().includes(lower));
-  }, [transactions, localSearchTerm]);
+  }, [transactions, localSearchTerm, selectMode]);
 
   const displayTotalCount = totalCount;
 
@@ -175,6 +192,7 @@ export default function TransactionsClientComponent({
         onLoadMore={handleLoadMore}
         searchTerm={localSearchTerm}
         onSearchTermChange={setLocalSearchTerm}
+        onSearchTermSelect={handleSearchTermSelect}
         sggCd={sggCd}
         sortBy={urlSortBy}
         sortDir={urlSortDir}
