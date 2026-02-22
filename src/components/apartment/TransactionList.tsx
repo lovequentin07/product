@@ -122,7 +122,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
               const pyeong = t.area * 0.3025;
               const pricePerPyeong = pyeong > 0 ? t.price / pyeong : 0;
               const isSelected = searchTerm && t.aptName.toLowerCase().includes(searchTerm.toLowerCase());
-              const detailHref = `/real-estate/apt/${sggCd}/${encodeURIComponent(t.aptName)}`;
+              const detailHref = t.sggNm
+                ? `/apt/${encodeURIComponent(t.sggNm)}/${encodeURIComponent(t.aptName)}`
+                : `/apt?lawdCd=${sggCd}`;
 
               return (
                 <tr key={t.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}>

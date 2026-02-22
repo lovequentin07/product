@@ -130,7 +130,7 @@ async function getD1AptHistory(
 // -------------------------
 // 공개 API (함수 시그니처 불변)
 // -------------------------
-export async function getDistinctApartments(): Promise<{ sgg_cd: string; apt_nm: string }[]> {
+export async function getDistinctApartments(): Promise<{ sgg_cd: string; sgg_nm: string; apt_nm: string }[]> {
   let db: D1Database | null = null;
   try {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
@@ -142,19 +142,19 @@ export async function getDistinctApartments(): Promise<{ sgg_cd: string; apt_nm:
 
   if (!db) {
     const seen = new Set<string>();
-    return MOCK_TRANSACTIONS.reduce<{ sgg_cd: string; apt_nm: string }[]>((acc, row) => {
+    return MOCK_TRANSACTIONS.reduce<{ sgg_cd: string; sgg_nm: string; apt_nm: string }[]>((acc, row) => {
       const key = `${row.sgg_cd}|${row.apt_nm}`;
       if (!seen.has(key)) {
         seen.add(key);
-        acc.push({ sgg_cd: row.sgg_cd, apt_nm: row.apt_nm });
+        acc.push({ sgg_cd: row.sgg_cd, sgg_nm: row.sgg_nm ?? '', apt_nm: row.apt_nm });
       }
       return acc;
     }, []);
   }
 
   const result = await db
-    .prepare('SELECT DISTINCT sgg_cd, apt_nm FROM transactions ORDER BY sgg_cd, apt_nm')
-    .all<{ sgg_cd: string; apt_nm: string }>();
+    .prepare('SELECT DISTINCT sgg_cd, sgg_nm, apt_nm FROM transactions ORDER BY sgg_cd, apt_nm')
+    .all<{ sgg_cd: string; sgg_nm: string; apt_nm: string }>();
 
   return result.results ?? [];
 }

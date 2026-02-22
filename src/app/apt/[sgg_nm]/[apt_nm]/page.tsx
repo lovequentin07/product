@@ -1,16 +1,40 @@
-// src/app/real-estate/apt/[sgg_cd]/[apt_nm]/page.tsx
+// src/app/apt/[sgg_nm]/[apt_nm]/page.tsx
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+import { notFound } from 'next/navigation';
 import { getAptHistory } from '@/lib/db/apt';
-import { getRegionNameByCode } from '@/data/regions';
+import { getRegionCodeByName } from '@/data/regions';
 import AptDetailHeader from '@/components/apt-detail/AptDetailHeader';
-import PriceTrendChart from '@/components/apt-detail/PriceTrendChart';
-import AreaBarChart from '@/components/apt-detail/AreaBarChart';
 import AptDetailTransactionsClient from '@/components/apt-detail/AptDetailTransactionsClient';
+
+const PriceTrendChart = dynamic(
+  () => import('@/components/apt-detail/PriceTrendChart'),
+  {
+    loading: () => (
+      <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
+        <div className="h-56 bg-gray-100 dark:bg-gray-700 rounded" />
+      </div>
+    ),
+  }
+);
+
+const AreaBarChart = dynamic(
+  () => import('@/components/apt-detail/AreaBarChart'),
+  {
+    loading: () => (
+      <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4" />
+        <div className="h-56 bg-gray-100 dark:bg-gray-700 rounded" />
+      </div>
+    ),
+  }
+);
 import { NormalizedTransaction } from '@/types/real-estate';
 
 interface PageProps {
-  params: Promise<{ sgg_cd: string; apt_nm: string }>;
+  params: Promise<{ sgg_nm: string; apt_nm: string }>;
   searchParams: Promise<{
     deal_ymd?: string;
     pageNo?: string;
@@ -22,12 +46,12 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { sgg_cd, apt_nm } = await params;
+  const { sgg_nm, apt_nm } = await params;
+  const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
-  const regionName = getRegionNameByCode(sgg_cd) || '';
-  const title = `${aptName} 실거래가 추이 | ${regionName} 아파트 시세 분석`;
+  const title = `${aptName} 실거래가 추이 | ${decodedSggNm} 아파트 시세 분석`;
   const description = `${aptName}의 전체 실거래가 추이, 면적별 가격, 최근 거래 이력을 한눈에 확인하세요.`;
-  const canonicalUrl = `/real-estate/apt/${sgg_cd}/${apt_nm}`;
+  const canonicalUrl = `/apt/${sgg_nm}/${apt_nm}`;
   return {
     title,
     description,
@@ -127,8 +151,12 @@ function LoadingSkeleton() {
 }
 
 export default async function AptDetailPage({ params, searchParams }: PageProps) {
-  const { sgg_cd, apt_nm } = await params;
+  const { sgg_nm, apt_nm } = await params;
   const { deal_ymd, pageNo, numOfRows, sortBy, sortDir, areaBucket } = await searchParams;
+
+  const decodedSggNm = decodeURIComponent(sgg_nm);
+  const sgg_cd = getRegionCodeByName(decodedSggNm);
+  if (!sgg_cd) notFound();
 
   const page = Math.max(1, parseInt(pageNo || '1', 10));
   const rows = Math.min(100, Math.max(10, parseInt(numOfRows || '20', 10)));
@@ -137,19 +165,18 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
   const parsedAreaBucket = areaBucket ? Number(areaBucket) : undefined;
 
   const aptName = decodeURIComponent(apt_nm);
-  const regionName = getRegionNameByCode(sgg_cd) || sgg_cd;
 
   // 목록 페이지 복귀 링크 생성
   const backHref = deal_ymd
-    ? `/real-estate/transaction?lawdCd=${sgg_cd}&dealYmd=${deal_ymd}`
-    : `/real-estate/transaction?lawdCd=${sgg_cd}`;
+    ? `/apt?lawdCd=${sgg_cd}&dealYmd=${deal_ymd}`
+    : `/apt?lawdCd=${sgg_cd}`;
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: '홈', item: 'https://datazip.net' },
-      { '@type': 'ListItem', position: 2, name: '실거래가 조회', item: 'https://datazip.net/real-estate/transaction' },
+      { '@type': 'ListItem', position: 2, name: '실거래가 조회', item: 'https://datazip.net/apt' },
       { '@type': 'ListItem', position: 3, name: `${aptName} 실거래가` },
     ],
   };
@@ -161,7 +188,7 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <header className="sr-only">
-        <h1>{aptName} 실거래가 분석 — {regionName}</h1>
+        <h1>{aptName} 실거래가 분석 — {decodedSggNm}</h1>
       </header>
 
       <Suspense fallback={<LoadingSkeleton />}>

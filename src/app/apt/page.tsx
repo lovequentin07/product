@@ -1,4 +1,4 @@
-// app/real-estate/transaction/page.tsx
+// app/apt/page.tsx
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
@@ -60,8 +60,8 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
   return {
     title,
     description,
-    alternates: { canonical: "/real-estate/transaction" },
-    openGraph: { title, description, url: "/real-estate/transaction" },
+    alternates: { canonical: "/apt" },
+    openGraph: { title, description, url: "/apt" },
   };
 }
 
@@ -172,7 +172,7 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://datazip.net/real-estate/transaction?searchTerm={search_term_string}',
+        urlTemplate: 'https://datazip.net/apt?searchTerm={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },

@@ -46,7 +46,7 @@ const SearchForm: React.FC = () => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     const searchTerm = current.get('searchTerm') || '';
 
-    let query = `/real-estate/transaction?lawdCd=${selectedGu}&pageNo=1`;
+    let query = `/apt?lawdCd=${selectedGu}&pageNo=1`;
 
     if (selectedYear !== YEAR_ALL) {
       if (selectedMonth !== MONTH_ALL) {

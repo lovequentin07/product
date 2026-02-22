@@ -12,6 +12,7 @@ export const regions: Region[] = [
   // 서울특별시 (Seoul)
   { code: '11000', name: '서울특별시', parent: '' },
   { code: '11110', name: '종로구', parent: '서울특별시' },
+  { code: '11140', name: '중구', parent: '서울특별시' },
   { code: '11170', name: '용산구', parent: '서울특별시' },
   { code: '11230', name: '동대문구', parent: '서울특별시' },
   { code: '11290', name: '성북구', parent: '서울특별시' },
@@ -65,3 +66,6 @@ export const getParentRegions = (): Region[] => {
 export const getRegionNameByCode = (code: string): string | undefined => {
   return regions.find(region => region.code === code)?.name;
 };
+
+export const getRegionCodeByName = (name: string): string | undefined =>
+  regions.find(r => r.name === name)?.code;
