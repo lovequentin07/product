@@ -26,6 +26,19 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     type: "website",
   },
+  twitter: {
+    card: "summary",
+    title: "서울 아파트 실거래가 조회 | DataZip",
+    description: "서울 25개 구 아파트 실거래가를 한눈에 조회하세요. 국토교통부 공공데이터 기반 131만건.",
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "DataZip",
+  url: "https://datazip.net",
+  description: "서울 아파트 실거래가 조회 서비스",
 };
 
 const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -44,6 +57,10 @@ export default function RootLayout({
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7470215059416865"
           crossOrigin="anonymous"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
       <body
