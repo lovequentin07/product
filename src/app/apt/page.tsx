@@ -220,11 +220,8 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
           />
         </Suspense>
 
-        <section className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-500 space-y-2">
-          <p>
-            {regionName} 아파트 실거래가 데이터를 국토교통부 공공데이터 기반으로 제공합니다.
-            2006년부터 현재까지 서울 전체 131만건 이상의 매매 거래 이력을 조회할 수 있습니다.
-          </p>
+        <section className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-500 space-y-2 text-center">
+          <p>2006년부터 현재까지 서울 전체 131만건 이상의 매매 거래 이력을 조회할 수 있습니다.</p>
           <p>
             지역(구)과 거래 연월을 선택하여 원하는 조건의 실거래 정보를 확인하고,
             아파트명 검색으로 특정 단지의 시세를 빠르게 찾을 수 있습니다.
