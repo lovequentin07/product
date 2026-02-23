@@ -190,7 +190,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
   };
 
   if (shouldCache) {
-    await cache!.put(cacheKey, JSON.stringify(output), { expirationTtl: 604800 }); // 7일
+    await cache!.put(cacheKey, JSON.stringify(output), { expirationTtl: 86400 }); // 24시간
   }
 
   return output;
