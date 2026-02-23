@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     title: "서울 아파트 실거래가 조회 | DataZip",
     description: "서울 25개 구 아파트 실거래가를 한눈에 조회하세요. 국토교통부 공공데이터 기반 131만건.",
   },
+  other: {
+    'naver-site-verification': '5098c8f688adf3e28c89a3f09e53a8a65ffbf83c',
+  },
 };
 
 const organizationJsonLd = {
