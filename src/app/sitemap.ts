@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getDistinctApartments, getLatestDealDate } from "@/lib/db/apt";
+import { getLatestDealDate } from "@/lib/db/apt";
 import { regions } from "@/data/regions";
 
 const BASE_URL = "https://datazip.net";
@@ -28,6 +28,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // 구 단위 지역 페이지만 포함 (개별 아파트 URL은 구글이 지역 페이지 크롤링 후 자연 발견)
+  // getDistinctApartments()는 131만 건 SELECT DISTINCT → Cloudflare Workers CPU 제한 초과
   const regionUrls: MetadataRoute.Sitemap = regions
     .filter((r) => r.parent === '서울특별시')
     .map((r) => ({
@@ -37,15 +39,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.85,
     }));
 
-  const apartments = await getDistinctApartments();
-  const aptUrls: MetadataRoute.Sitemap = apartments
-    .filter(({ sgg_nm }) => sgg_nm)
-    .map(({ sgg_nm, apt_nm }) => ({
-      url: `${BASE_URL}/apt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
-      lastModified: latestDate,
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    }));
-
-  return [...staticUrls, ...regionUrls, ...aptUrls];
+  return [...staticUrls, ...regionUrls];
 }
