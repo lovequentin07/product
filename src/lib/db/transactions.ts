@@ -74,7 +74,7 @@ function getMockTransactions(params: TransactionQueryParams): TransactionsResult
 // -------------------------
 // D1 쿼리
 // -------------------------
-async function getD1Transactions(db: D1Database, params: TransactionQueryParams): Promise<TransactionsResult> {
+async function getD1Transactions(db: D1Database, params: TransactionQueryParams, cache?: KVNamespace | null): Promise<TransactionsResult> {
   const {
     sgg_cd,
     deal_ymd,
@@ -93,6 +93,15 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams)
   const ALLOWED_SORT = new Set(['deal_date', 'deal_amount_billion', 'price_per_pyeong', 'area_pyeong', 'floor', 'build_year', 'apt_nm', 'sgg_nm']);
   const safeSort = ALLOWED_SORT.has(sort_by) ? sort_by : 'deal_date';
   const safeOrder = sort_order === 'asc' ? 'ASC' : 'DESC';
+
+  // 캐시: apt_nm 검색은 동적 입력이므로 제외
+  const shouldCache = !!cache && !apt_nm;
+  const cacheKey = `txn:${sgg_cd ?? '11000'}:${deal_ymd ?? 'all'}:${safeSort}:${safeOrder}:${page}:${limit}:${area_min ?? ''}:${area_max ?? ''}:${price_min ?? ''}:${price_max ?? ''}`;
+
+  if (shouldCache) {
+    const cached = await cache!.get(cacheKey, 'json') as TransactionsResult | null;
+    if (cached) return cached;
+  }
 
   const conditions: string[] = [];
   const bindings: (string | number)[] = [];
@@ -172,13 +181,19 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams)
     avgPricePerPyeong: Math.round((first?.w_avg_ppp ?? 0) * 100) / 100,
   };
 
-  return {
+  const output: TransactionsResult = {
     transactions: result.results ?? [],
     totalCount,
     page,
     totalPages,
     summary,
   };
+
+  if (shouldCache) {
+    await cache!.put(cacheKey, JSON.stringify(output), { expirationTtl: 86400 }); // 24시간
+  }
+
+  return output;
 }
 
 // -------------------------
@@ -186,15 +201,18 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams)
 // -------------------------
 export async function getTransactions(params: TransactionQueryParams): Promise<TransactionsResult> {
   let db: D1Database | null = null;
+  let cache: KVNamespace | null = null;
   try {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
     const { env } = await getCloudflareContext();
-    db = (env as unknown as { DB: D1Database }).DB ?? null;
+    const typedEnv = env as unknown as { DB: D1Database; CACHE?: KVNamespace };
+    db = typedEnv.DB ?? null;
+    cache = typedEnv.CACHE ?? null;
   } catch {
     // 로컬 개발 환경 — getCloudflareContext 불가
   }
 
   if (!db) return getMockTransactions(params);
 
-  return getD1Transactions(db, params);
+  return getD1Transactions(db, params, cache);
 }

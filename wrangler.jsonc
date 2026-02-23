@@ -14,5 +14,11 @@
       "database_name": "apt-trade-db",
       "database_id": "a65766e9-f184-4771-bbf6-4139d0f7b6a8"
     }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "0e3ba494ce7648fb95c7b92dfbe0bd06"
+    }
   ]
 }
