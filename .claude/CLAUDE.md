@@ -33,10 +33,10 @@ npm run lint             # ESLint 실행
 
 **데이터 플로우**:
 1. `SearchForm`(클라이언트)에서 지역·날짜 선택 → URL 쿼리 파라미터 (`lawdCd`, `dealYmd`, `pageNo`, `sortBy`, `sortDir`, `searchTerm`) push
-2. 서버 컴포넌트(`src/app/real-estate/transaction/page.tsx`)가 `searchParams`를 읽고 `getTransactions()` 호출
+2. 서버 컴포넌트(`src/app/apt/page.tsx`)가 `searchParams`를 읽고 `getTransactions()` 호출
 3. `src/lib/db/transactions.ts`가 D1에 SQL 쿼리 (정렬·필터·페이지네이션 모두 서버사이드)
 4. `TransactionRow[]`를 `NormalizedTransaction[]`으로 변환 후 `TransactionsClientComponent`에 전달
-5. 클라이언트는 면적·가격 필터(클라이언트 로컬)만 추가 처리
+5. 면적·가격 필터도 URL params(areaMin/Max, priceMin/Max)로 서버사이드 처리
 
 **클라이언트 상태**: `TransactionsClientComponent`가 아파트명 검색(500ms 디바운스 URL 업데이트), 정렬(URL 기반) 상태를 관리하고 `TransactionList`(표현 컴포넌트)에 전달.
 
@@ -50,7 +50,7 @@ npm run lint             # ESLint 실행
 
 ## 서비스 구조 전략
 
-- **Sub-route 방식**: 각 서비스는 SEO 최적화를 위해 독립된 고유 경로(URL) 사용 (예: `/real-estate/transaction`)
+- **Sub-route 방식**: 각 서비스는 SEO 최적화를 위해 독립된 고유 경로(URL) 사용 (예: `/apt`, `/apt/강남구`, `/apt/강남구/래미안아파트`)
 - **단계적 개발**: 개별 서브 서비스 개발에 우선 집중, 메인 허브(`page.tsx`)는 추후에 통합 구축
 - **분석 연동**: GA4 및 Microsoft Clarity를 통한 사용자 행동 분석 및 광고 수익 최적화 예정
 
