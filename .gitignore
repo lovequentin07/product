@@ -36,6 +36,7 @@ yarn-error.log*
 .claude/todo.md
 .claude/summary
 .claude/prompts
+.claude/plans
 
 # vercel
 .vercel

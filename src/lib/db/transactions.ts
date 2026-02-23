@@ -127,36 +127,53 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams)
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  // 집계 쿼리
-  const summaryStmt = db
-    .prepare(`SELECT COUNT(*) as cnt, AVG(deal_amount) as avg_amount, MAX(deal_amount) as max_amount, MIN(deal_amount) as min_amount, AVG(price_per_pyeong) as avg_ppp FROM transactions ${whereClause}`)
-    .bind(...bindings);
-
-  // 목록 쿼리
+  // 단일 쿼리: window function으로 집계+목록 동시 조회 (전체 스캔 2회 → 1회)
   const offset = (page - 1) * limit;
-  const listStmt = db
-    .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${whereClause} ORDER BY ${safeSort} ${safeOrder} LIMIT ? OFFSET ?`
-    )
-    .bind(...bindings, limit, offset);
+  const sql = `
+    SELECT
+      id, apt_nm, deal_date, deal_amount, deal_amount_billion,
+      area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year,
+      umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type,
+      deal_year, deal_month, deal_day,
+      COUNT(*) OVER() AS w_cnt,
+      AVG(deal_amount) OVER() AS w_avg,
+      MAX(deal_amount) OVER() AS w_max,
+      MIN(deal_amount) OVER() AS w_min,
+      AVG(price_per_pyeong) OVER() AS w_avg_ppp
+    FROM transactions
+    ${whereClause}
+    ORDER BY ${safeSort} ${safeOrder}
+    LIMIT ? OFFSET ?
+  `;
 
-  const [summaryResult, listResult] = await Promise.all([
-    summaryStmt.first<{ cnt: number; avg_amount: number; max_amount: number; min_amount: number; avg_ppp: number }>(),
-    listStmt.all<TransactionRow>(),
-  ]);
+  type TransactionWithWindow = TransactionRow & {
+    w_cnt: number;
+    w_avg: number;
+    w_max: number;
+    w_min: number;
+    w_avg_ppp: number;
+  };
 
-  const totalCount = summaryResult?.cnt ?? 0;
+  let result: D1Result<TransactionWithWindow>;
+  try {
+    result = await db.prepare(sql).bind(...bindings, limit, offset).all<TransactionWithWindow>();
+  } catch (e) {
+    throw new Error(`D1 query failed: ${(e as Error).message}`);
+  }
+
+  const first = result.results[0];
+  const totalCount = first?.w_cnt ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
   const summary: TransactionSummary = {
-    avgPrice: Math.round(summaryResult?.avg_amount ?? 0),
-    maxPrice: summaryResult?.max_amount ?? 0,
-    minPrice: summaryResult?.min_amount ?? 0,
-    avgPricePerPyeong: Math.round((summaryResult?.avg_ppp ?? 0) * 100) / 100,
+    avgPrice: Math.round(first?.w_avg ?? 0),
+    maxPrice: first?.w_max ?? 0,
+    minPrice: first?.w_min ?? 0,
+    avgPricePerPyeong: Math.round((first?.w_avg_ppp ?? 0) * 100) / 100,
   };
 
   return {
-    transactions: listResult.results ?? [],
+    transactions: result.results ?? [],
     totalCount,
     page,
     totalPages,
