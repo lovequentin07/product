@@ -45,9 +45,9 @@ export default function AptMgmtPage() {
       <main className="space-y-6">
         <AptMgmtSearchForm />
 
-        <section className="text-sm text-gray-500 space-y-3 bg-gray-50 rounded-xl p-5">
+        <section className="text-sm text-gray-500 space-y-3 bg-gray-50 rounded-xl p-5 text-center">
           <h2 className="font-medium text-gray-700">이런 분께 유용합니다</h2>
-          <ul className="space-y-1.5 list-disc list-inside">
+          <ul className="space-y-1.5">
             <li>관리비가 너무 많이 나오는 것 같은 분</li>
             <li>이사 전 아파트 관리비 수준을 미리 확인하고 싶은 분</li>
             <li>경비비·청소비 등 항목별 비교가 필요한 분</li>
