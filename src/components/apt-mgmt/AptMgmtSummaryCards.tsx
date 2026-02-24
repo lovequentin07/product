@@ -2,6 +2,7 @@
 // 헤더 + 상/중/하 Verdict Card
 
 import { MgmtFeeResult } from '@/types/management-fee';
+import { type Verdict, resultSummaryConfig } from './summaryConfig';
 
 interface Props {
   result: MgmtFeeResult;
@@ -19,52 +20,70 @@ function pctVsAvg(mine: number | null, avg: number | null): string | null {
   return `${sign}${diff.toFixed(1)}%`;
 }
 
-type Verdict = '상' | '중' | '하';
-
+// 상 = 점수 높음(절약), 하 = 점수 낮음(비쌈)
 function getVerdict(rank: number | null, total: number | null): Verdict | null {
   if (!rank || !total) return null;
   const pct = (rank / total) * 100;
-  if (pct <= 33) return '하';
+  if (pct <= 33) return '상';
   if (pct <= 66) return '중';
-  return '상';
+  return '하';
 }
 
-const VERDICT_CONFIG: Record<Verdict, { bg: string; border: string; text: string; badge: string; label: string; desc: string }> = {
-  하: {
+// desc 템플릿의 {변수} 치환
+function interpolate(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? `{${key}}`));
+}
+
+// 상 = 초록, 중 = 노랑, 하 = 빨강
+const VERDICT_STYLE: Record<Verdict, { bg: string; border: string; text: string; badge: string }> = {
+  상: {
     bg: 'bg-green-50',
     border: 'border-green-200',
     text: 'text-green-700',
     badge: 'bg-green-100 text-green-800 border border-green-300',
-    label: '하 (절약형)',
-    desc: '서울 평균 대비 관리비가 낮은 편입니다.',
   },
   중: {
     bg: 'bg-yellow-50',
     border: 'border-yellow-200',
     text: 'text-yellow-700',
     badge: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-    label: '중 (보통)',
-    desc: '서울 평균 수준의 관리비입니다.',
   },
-  상: {
+  하: {
     bg: 'bg-red-50',
     border: 'border-red-200',
     text: 'text-red-700',
     badge: 'bg-red-100 text-red-800 border border-red-300',
-    label: '상 (주의)',
-    desc: '서울 평균 대비 관리비가 높은 편입니다.',
   },
 };
 
 export default function AptMgmtSummaryCards({ result }: Props) {
-  const verdict = getVerdict(result.seoul_rank, result.seoul_total);
+  const verdict = getVerdict(result.sgg_rank, result.sgg_total);
   const commonPct = pctVsAvg(result.common_per_hh, result.sgg_avg_common);
-  const cfg = verdict ? VERDICT_CONFIG[verdict] : null;
+  const style = verdict ? VERDICT_STYLE[verdict] : null;
+  const textConfig = verdict ? resultSummaryConfig.score.options[verdict] : null;
 
-  const seoulPct =
-    result.seoul_rank && result.seoul_total
-      ? Math.round((result.seoul_rank / result.seoul_total) * 100)
+  // 템플릿 변수 계산
+  const rank = result.sgg_rank ?? 0;
+  const total = result.sgg_total ?? 0;
+  const score = total > 0 ? Math.round((1 - rank / total) * 100) : null;
+  // 상/중: 상위 X%, 하: 하위 X%
+  const percent =
+    total > 0
+      ? verdict === '하'
+        ? Math.round(((total - rank) / total) * 100) + 1
+        : Math.round((rank / total) * 100)
       : null;
+
+  const desc =
+    textConfig && score !== null && percent !== null
+      ? interpolate(textConfig.desc, {
+          score,
+          sgg_nm: result.sgg_nm,
+          total_count: total.toLocaleString(),
+          rank: rank.toLocaleString(),
+          percent,
+        })
+      : textConfig?.desc ?? null;
 
   return (
     <div className="space-y-4">
@@ -81,32 +100,29 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       </div>
 
       {/* Verdict Card */}
-      {cfg && verdict ? (
-        <div className={`rounded-xl border ${cfg.border} ${cfg.bg} p-5`}>
+      {style && textConfig && verdict ? (
+        <div className={`rounded-xl border ${style.border} ${style.bg} p-5`}>
           <p className="text-sm font-medium text-gray-600 mb-3">관리비 수준</p>
           <div className="flex items-center gap-3 mb-3">
-            <span className={`text-2xl font-bold px-4 py-1.5 rounded-full ${cfg.badge}`}>
-              {verdict}
-            </span>
-            <span className={`text-base font-semibold ${cfg.text}`}>{cfg.label}</span>
-          </div>
-          <p className="text-sm text-gray-700 mb-2">{cfg.desc}</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-            {seoulPct !== null && (
-              <span>서울 {result.seoul_total?.toLocaleString()}개 단지 중 상위 {seoulPct}%</span>
-            )}
-            {result.common_per_hh && (
-              <span>
-                세대당 월 공용관리비{' '}
-                <strong className="text-gray-800">{formatWon(result.common_per_hh)}</strong>
-                {commonPct && (
-                  <span className={parseFloat(commonPct) > 0 ? 'text-red-600' : 'text-green-600'}>
-                    {' '}({result.sgg_nm} 평균 대비 {commonPct})
-                  </span>
-                )}
+            {score !== null && (
+              <span className={`text-2xl font-bold px-4 py-1.5 rounded-full ${style.badge}`}>
+                {score}점
               </span>
             )}
+            <span className={`text-base font-semibold ${style.text}`}>{textConfig.label}</span>
           </div>
+          {desc && <p className="text-sm text-gray-700 mb-2">{desc}</p>}
+          {result.common_per_hh && (
+            <div className="text-sm text-gray-600 mt-2">
+              세대당 월 공용관리비{' '}
+              <strong className="text-gray-800">{formatWon(result.common_per_hh)}</strong>
+              {commonPct && (
+                <span className={parseFloat(commonPct) > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {' '}({result.sgg_nm} 평균 대비 {commonPct})
+                </span>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         /* 랭킹 데이터 없을 때 기본 수치 표시 */
