@@ -54,11 +54,6 @@ export default function AptMgmtPage() {
           </ul>
         </section>
 
-        <section className="text-sm text-gray-400 space-y-1">
-          <p>• 데이터 출처: K-apt 공동주택관리정보시스템 공시 데이터</p>
-          <p>• 기준: 가장 최근 공시월 기준 세대당 월 평균</p>
-          <p>• 서울특별시 전체 공동주택 약 3,000개 단지 비교</p>
-        </section>
       </main>
     </div>
   );
