@@ -55,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <head>
+      <head suppressHydrationWarning>
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
           async

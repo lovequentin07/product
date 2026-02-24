@@ -3,6 +3,54 @@
 import { callPublicDataApi } from './client';
 import { TransactionItem, NormalizedTransaction, TransactionRequest, TransactionResponse } from '@/types/real-estate'; // Import TransactionResponse
 
+// -------------------------
+// 단지 기본 정보 API (관리비 세대수 보강용)
+// -------------------------
+const APT_BASIS_API_PATH = '/AptBasisInfoServiceV4/getAphusBassInfoV4';
+
+export interface AptBassInfo {
+  kaptCode?: string;
+  kaptName?: string;
+  kaptdaCnt?: number | string;  // 세대수
+  kaptUsedate?: string;         // 사용승인일 (YYYYMMDD)
+  codeHeatNm?: string;          // 난방방식명
+  kaptAddr?: string;
+}
+
+/**
+ * K-apt 단지 기본 정보 조회 (JSON 방식)
+ * Base URL: apis.data.go.kr/1613000/AptBasisInfoServiceV4
+ */
+export async function getAptBassInfo(kaptCode: string): Promise<AptBassInfo | null> {
+  const apiKey = process.env.DATA_GO_KR_API_KEY;
+  if (!apiKey) {
+    console.error('DATA_GO_KR_API_KEY not set');
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    serviceKey: apiKey,
+    kaptCode,
+    _type: 'json',
+  });
+  const url = `https://apis.data.go.kr/1613000${APT_BASIS_API_PATH}?${params.toString()}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const json = await res.json() as {
+      response?: { body?: { items?: { item?: AptBassInfo | AptBassInfo[] } } };
+    };
+
+    const item = json?.response?.body?.items?.item;
+    if (!item) return null;
+    return Array.isArray(item) ? item[0] : item;
+  } catch {
+    return null;
+  }
+}
+
 const APARTMENT_TRADE_API_PATH = '/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev';
 
 interface ApartmentTransactionsResult {

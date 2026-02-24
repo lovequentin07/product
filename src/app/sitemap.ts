@@ -39,5 +39,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.85,
     }));
 
-  return [...staticUrls, ...regionUrls];
+  // 관리비 지킴이 — 랜딩 페이지만 포함 (단지별 페이지는 D1 데이터 로드 후 추가)
+  const mgmtUrls: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/apt-mgmt`,
+      lastModified: new Date('2026-02-24'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+  ];
+
+  return [...staticUrls, ...regionUrls, ...mgmtUrls];
 }
