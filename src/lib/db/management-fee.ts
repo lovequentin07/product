@@ -10,15 +10,14 @@ const MOCK_APTS: MgmtFeeApt[] = [
   { kapt_code: 'A10001000', apt_nm: '래미안대치팰리스', umd_nm: '대치동', billing_ym: '202501' },
   { kapt_code: 'A10001001', apt_nm: '은마아파트', umd_nm: '대치동', billing_ym: '202501' },
   { kapt_code: 'A10001002', apt_nm: '타워팰리스', umd_nm: '도곡동', billing_ym: '202501' },
+  { kapt_code: 'A10001003', apt_nm: '개포주공', umd_nm: '개포동', billing_ym: '202501' },
+  { kapt_code: 'A10001004', apt_nm: '삼성현대', umd_nm: '삼성동', billing_ym: '202501' },
 ];
 
-const MOCK_RESULT: MgmtFeeResult = {
-  id: 1,
-  kapt_code: 'A10001000',
-  apt_nm: '래미안대치팰리스',
+// 공통 필드 (관리비 항목 등)
+const MOCK_BASE = {
   sido: '서울특별시',
   sgg_nm: '강남구',
-  umd_nm: '대치동',
   billing_ym: '202501',
   common_mgmt_total: 50000000,
   labor_cost: 20000000,
@@ -61,26 +60,68 @@ const MOCK_RESULT: MgmtFeeResult = {
   ltm_total_reserve: 300000000,
   ltm_reserve_rate: 85.5,
   misc_income: 2000000,
-  household_cnt: 1996,
-  common_per_hh: 25050,
+  household_cnt: 500,
   security_per_hh: 5010,
   cleaning_per_hh: 2506,
-  heating_per_hh: 12524,
-  electricity_per_hh: 11523,
-  water_per_hh: 5010,
   ltm_per_hh: 5010,
-  total_per_hh: 70140,
-  umd_rank: 3,
-  umd_total: 12,
-  umd_avg_common: 22000,
-  sgg_rank: 45,
-  sgg_total: 280,
-  sgg_avg_common: 20000,
   sgg_avg_security: 4500,
-  seoul_rank: 320,
-  seoul_total: 3200,
-  seoul_avg_common: 18000,
   seoul_avg_security: 3800,
+  umd_avg_common: 22000,
+};
+
+// 5개 tier mock: sgg_rank/sgg_total 기준
+// A: ≤20%, B: 21-40%, C: 41-60%, D: 61-80%, E: >80%
+const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
+  // A등급: sgg 16%, seoul 10%, umd 25%
+  A10001000: {
+    ...MOCK_BASE,
+    id: 1, kapt_code: 'A10001000', apt_nm: '래미안대치팰리스', umd_nm: '대치동',
+    common_per_hh: 14000, heating_per_hh: 8000, electricity_per_hh: 7000, water_per_hh: 4000,
+    total_per_hh: 45000,
+    umd_rank: 3, umd_total: 12,
+    sgg_rank: 45, sgg_total: 280, sgg_avg_common: 20000,
+    seoul_rank: 320, seoul_total: 3200, seoul_avg_common: 18000,
+  },
+  // B등급: sgg 32%, seoul 25%, umd 42%
+  A10001001: {
+    ...MOCK_BASE,
+    id: 2, kapt_code: 'A10001001', apt_nm: '은마아파트', umd_nm: '대치동',
+    common_per_hh: 18500, heating_per_hh: 10000, electricity_per_hh: 9000, water_per_hh: 5000,
+    total_per_hh: 58000,
+    umd_rank: 5, umd_total: 12,
+    sgg_rank: 90, sgg_total: 280, sgg_avg_common: 20000,
+    seoul_rank: 800, seoul_total: 3200, seoul_avg_common: 18000,
+  },
+  // C등급: sgg 50%, seoul 50%, umd 50%
+  A10001002: {
+    ...MOCK_BASE,
+    id: 3, kapt_code: 'A10001002', apt_nm: '타워팰리스', umd_nm: '도곡동',
+    common_per_hh: 20500, heating_per_hh: 12000, electricity_per_hh: 11000, water_per_hh: 6000,
+    total_per_hh: 68000,
+    umd_rank: 6, umd_total: 12,
+    sgg_rank: 140, sgg_total: 280, sgg_avg_common: 20000,
+    seoul_rank: 1600, seoul_total: 3200, seoul_avg_common: 18000,
+  },
+  // D등급: sgg 71%, seoul 68%, umd 67%
+  A10001003: {
+    ...MOCK_BASE,
+    id: 4, kapt_code: 'A10001003', apt_nm: '개포주공', umd_nm: '개포동',
+    common_per_hh: 25000, heating_per_hh: 15000, electricity_per_hh: 13000, water_per_hh: 7000,
+    total_per_hh: 82000,
+    umd_rank: 8, umd_total: 12,
+    sgg_rank: 200, sgg_total: 280, sgg_avg_common: 20000,
+    seoul_rank: 2170, seoul_total: 3200, seoul_avg_common: 18000,
+  },
+  // E등급: sgg 93%, seoul 91%, umd 92%
+  A10001004: {
+    ...MOCK_BASE,
+    id: 5, kapt_code: 'A10001004', apt_nm: '삼성현대', umd_nm: '삼성동',
+    common_per_hh: 33000, heating_per_hh: 20000, electricity_per_hh: 18000, water_per_hh: 9000,
+    total_per_hh: 105000,
+    umd_rank: 11, umd_total: 12,
+    sgg_rank: 260, sgg_total: 280, sgg_avg_common: 20000,
+    seoul_rank: 2920, seoul_total: 3200, seoul_avg_common: 18000,
+  },
 };
 
 // -------------------------
@@ -209,7 +250,7 @@ export async function getMgmtFeeResult(kapt_code: string): Promise<MgmtFeeResult
     // 로컬 개발 환경
   }
 
-  if (!db) return MOCK_RESULT;
+  if (!db) return MOCK_RESULTS[kapt_code] ?? MOCK_RESULTS['A10001000'];
   return getD1MgmtFeeResult(db, kapt_code, cache);
 }
 

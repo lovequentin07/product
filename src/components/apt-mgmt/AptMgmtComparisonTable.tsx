@@ -102,23 +102,23 @@ export default function AptMgmtComparisonTable({ result }: Props) {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100">
-        <h3 className="font-semibold text-gray-800">관리비 세부 비교</h3>
-        <p className="text-xs text-gray-400 mt-0.5">세대당 월 평균 (원)</p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+        <h3 className="font-semibold text-gray-800 dark:text-gray-100">관리비 세부 비교</h3>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">세대당 월 평균 (원)</p>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-xs text-gray-500">
+            <tr className="bg-gray-50 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400">
               <th className="text-left px-4 py-3 font-medium">항목</th>
               <th className="text-right px-4 py-3 font-medium">우리 아파트</th>
               <th className="text-right px-4 py-3 font-medium">{result.sgg_nm} 평균</th>
               <th className="text-right px-4 py-3 font-medium">서울 평균</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {rows.map((row) => {
               const isOpen = openGroups.has(row.label);
               const hasChildren = (row.children?.length ?? 0) > 0;
@@ -126,34 +126,34 @@ export default function AptMgmtComparisonTable({ result }: Props) {
                 <Fragment key={row.label}>
                   <tr
                     onClick={() => hasChildren && toggleGroup(row.label)}
-                    className={hasChildren ? 'cursor-pointer hover:bg-gray-50' : ''}
+                    className={hasChildren ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
                   >
-                    <td className="px-4 py-3 font-medium text-gray-700">
+                    <td className="px-4 py-3 font-medium text-gray-700 dark:text-gray-200">
                       {hasChildren && (
-                        <span className="mr-1 text-gray-400">{isOpen ? '▾' : '▸'}</span>
+                        <span className="mr-1 text-gray-400 dark:text-gray-500">{isOpen ? '▾' : '▸'}</span>
                       )}
                       {row.label}
                     </td>
                     <td className={`text-right px-4 py-3 ${cellColor(row.mine, row.sggAvg)}`}>
                       {formatWon(row.mine)}
                     </td>
-                    <td className="text-right px-4 py-3 text-gray-500">
+                    <td className="text-right px-4 py-3 text-gray-500 dark:text-gray-400">
                       {row.sggAvg != null ? formatWon(row.sggAvg) : '-'}
                     </td>
-                    <td className="text-right px-4 py-3 text-gray-500">
+                    <td className="text-right px-4 py-3 text-gray-500 dark:text-gray-400">
                       {row.seoulAvg != null ? formatWon(row.seoulAvg) : '-'}
                     </td>
                   </tr>
                   {isOpen && row.children?.map((child) => (
-                    <tr key={child.label} className="bg-gray-50/50">
-                      <td className="px-4 py-2 pl-8 text-gray-500 text-xs">{child.label}</td>
-                      <td className="text-right px-4 py-2 text-xs text-gray-600">
+                    <tr key={child.label} className="bg-gray-50/50 dark:bg-gray-700/50">
+                      <td className="px-4 py-2 pl-8 text-gray-500 dark:text-gray-400 text-xs">{child.label}</td>
+                      <td className="text-right px-4 py-2 text-xs text-gray-600 dark:text-gray-300">
                         {formatWon(child.mine)}
                       </td>
-                      <td className="text-right px-4 py-2 text-xs text-gray-400">
+                      <td className="text-right px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
                         {child.sggAvg != null ? formatWon(child.sggAvg) : '-'}
                       </td>
-                      <td className="text-right px-4 py-2 text-xs text-gray-400">
+                      <td className="text-right px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
                         {child.seoulAvg != null ? formatWon(child.seoulAvg) : '-'}
                       </td>
                     </tr>
@@ -165,7 +165,7 @@ export default function AptMgmtComparisonTable({ result }: Props) {
         </table>
       </div>
 
-      <div className="px-5 py-3 bg-gray-50 text-xs text-gray-400">
+      <div className="px-5 py-3 bg-gray-50 dark:bg-gray-700 text-xs text-gray-400 dark:text-gray-400">
         * 구 평균 및 서울 평균은 공용관리비 기준. 세대당 = 단지 전체 합계 ÷ 세대수.
       </div>
     </div>

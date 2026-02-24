@@ -64,25 +64,15 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
       />
 
       {/* 브레드크럼 */}
-      <nav className="text-xs text-gray-400 mb-4 flex items-center gap-1.5 flex-wrap">
-        <Link href="/apt-mgmt" className="hover:text-gray-600">관리비 지킴이</Link>
+      <nav className="text-xs text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1.5 flex-wrap">
+        <Link href="/apt-mgmt" className="hover:text-gray-600 dark:hover:text-gray-300">관리비 지킴이</Link>
         <span>›</span>
         <span>{decodedSggNm}</span>
         <span>›</span>
-        <span className="text-gray-600 font-medium">{aptName}</span>
+        <span className="text-gray-600 dark:text-gray-300 font-medium">{aptName}</span>
       </nav>
 
       <AptMgmtResultClient result={result} />
-
-      {/* 하단 CTA */}
-      <div className="mt-6 text-center">
-        <Link
-          href="/apt-mgmt"
-          className="inline-block text-sm text-blue-600 hover:text-blue-700 underline"
-        >
-          다른 아파트 관리비 분석하기 →
-        </Link>
-      </div>
     </div>
   );
 }

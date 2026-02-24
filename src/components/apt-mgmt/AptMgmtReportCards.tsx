@@ -10,9 +10,9 @@ interface Props {
 type Level = '상' | '중' | '하';
 
 const LEVEL_STYLE: Record<Level, string> = {
-  하: 'bg-green-100 text-green-800 border border-green-200',
-  중: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  상: 'bg-red-100 text-red-800 border border-red-200',
+  하: 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700',
+  중: 'bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700',
+  상: 'bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700',
 };
 
 function formatWon(val: number | null | undefined): string {
@@ -52,19 +52,19 @@ interface CardProps {
 
 function ReportCard({ icon, title, level, mainValue, description, subNote }: CardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-2">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">{icon}</span>
-          <span className="text-sm font-semibold text-gray-700">{title}</span>
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{title}</span>
         </div>
         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${LEVEL_STYLE[level]}`}>
           {level}
         </span>
       </div>
-      <p className="text-xl font-bold text-gray-900">{mainValue}</p>
-      <p className="text-xs text-gray-500">{description}</p>
-      {subNote && <p className="text-xs text-gray-400">{subNote}</p>}
+      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{mainValue}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+      {subNote && <p className="text-xs text-gray-400 dark:text-gray-500">{subNote}</p>}
     </div>
   );
 }

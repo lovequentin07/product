@@ -48,27 +48,27 @@ export default function AptMgmtSearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-800">아파트 관리비 분석</h2>
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">아파트 관리비 분석</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* 서울시 (고정) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">시/도</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">시/도</label>
           <input
             readOnly
             value="서울특별시"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+            className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
           />
         </div>
 
         {/* 구 선택 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">구 선택</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">구 선택</label>
           <select
             value={sggNm}
             onChange={(e) => setSggNm(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">-- 구를 선택하세요 --</option>
             {SEOUL_DISTRICTS.map((r) => (
@@ -81,12 +81,12 @@ export default function AptMgmtSearchForm() {
 
         {/* 아파트 선택 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">아파트 선택</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">아파트 선택</label>
           <select
             value={effectiveKaptCode}
             onChange={(e) => setKaptCode(e.target.value)}
             disabled={!sggNm || loading}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500"
           >
             <option value="">
               {loading ? '불러오는 중...' : visibleApts.length === 0 && sggNm ? '단지 정보 없음' : '-- 아파트를 선택하세요 --'}
