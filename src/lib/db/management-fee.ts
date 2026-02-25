@@ -132,7 +132,7 @@ async function getD1MgmtFeeApts(db: D1Database, sgg_nm: string): Promise<MgmtFee
   const result = await db
     .prepare(
       `SELECT kapt_code, apt_nm, umd_nm, MAX(billing_ym) as billing_ym
-       FROM mgmt_fee
+       FROM apt_mgmt_fee
        WHERE sgg_nm = ? AND sido = '서울특별시'
        GROUP BY kapt_code
        ORDER BY apt_nm`
@@ -149,7 +149,7 @@ async function getD1MgmtFeeResult(
 ): Promise<MgmtFeeResult | null> {
   // 최신 billing_ym 조회
   const latestRow = await db
-    .prepare(`SELECT MAX(billing_ym) as max_ym FROM mgmt_fee WHERE kapt_code = ?`)
+    .prepare(`SELECT MAX(billing_ym) as max_ym FROM apt_mgmt_fee WHERE kapt_code = ?`)
     .bind(kapt_code)
     .first<{ max_ym: string }>();
 
@@ -166,7 +166,7 @@ async function getD1MgmtFeeResult(
   // Window function으로 랭킹 계산 (서울 전체 단지 스캔 ~3,000건)
   const sql = `
     WITH snapshot AS (
-      SELECT * FROM mgmt_fee
+      SELECT * FROM apt_mgmt_fee
       WHERE billing_ym = ? AND sido = '서울특별시'
         AND common_per_hh IS NOT NULL
     )
@@ -192,7 +192,7 @@ async function getD1MgmtFeeResult(
   try {
     result = await db.prepare(sql).bind(billing_ym, kapt_code).all<MgmtFeeResult>();
   } catch (e) {
-    throw new Error(`D1 mgmt_fee query failed: ${(e as Error).message}`);
+    throw new Error(`D1 apt_mgmt_fee query failed: ${(e as Error).message}`);
   }
 
   const row = result.results[0] ?? null;
@@ -209,7 +209,7 @@ async function getD1MgmtFeeHistory(db: D1Database, kapt_code: string): Promise<M
   const result = await db
     .prepare(
       `SELECT billing_ym, common_per_hh, total_per_hh, household_cnt
-       FROM mgmt_fee
+       FROM apt_mgmt_fee
        WHERE kapt_code = ?
        ORDER BY billing_ym DESC
        LIMIT 24`

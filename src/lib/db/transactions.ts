@@ -149,7 +149,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
       MAX(deal_amount) OVER() AS w_max,
       MIN(deal_amount) OVER() AS w_min,
       AVG(price_per_pyeong) OVER() AS w_avg_ppp
-    FROM transactions
+    FROM apt_transactions
     ${whereClause}
     ORDER BY ${safeSort} ${safeOrder}
     LIMIT ? OFFSET ?

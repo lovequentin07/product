@@ -3,6 +3,7 @@
 
 export interface MgmtFeeRow {
   id: number;
+  apt_meta_id?: number;
   kapt_code: string;
   apt_nm: string;
   sido: string;

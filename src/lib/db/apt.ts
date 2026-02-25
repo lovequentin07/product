@@ -58,28 +58,28 @@ async function getD1AptHistory(
   // 기본 정보 + 필터된 건수
   const metaStmt = db
     .prepare(
-      `SELECT sgg_nm, umd_nm, build_year, COUNT(*) as total_count FROM transactions ${filteredWhere} LIMIT 1`
+      `SELECT sgg_nm, umd_nm, build_year, COUNT(*) as total_count FROM apt_transactions ${filteredWhere} LIMIT 1`
     )
     .bind(...filteredBindings);
 
   // 월별 집계 (areaBucket 필터 적용)
   const monthlyStmt = db
     .prepare(
-      `SELECT deal_year || '-' || printf('%02d', deal_month) as year_month, AVG(deal_amount) as avg_price, AVG(price_per_pyeong) as avg_ppp, COUNT(*) as cnt FROM transactions ${filteredWhere} GROUP BY deal_year, deal_month ORDER BY deal_year DESC, deal_month DESC`
+      `SELECT deal_year || '-' || printf('%02d', deal_month) as year_month, AVG(deal_amount) as avg_price, AVG(price_per_pyeong) as avg_ppp, COUNT(*) as cnt FROM apt_transactions ${filteredWhere} GROUP BY deal_year, deal_month ORDER BY deal_year DESC, deal_month DESC`
     )
     .bind(...filteredBindings);
 
   // 평형별 집계 — 항상 전체 평형 표시 (탭 목록이 사라지지 않도록)
   const areaStmt = db
     .prepare(
-      `SELECT (area_pyeong / 10) * 10 as bucket, COUNT(*) as cnt, AVG(deal_amount) as avg_price FROM transactions ${baseWhere} GROUP BY bucket ORDER BY bucket`
+      `SELECT (area_pyeong / 10) * 10 as bucket, COUNT(*) as cnt, AVG(deal_amount) as avg_price FROM apt_transactions ${baseWhere} GROUP BY bucket ORDER BY bucket`
     )
     .bind(...baseBindings);
 
   // 페이지네이션된 거래 목록 (areaBucket 필터 적용)
   const recentStmt = db
     .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM transactions ${filteredWhere} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM apt_transactions ${filteredWhere} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
     )
     .bind(...filteredBindings, numOfRows, offset);
 
@@ -143,7 +143,7 @@ export async function getLatestDealDate(): Promise<Date> {
   if (!db) return new Date('2026-02-20');
 
   const row = await db
-    .prepare('SELECT MAX(deal_date) as latest FROM transactions')
+    .prepare('SELECT MAX(deal_date) as latest FROM apt_transactions')
     .first<{ latest: string }>();
 
   return row?.latest ? new Date(row.latest) : new Date();
@@ -195,7 +195,7 @@ export async function getRegionApartmentStats(sgg_cd: string): Promise<RegionApa
       `SELECT apt_nm, umd_nm, COUNT(*) as total_count,
               ROUND(AVG(deal_amount_billion), 1) as avg_billion,
               MAX(deal_date) as latest_date
-       FROM transactions
+       FROM apt_transactions
        WHERE sgg_cd = ?
        GROUP BY apt_nm
        ORDER BY total_count DESC
@@ -230,7 +230,7 @@ export async function getDistinctApartments(): Promise<{ sgg_cd: string; sgg_nm:
   }
 
   const result = await db
-    .prepare('SELECT DISTINCT sgg_cd, sgg_nm, apt_nm FROM transactions ORDER BY sgg_cd, apt_nm')
+    .prepare('SELECT DISTINCT sgg_cd, sgg_nm, apt_nm FROM apt_transactions ORDER BY sgg_cd, apt_nm')
     .all<{ sgg_cd: string; sgg_nm: string; apt_nm: string }>();
 
   return result.results ?? [];

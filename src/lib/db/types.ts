@@ -17,6 +17,7 @@ export interface TransactionQueryParams {
 
 export interface TransactionRow {
   id: number;
+  apt_meta_id?: number;
   apt_nm: string;
   deal_date: string;        // YYYY-MM-DD
   deal_amount: number;      // 만원
