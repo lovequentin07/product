@@ -85,10 +85,11 @@ CREATE TABLE apt_mgmt_fee (
 ## 백엔드 완료 작업 (순서)
 
 1. `src/scripts/migrate-mgmt-fee.ts` 실행 (XLSX → D1)
-2. `src/scripts/enrich-mgmt-fee.ts` 실행 (세대수 보강)
+2. `DATA_GO_KR_API_KEY=... npx tsx src/scripts/create-apt-meta.ts --remote`
+   - Step 1~3: apt_meta 생성 + kapt_code 매핑 + backfill
+   - Step 4: K-apt API → household_cnt 조회 + per_hh 계산 (통합)
 3. `feat/apt-mgmt` → `main` 병합
 4. `wrangler d1 execute apt-trade-db --remote --file=src/data/migrate-v4.sql` (v4 스키마 프로덕션 적용)
-5. `npx tsx src/scripts/create-apt-meta.ts --remote`
 
 ## 데이터 출처
 

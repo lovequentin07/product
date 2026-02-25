@@ -166,7 +166,7 @@ function sleep(ms: number): void {
 function runBatch(valueRows: string[], attempt = 1): void {
   // 개별 INSERT 문 (multi-row VALUES가 SQLITE_TOOBIG 발생 → 개별로)
   const stmts = valueRows.map(
-    (v) => `INSERT OR IGNORE INTO mgmt_fee ${INSERT_COLS} VALUES ${v};`
+    (v) => `INSERT OR IGNORE INTO apt_mgmt_fee ${INSERT_COLS} VALUES ${v};`
   );
   const sql = stmts.join('\n');
   fs.writeFileSync(TMP_SQL_FILE, sql, 'utf-8');

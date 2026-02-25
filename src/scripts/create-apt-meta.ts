@@ -6,16 +6,19 @@
  *   npx tsx src/scripts/create-apt-meta.ts            # 로컬 D1 (local 환경)
  *   npx tsx src/scripts/create-apt-meta.ts --remote   # 프로덕션 D1
  *
- * 3단계 실행:
+ * 4단계 실행:
  *   1단계: apt_transactions → apt_meta 추출 + apt_name_alias 생성
- *   2단계: apt_mgmt_fee → apt_meta UPSERT (kapt_code / household_cnt 추가)
+ *   2단계: apt_mgmt_fee → apt_meta UPSERT (kapt_code 매핑)
  *   3단계: apt_meta_id backfill (apt_transactions, apt_mgmt_fee)
+ *   4단계: K-apt API → household_cnt 조회 + per_hh 계산 (enrich 통합)
  *
- * 재실행 안전: INSERT OR IGNORE / UPDATE ... WHERE apt_meta_id IS NULL 사용
+ * 재실행 안전: INSERT OR IGNORE / UPDATE ... WHERE IS NULL 사용
+ * 환경변수: DATA_GO_KR_API_KEY (단계4 필수)
  */
 
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import { getAptBassInfo } from '../lib/api/apartment';
 
 // -------------------------
 // 설정
@@ -24,6 +27,10 @@ const DB_NAME = 'apt-trade-db';
 const TMP_SQL = '/tmp/create_apt_meta.sql';
 const isRemote = process.argv.includes('--remote');
 const remoteFlag = isRemote ? '--remote' : '--local';
+const DELAY_MS = 200;
+const PROGRESS_FILE = '/tmp/create_apt_meta_enrich_progress.json';
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // -------------------------
 // 유틸
@@ -281,6 +288,122 @@ WHERE apt_meta_id IS NULL;
 }
 
 // -------------------------
+// 단계 4: K-apt API → household_cnt + per_hh 계산
+// -------------------------
+async function step4_enrich_household(): Promise<void> {
+  console.log('\n[단계4] 세대수 API 조회 + per_hh 계산...');
+
+  const apiKey = process.env.DATA_GO_KR_API_KEY;
+  if (!apiKey) {
+    console.warn('  ⚠️  DATA_GO_KR_API_KEY 미설정 → 단계4 건너뜀');
+    return;
+  }
+
+  // 진행상황 복원 (재실행 안전)
+  let processed: Set<string> = new Set();
+  if (fs.existsSync(PROGRESS_FILE)) {
+    try {
+      const saved = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8')) as { processed: string[] };
+      processed = new Set(saved.processed);
+      console.log(`  → 진행상황 복원: ${processed.size}건 이미 처리됨`);
+    } catch { /* 무시 */ }
+  }
+
+  // 4a: kapt_code IS NOT NULL이고 household_cnt가 없는 apt_meta 조회
+  const rowsJson = queryOne(`
+    SELECT id, kapt_code FROM apt_meta
+    WHERE kapt_code IS NOT NULL AND household_cnt IS NULL
+    ORDER BY id;
+  `);
+
+  let rows: { id: number; kapt_code: string }[] = [];
+  try {
+    const parsed = JSON.parse(rowsJson);
+    rows = parsed?.[0]?.results ?? [];
+  } catch { /* 무시 */ }
+
+  console.log(`  → 세대수 조회 대상: ${rows.length}건`);
+
+  let done = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    if (processed.has(row.kapt_code)) continue;
+
+    const info = await getAptBassInfo(row.kapt_code);
+    const raw = info?.kaptdaCnt;
+    const cnt = Math.max(parseInt(String(raw ?? '0'), 10) || 0, 1);
+
+    const updateSql = `UPDATE apt_meta SET household_cnt = ${cnt}, updated_at = CURRENT_TIMESTAMP WHERE id = ${row.id};`;
+    try {
+      fs.writeFileSync(TMP_SQL, updateSql, 'utf8');
+      execSync(`wrangler d1 execute ${DB_NAME} ${remoteFlag} --file=${TMP_SQL}`, {
+        encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe']
+      });
+      processed.add(row.kapt_code);
+      done++;
+    } catch {
+      failed++;
+    }
+
+    // 10건마다 진행상황 저장
+    if ((done + failed) % 10 === 0) {
+      fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ processed: [...processed] }), 'utf8');
+      process.stdout.write(`\r  → ${done}/${rows.length} 처리됨, ${failed}건 실패`);
+    }
+
+    await sleep(DELAY_MS);
+  }
+
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ processed: [...processed] }), 'utf8');
+  console.log(`\n  → 단계4a 완료: ${done}건 성공, ${failed}건 실패`);
+
+  // 4b: apt_meta.household_cnt → apt_mgmt_fee.household_cnt 전파
+  runSql(`
+UPDATE apt_mgmt_fee
+SET household_cnt = (
+  SELECT m.household_cnt FROM apt_meta m
+  WHERE m.kapt_code = apt_mgmt_fee.kapt_code
+    AND m.household_cnt IS NOT NULL
+)
+WHERE household_cnt IS NULL;
+  `, '단계4b apt_mgmt_fee 세대수 전파');
+
+  // 4c: per_hh 컬럼 계산
+  runSql(`
+UPDATE apt_mgmt_fee
+SET
+  common_per_hh      = CASE WHEN household_cnt > 0 THEN ROUND(CAST(common_mgmt_total AS REAL) / household_cnt) ELSE NULL END,
+  security_per_hh    = CASE WHEN household_cnt > 0 THEN ROUND(CAST(security_cost AS REAL) / household_cnt) ELSE NULL END,
+  cleaning_per_hh    = CASE WHEN household_cnt > 0 THEN ROUND(CAST(cleaning_cost AS REAL) / household_cnt) ELSE NULL END,
+  heating_per_hh     = CASE WHEN household_cnt > 0 THEN ROUND(CAST((heating_common + heating_indiv) AS REAL) / household_cnt) ELSE NULL END,
+  electricity_per_hh = CASE WHEN household_cnt > 0 THEN ROUND(CAST((electricity_common + electricity_indiv) AS REAL) / household_cnt) ELSE NULL END,
+  water_per_hh       = CASE WHEN household_cnt > 0 THEN ROUND(CAST((water_common + water_indiv) AS REAL) / household_cnt) ELSE NULL END,
+  ltm_per_hh         = CASE WHEN household_cnt > 0 THEN ROUND(CAST(ltm_monthly_charge AS REAL) / household_cnt) ELSE NULL END,
+  total_per_hh       = CASE WHEN household_cnt > 0 THEN ROUND(CAST((common_mgmt_total + indiv_usage_total + ltm_monthly_charge) AS REAL) / household_cnt) ELSE NULL END
+WHERE household_cnt IS NOT NULL AND household_cnt > 0;
+  `, '단계4c per_hh 계산');
+
+  // 통계 출력
+  const statsJson = queryOne(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN common_per_hh IS NOT NULL THEN 1 ELSE 0 END) AS with_per_hh
+    FROM apt_mgmt_fee;
+  `);
+  try {
+    const statsRows = JSON.parse(statsJson);
+    const r = statsRows?.[0]?.results?.[0];
+    if (r) {
+      const pct = ((r.with_per_hh / r.total) * 100).toFixed(1);
+      console.log(`  → per_hh 계산 완료: ${r.with_per_hh}/${r.total} (${pct}%)`);
+    }
+  } catch { /* 무시 */ }
+
+  if (fs.existsSync(PROGRESS_FILE)) fs.unlinkSync(PROGRESS_FILE);
+}
+
+// -------------------------
 // 메인
 // -------------------------
 async function main(): Promise<void> {
@@ -292,6 +415,7 @@ async function main(): Promise<void> {
     step1_from_transactions();
     step2_from_mgmt_fee();
     step3_backfill();
+    await step4_enrich_household();
     console.log('\n=== 마이그레이션 완료 ===\n');
   } finally {
     if (fs.existsSync(TMP_SQL)) fs.unlinkSync(TMP_SQL);
