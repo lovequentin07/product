@@ -53,3 +53,4 @@ firebase-debug.log
 *.tsbuildinfo
 next-env.d.ts
 .wrangler/
+.claude/data_source/*.xlsx
