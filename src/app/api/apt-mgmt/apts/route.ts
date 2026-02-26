@@ -4,8 +4,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMgmtFeeApts } from '@/lib/db/management-fee';
 
-export const runtime = 'edge';
-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const sgg_nm = searchParams.get('sgg_nm');
