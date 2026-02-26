@@ -2,11 +2,11 @@
 
 ## 작업 목록
 
-- [ ] `create-apt-meta.ts` 단순화 (Step 1 + Step 4만 유지)
-- [ ] 미커밋 파일 커밋 (scripts 3개 + .claude 문서)
-- [ ] `create-apt-meta.ts --remote` 실행 → apt_meta 생성 + per_hh 계산
-- [ ] `management-fee.ts` 실DB 전환 (kapt_code JOIN 쿼리)
-- [ ] 배포 및 검증
+- [x] `create-apt-meta.ts` 단순화 (Step 1 + Step 4만 유지)
+- [x] 미커밋 파일 커밋 (scripts 3개 + .claude 문서)
+- [x] `create-apt-meta.ts --remote` 실행 → apt_meta 3,335건, per_hh 36,802건(100%) 완료
+- [x] `management-fee.ts` window function 2단계 CTE 버그 수정
+- [x] 배포 (git push → Cloudflare 자동 빌드)
 
 ## 설계
 

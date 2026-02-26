@@ -86,19 +86,9 @@ export default function AptMgmtSummaryCards({ result }: Props) {
     ? interpolate(config.desc, { apt_nm: result.apt_nm, sgg_nm: result.sgg_nm, total_count: total.toLocaleString(), rank: rank.toLocaleString(), percent })
     : null;
 
-  // 공용관리비: 구 평균보다 낮을수록 점수 높음
-  const commonDiff = result.common_per_hh && result.sgg_avg_common
-    ? ((result.common_per_hh - result.sgg_avg_common) / result.sgg_avg_common) * 100
-    : null;
-  const commonScore = commonDiff !== null
-    ? Math.max(5, Math.min(95, Math.round(50 - commonDiff)))
-    : 50;
-
-  // 개인관리비: 기준(30,000원)보다 낮을수록 점수 높음
-  const personalTotal = (result.heating_per_hh ?? 0) + (result.electricity_per_hh ?? 0) + (result.water_per_hh ?? 0);
-  const personalBaseline = 30000;
-  const personalDiff = ((personalTotal - personalBaseline) / personalBaseline) * 100;
-  const personalScore = Math.max(5, Math.min(95, Math.round(50 - personalDiff / 2)));
+  // 공용/개인관리비: 서울 전체 비중 순위
+  const commonScore = rankScore(result.common_ratio_rank, result.seoul_total);
+  const personalScore = rankScore(result.personal_ratio_rank, result.seoul_total);
 
   return (
     <div className="space-y-8 py-2">

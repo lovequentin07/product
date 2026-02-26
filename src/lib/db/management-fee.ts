@@ -81,6 +81,7 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     umd_rank: 3, umd_total: 12,
     sgg_rank: 45, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 320, seoul_total: 3200, seoul_avg_common: 18000,
+    common_ratio_rank: 300, personal_ratio_rank: 2900,
   },
   // B등급: sgg 32%, seoul 25%, umd 42%
   A10001001: {
@@ -91,6 +92,7 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     umd_rank: 5, umd_total: 12,
     sgg_rank: 90, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 800, seoul_total: 3200, seoul_avg_common: 18000,
+    common_ratio_rank: 750, personal_ratio_rank: 2450,
   },
   // C등급: sgg 50%, seoul 50%, umd 50%
   A10001002: {
@@ -101,6 +103,7 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     umd_rank: 6, umd_total: 12,
     sgg_rank: 140, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 1600, seoul_total: 3200, seoul_avg_common: 18000,
+    common_ratio_rank: 1600, personal_ratio_rank: 1600,
   },
   // D등급: sgg 71%, seoul 68%, umd 67%
   A10001003: {
@@ -111,6 +114,7 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     umd_rank: 8, umd_total: 12,
     sgg_rank: 200, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 2170, seoul_total: 3200, seoul_avg_common: 18000,
+    common_ratio_rank: 2200, personal_ratio_rank: 900,
   },
   // E등급: sgg 93%, seoul 91%, umd 92%
   A10001004: {
@@ -121,6 +125,7 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     umd_rank: 11, umd_total: 12,
     sgg_rank: 260, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 2920, seoul_total: 3200, seoul_avg_common: 18000,
+    common_ratio_rank: 2900, personal_ratio_rank: 300,
   },
 };
 
@@ -169,22 +174,24 @@ async function getD1MgmtFeeResult(
     WITH snapshot AS (
       SELECT * FROM apt_mgmt_fee
       WHERE billing_ym = ? AND sido = '서울특별시'
-        AND common_per_hh IS NOT NULL
+        AND total_per_hh IS NOT NULL AND total_per_hh > 0
     ),
     ranked AS (
       SELECT
         s.*,
-        RANK() OVER(PARTITION BY s.umd_nm ORDER BY s.common_per_hh) as umd_rank,
+        RANK() OVER(PARTITION BY s.umd_nm ORDER BY s.total_per_hh) as umd_rank,
         COUNT(*) OVER(PARTITION BY s.umd_nm) as umd_total,
-        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.common_per_hh) as sgg_rank,
+        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.total_per_hh) as sgg_rank,
         COUNT(*) OVER(PARTITION BY s.sgg_nm) as sgg_total,
-        RANK() OVER(ORDER BY s.common_per_hh) as seoul_rank,
+        RANK() OVER(ORDER BY s.total_per_hh) as seoul_rank,
         COUNT(*) OVER() as seoul_total,
         AVG(s.common_per_hh) OVER() as seoul_avg_common,
         AVG(s.security_per_hh) OVER() as seoul_avg_security,
         AVG(s.common_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_common,
         AVG(s.security_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_security,
-        AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common
+        AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common,
+        RANK() OVER(ORDER BY CAST(s.common_per_hh AS REAL) / s.total_per_hh) as common_ratio_rank,
+        RANK() OVER(ORDER BY CAST(s.total_per_hh - s.common_per_hh AS REAL) / s.total_per_hh) as personal_ratio_rank
       FROM snapshot s
     )
     SELECT * FROM ranked
