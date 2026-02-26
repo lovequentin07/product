@@ -171,7 +171,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v2:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     const cached = await cache.get(cacheKey, 'json') as MgmtFeeResult | null;

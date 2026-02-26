@@ -64,26 +64,17 @@ function BarRow({ label, dotColor, score }: BarRowProps) {
 interface CompareRowProps {
   label: string;
   amount: number | null;
-  sggRank: number | null;
-  sggTotal: number | null;
   sggAvg: number | null;
 }
 
-function CompareRow({ label, amount, sggRank, sggTotal, sggAvg }: CompareRowProps) {
-  const rankPct = sggRank != null && sggTotal != null && sggTotal > 0
-    ? Math.round((sggRank / sggTotal) * 100)
-    : null;
-
+function CompareRow({ label, amount, sggAvg }: CompareRowProps) {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
         {label}
       </span>
       <span className="text-sm font-bold text-gray-900 dark:text-gray-100 text-right whitespace-nowrap">
         {amount != null ? `${amount.toLocaleString()}원` : '-'}
-      </span>
-      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
-        {rankPct != null ? `${rankPct}%` : '-'}
       </span>
       <span className="text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">
         {sggAvg != null ? `${Math.round(sggAvg).toLocaleString()}원` : '-'}
@@ -183,33 +174,14 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
           주요 항목 비교
         </p>
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
           <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">랭킹</span>
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구 평균</span>
         </div>
-        <CompareRow
-          label="총 관리비"
-          amount={result.total_per_hh}
-          sggRank={result.sgg_rank}
-          sggTotal={result.sgg_total}
-          sggAvg={result.sgg_avg_total}
-        />
-        <CompareRow
-          label="공동관리비"
-          amount={result.common_per_hh}
-          sggRank={result.common_sgg_rank}
-          sggTotal={result.sgg_total}
-          sggAvg={result.sgg_avg_common}
-        />
-        <CompareRow
-          label="개인관리비"
-          amount={personalFee}
-          sggRank={result.personal_sgg_rank}
-          sggTotal={result.sgg_total}
-          sggAvg={sggAvgPersonal}
-        />
+        <CompareRow label="총 관리비" amount={result.total_per_hh} sggAvg={result.sgg_avg_total} />
+        <CompareRow label="공동관리비" amount={result.common_per_hh} sggAvg={result.sgg_avg_common} />
+        <CompareRow label="개인관리비" amount={personalFee} sggAvg={sggAvgPersonal} />
       </div>
 
       {/* 공유 버튼 */}
