@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://datazip.net"),
   title: {
-    default: "서울 아파트 실거래가 조회",
+    default: "DataZip — 아파트 관리비·실거래가 비교",
     template: "%s | DataZip",
   },
-  description: "서울 아파트 실거래가를 지역·기간별로 조회하세요. 공공데이터 기반 최신 거래 정보를 제공합니다.",
-  keywords: ['아파트 실거래가', '서울 아파트', '아파트 시세', '매매가', '실거래가 조회'],
+  description: "우리 아파트 관리비가 동네·구·서울 전체 대비 어느 수준인지 확인하고, 실거래가까지 한눈에 조회하세요. K-apt·국토부 공공데이터 기반.",
+  keywords: ['아파트 관리비', '관리비 비교', '아파트 실거래가', '서울 아파트', 'K-apt'],
   openGraph: {
     siteName: "DataZip",
     locale: "ko_KR",
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "서울 아파트 실거래가 조회 | DataZip",
-    description: "서울 25개 구 아파트 실거래가를 한눈에 조회하세요. 국토교통부 공공데이터 기반 131만건.",
+    title: "DataZip — 아파트 관리비·실거래가 비교",
+    description: "우리 아파트 관리비가 동네·구·서울 전체 대비 어느 수준인지 확인하고, 실거래가까지 한눈에 조회하세요.",
   },
   other: {
     'naver-site-verification': '5098c8f688adf3e28c89a3f09e53a8a65ffbf83c',
@@ -42,7 +42,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "DataZip",
   url: "https://datazip.net",
-  description: "서울 아파트 실거래가 조회 서비스",
+  description: "아파트 관리비·실거래가 비교 서비스",
 };
 
 const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;

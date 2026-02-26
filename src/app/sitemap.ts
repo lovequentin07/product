@@ -17,8 +17,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${BASE_URL}/apt`,
       lastModified: latestDate,
-      changeFrequency: "daily",
-      priority: 0.9,
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/privacy-policy`,
@@ -36,16 +36,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE_URL}/apt/${encodeURIComponent(r.name)}`,
       lastModified: latestDate,
       changeFrequency: "weekly" as const,
-      priority: 0.85,
+      priority: 0.7,
     }));
 
   // 관리비 지킴이 — 랜딩 페이지만 포함 (단지별 페이지는 D1 데이터 로드 후 추가)
   const mgmtUrls: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/apt-mgmt`,
-      lastModified: new Date('2026-02-24'),
-      changeFrequency: 'monthly',
-      priority: 0.8,
+      lastModified: new Date('2026-02-26'),
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
   ];
 
