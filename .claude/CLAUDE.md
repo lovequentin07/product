@@ -1,6 +1,13 @@
-# CLAUDE.md
+## Execution Workflow
 
-이 파일은 이 저장소에서 작업할 때 Claude Code(claude.ai/code)에게 제공되는 가이드입니다.
+모든 작업은 WORKFLOW.md에 적힌 규칙을 준수하여 진행합니다. 
+ALWAYS follow strict execution WORKFLOW.md workflow for Claude Code.
+
+- For any non-trivial task, enter plan mode first.
+- Detailed execution rules are defined in `.claude/WORKFLOW.md`.
+- Task planning and progress tracking must be done in `tasks/todo.md`.
+- Repeated mistakes must be recorded in `tasks/lessons.md`.
+- Never mark work as done without verification.
 
 ## 프로젝트 개요
 
@@ -66,12 +73,4 @@ npm run lint             # ESLint 실행
 
 `@/*` → `./src/*` (`tsconfig.json` 설정)
 
-## Execution Workflow
 
-This repository enforces a strict execution workflow for Claude Code.
-
-- For any non-trivial task, enter plan mode first.
-- Detailed execution rules are defined in `.claude/workflow.md`.
-- Task planning and progress tracking must be done in `tasks/todo.md`.
-- Repeated mistakes must be recorded in `tasks/lessons.md`.
-- Never mark work as done without verification.

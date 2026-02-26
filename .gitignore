@@ -54,3 +54,5 @@ firebase-debug.log
 next-env.d.ts
 .wrangler/
 .claude/data_source/*.xlsx
+.claude/img_check/
+.idx/
