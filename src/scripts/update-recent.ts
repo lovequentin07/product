@@ -159,7 +159,7 @@ async function updateMonth(year: number, month: number, yyyymm: string): Promise
   }
 
   // 2. DELETE 기존 데이터
-  const deleteSql = `DELETE FROM transactions WHERE deal_year = ${year} AND deal_month = ${month};`;
+  const deleteSql = `DELETE FROM apt_transactions WHERE deal_year = ${year} AND deal_month = ${month};`;
   await runSQL(deleteSql, `DELETE ${yyyymm}`);
 
   if (allItems.length === 0) return 0;
@@ -178,7 +178,7 @@ async function updateMonth(year: number, month: number, yyyymm: string): Promise
   for (let i = 0; i < valueRows.length; i += BATCH_SIZE) {
     const batch = valueRows.slice(i, i + BATCH_SIZE);
     const batchNo = Math.floor(i / BATCH_SIZE) + 1;
-    const insertSql = `INSERT INTO transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
+    const insertSql = `INSERT INTO apt_transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
     await runSQL(insertSql, `INSERT ${yyyymm} 배치 ${batchNo}/${totalBatches} (${batch.length}건)`);
   }
 
