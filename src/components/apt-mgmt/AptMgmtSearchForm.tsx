@@ -161,7 +161,7 @@ export default function AptMgmtSearchForm() {
       <button
         type="submit"
         disabled={!sggNm || !selectedApt}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+        className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all text-sm"
       >
         관리비 분석 시작
       </button>
