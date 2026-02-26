@@ -35,8 +35,12 @@ export default function AptMgmtShareButtons() {
     if (navigator.share) {
       try {
         await navigator.share({ url: window.location.href });
-      } catch {
-        // 취소 또는 실패 — 무시
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          // WebView 등 공유 API 지원 불완전 — 복사로 폴백
+          handleCopy();
+        }
+        // AbortError: 사용자가 공유 취소 — 무시
       }
     } else {
       handleCopy();

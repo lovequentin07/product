@@ -98,7 +98,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-1">
           관리비 분석 결과
         </p>
-        <p className="text-base font-semibold text-gray-800 dark:text-gray-100">
+        <p className="text-base font-semibold text-gray-800 dark:text-gray-100 break-words">
           {result.sgg_nm} {result.umd_nm} {result.apt_nm}
         </p>
       </div>
@@ -110,7 +110,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
             {percentLabel}
           </p>
         )}
-        <h3 className={`text-lg sm:text-xl font-bold leading-snug ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
+        <h3 className={`text-lg sm:text-xl font-bold leading-snug break-words ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
           {title}
         </h3>
         {desc && (
