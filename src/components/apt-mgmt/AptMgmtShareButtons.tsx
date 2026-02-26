@@ -1,10 +1,15 @@
 'use client';
 // src/components/apt-mgmt/AptMgmtShareButtons.tsx
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AptMgmtShareButtons() {
   const [copied, setCopied] = useState(false);
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== 'undefined' && !!navigator.share);
+  }, []);
 
   const handleCopy = async () => {
     const url = window.location.href;
@@ -55,12 +60,14 @@ export default function AptMgmtShareButtons() {
       >
         {copied ? '✅ 복사됨' : '🔗 링크 복사'}
       </button>
-      <button
-        onClick={handleShare}
-        className="flex items-center gap-1.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium py-1.5 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 active:scale-95 transition-colors text-xs"
-      >
-        공유하기
-      </button>
+      {canShare && (
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium py-1.5 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 active:scale-95 transition-colors text-xs"
+        >
+          공유하기
+        </button>
+      )}
     </div>
   );
 }
