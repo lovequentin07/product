@@ -20,3 +20,17 @@ JSONL 전체 스캔 + 이름 퍼지 매칭 로직을 작성함.
 
 **교훈**: 현재 서비스에 실제로 필요한 데이터 연결인지 먼저 확인할 것.
 "나중에 필요할 수도 있다"는 이유로 복잡도를 추가하지 말 것.
+
+## 모바일/PC 양쪽 기준 개발 (항상 적용)
+
+모든 프론트엔드 작업은 모바일(375px)과 PC(1280px) 양쪽에서 확인해야 함.
+Tailwind 반응형 프리픽스(`sm:`, `md:`) 적극 활용.
+수평 오버플로우 방지: 페이지/섹션 루트에 `overflow-x-hidden` 적용.
+
+## 2026-02-26: `export const runtime = 'edge'` 금지
+
+**상황**: Next.js API route (`/api/apt-mgmt/apts/route.ts`)에 `export const runtime = 'edge'` 선언 → 500 에러 반환.
+
+**원인**: OpenNext (`@opennextjs/cloudflare`) 번들링 방식과 충돌. runtime 지시어가 있으면 핸들러가 정상 실행되지 않음.
+
+**규칙**: Cloudflare Workers 배포 시 API route에 `runtime` 지시어 추가 금지. Next.js 기본 runtime 사용.

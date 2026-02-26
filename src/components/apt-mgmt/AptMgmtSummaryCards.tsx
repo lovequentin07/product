@@ -44,7 +44,7 @@ interface BarRowProps {
 function BarRow({ label, dotColor, score }: BarRowProps) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1.5 w-20 sm:w-28 shrink-0">
+      <div className="flex items-center gap-1.5 w-[6.5rem] sm:w-28 shrink-0">
         <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
         <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
       </div>
@@ -114,9 +114,13 @@ export default function AptMgmtSummaryCards({ result }: Props) {
           {title}
         </h3>
         {desc && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-line leading-7">
-            {desc}
-          </p>
+          <div className="space-y-2 text-center">
+            {desc.split('\n').map((line, i) => (
+              <p key={i} className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                {line}
+              </p>
+            ))}
+          </div>
         )}
       </div>
 
