@@ -70,6 +70,10 @@ interface CompareRowProps {
 }
 
 function CompareRow({ label, amount, sggRank, sggTotal, sggAvg }: CompareRowProps) {
+  const rankPct = sggRank != null && sggTotal != null && sggTotal > 0
+    ? Math.round((sggRank / sggTotal) * 100)
+    : null;
+
   return (
     <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
@@ -78,11 +82,11 @@ function CompareRow({ label, amount, sggRank, sggTotal, sggAvg }: CompareRowProp
       <span className="text-sm font-bold text-gray-900 dark:text-gray-100 text-right whitespace-nowrap">
         {amount != null ? `${amount.toLocaleString()}원` : '-'}
       </span>
-      <span className="text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
-        {sggRank != null && sggTotal != null ? `${sggRank.toLocaleString()}위 / ${sggTotal.toLocaleString()}개` : '-'}
+      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
+        {rankPct != null ? `${rankPct}%` : '-'}
       </span>
       <span className="text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">
-        평균 {sggAvg != null ? `${Math.round(sggAvg).toLocaleString()}원` : '-'}
+        {sggAvg != null ? `${Math.round(sggAvg).toLocaleString()}원` : '-'}
       </span>
     </div>
   );
@@ -182,7 +186,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
           <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구내 순위</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">랭킹</span>
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구 평균</span>
         </div>
         <CompareRow

@@ -61,9 +61,9 @@ const MOCK_BASE = {
   ltm_reserve_rate: 85.5,
   misc_income: 2000000,
   household_cnt: 500,
-  security_per_hh: 5010,
-  cleaning_per_hh: 2506,
-  ltm_per_hh: 5010,
+  security_per_hh: Math.round(10000000 / 500),   // security_cost / household_cnt
+  cleaning_per_hh: Math.round(5000000 / 500),    // cleaning_cost / household_cnt
+  ltm_per_hh: Math.round(10000000 / 500),        // ltm_monthly_charge / household_cnt
   sgg_avg_security: 4500,
   seoul_avg_security: 3800,
   umd_avg_common: 22000,
