@@ -1,8 +1,8 @@
 'use client';
 // src/components/apt-mgmt/AptMgmtSearchForm.tsx
-// 구 드롭다운 → 아파트 드롭다운 → 제출
+// 구 드롭다운 → 아파트 텍스트 입력(자동완성) → 제출
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { regions } from '@/data/regions';
 import { MgmtFeeApt } from '@/types/management-fee';
@@ -14,36 +14,72 @@ const SEOUL_DISTRICTS = regions
 export default function AptMgmtSearchForm() {
   const router = useRouter();
   const [sggNm, setSggNm] = useState('');
-  const [kaptCode, setKaptCode] = useState('');
   const [apts, setApts] = useState<MgmtFeeApt[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // sggNm이 없으면 빈 목록으로 파생 — effect 내 직접 setState 불필요
-  const visibleApts = sggNm ? apts : [];
-  const effectiveKaptCode = sggNm ? kaptCode : '';
+  // 자동완성 상태
+  const [inputValue, setInputValue] = useState('');
+  const [selectedApt, setSelectedApt] = useState<MgmtFeeApt | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 구 변경 시 아파트 목록 로드 + 선택 초기화
   useEffect(() => {
+    setSelectedApt(null);
+    setInputValue('');
+    setShowDropdown(false);
+    setApts([]);
     if (!sggNm) return;
+
     setLoading(true);
     setError('');
     fetch(`/api/apt-mgmt/apts?sgg_nm=${encodeURIComponent(sggNm)}`)
       .then((r) => r.json() as Promise<MgmtFeeApt[]>)
-      .then((data) => {
-        setApts(data);
-        setKaptCode('');
-      })
+      .then((data) => setApts(Array.isArray(data) ? data : []))
       .catch(() => setError('아파트 목록을 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
   }, [sggNm]);
 
+  // 클라이언트 필터링
+  const filtered = (() => {
+    const q = inputValue.replace(/\s+/g, '').toLowerCase();
+    if (!q) return apts.slice(0, 50);
+    return apts
+      .filter((a) => {
+        const nm = a.apt_nm.replace(/\s+/g, '').toLowerCase();
+        const umd = (a.umd_nm ?? '').toLowerCase();
+        return nm.includes(q) || umd.includes(q);
+      })
+      .slice(0, 50);
+  })();
+
+  const handleSelect = (apt: MgmtFeeApt) => {
+    setSelectedApt(apt);
+    setInputValue(apt.apt_nm);
+    setShowDropdown(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setSelectedApt(null);
+    setShowDropdown(true);
+  };
+
+  const handleFocus = () => {
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+    if (apts.length > 0) setShowDropdown(true);
+  };
+
+  const handleBlur = () => {
+    blurTimer.current = setTimeout(() => setShowDropdown(false), 150);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sggNm || !effectiveKaptCode) return;
-    const apt = visibleApts.find((a) => a.kapt_code === effectiveKaptCode);
-    if (!apt) return;
+    if (!sggNm || !selectedApt) return;
     router.push(
-      `/apt-mgmt/${encodeURIComponent(sggNm)}/${encodeURIComponent(apt.apt_nm)}?kaptCode=${effectiveKaptCode}`
+      `/apt-mgmt/${encodeURIComponent(sggNm)}/${encodeURIComponent(selectedApt.apt_nm)}?kaptCode=${selectedApt.kapt_code}`
     );
   };
 
@@ -72,39 +108,60 @@ export default function AptMgmtSearchForm() {
           >
             <option value="">-- 구를 선택하세요 --</option>
             {SEOUL_DISTRICTS.map((r) => (
-              <option key={r.code} value={r.name}>
-                {r.name}
-              </option>
+              <option key={r.code} value={r.name}>{r.name}</option>
             ))}
           </select>
         </div>
 
-        {/* 아파트 선택 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">아파트 선택</label>
-          <select
-            value={effectiveKaptCode}
-            onChange={(e) => setKaptCode(e.target.value)}
+        {/* 아파트 자동완성 */}
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">아파트 검색</label>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             disabled={!sggNm || loading}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500"
-          >
-            <option value="">
-              {loading ? '불러오는 중...' : visibleApts.length === 0 && sggNm ? '단지 정보 없음' : '-- 아파트를 선택하세요 --'}
-            </option>
-            {visibleApts.map((a) => (
-              <option key={a.kapt_code} value={a.kapt_code}>
-                {a.apt_nm}{a.umd_nm ? ` (${a.umd_nm})` : ''}
-              </option>
-            ))}
-          </select>
+            placeholder={
+              loading ? '불러오는 중...' :
+              !sggNm ? '구를 먼저 선택하세요' :
+              '아파트명 입력'
+            }
+            autoComplete="off"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500 placeholder:text-gray-400"
+          />
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+
+          {/* 드롭다운 */}
+          {showDropdown && filtered.length > 0 && (
+            <ul className="absolute z-10 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filtered.map((a) => (
+                <li
+                  key={a.kapt_code}
+                  onMouseDown={() => handleSelect(a)}
+                  className="flex items-baseline justify-between px-3 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
+                >
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{a.apt_nm}</span>
+                  {a.umd_nm && (
+                    <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 shrink-0">{a.umd_nm}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {showDropdown && sggNm && !loading && filtered.length === 0 && (
+            <div className="absolute z-10 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+              검색 결과가 없습니다.
+            </div>
+          )}
         </div>
       </div>
 
       <button
         type="submit"
-        disabled={!sggNm || !effectiveKaptCode}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+        disabled={!sggNm || !selectedApt}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
       >
         관리비 분석 시작
       </button>
