@@ -1,3 +1,38 @@
+# 국토교통부_공동주택 단지 목록 서비스
+- API 유형: REST
+- 데이터포맷: JSON
+- End Point: https://apis.data.go.kr/1613000/AptListService3
+- 설명: 공동주택관리정보시스템에 가입한 전국 모든 단지 코드, 단지명을 조회
+
+## Parameters
+- serviceKey (필수): 인증키
+- pageNo: 페이지번호
+- numOfRows: 목록 건수
+
+## Response
+```json
+{
+  "body": {
+    "items": [
+      {
+        "kaptCode": "string",
+        "kaptName": "string",
+        "as1": "string",  // 시도명
+        "as2": "string",  // 시군구명
+        "as3": "string",  // 읍면명
+        "as4": "string",  // 동명
+        "bjdCode": "string"
+      }
+    ],
+    "numOfRows": "string",
+    "pageNo": "string",
+    "totalCount": "string"
+  }
+}
+```
+
+---
+
 # 국토교통부_공동주택 단지 기본 정보
 - API 유형	REST	
 - 데이터포맷	JSON
