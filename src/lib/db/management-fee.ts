@@ -163,28 +163,32 @@ async function getD1MgmtFeeResult(
     if (cached) return cached;
   }
 
-  // Window function으로 랭킹 계산 (서울 전체 단지 스캔 ~3,000건)
+  // 2단계 CTE: snapshot(전체) → ranked(window 함수) → WHERE로 필터
+  // 주의: window 함수는 WHERE 이후 계산되므로 반드시 분리된 CTE 필요
   const sql = `
     WITH snapshot AS (
       SELECT * FROM apt_mgmt_fee
       WHERE billing_ym = ? AND sido = '서울특별시'
         AND common_per_hh IS NOT NULL
+    ),
+    ranked AS (
+      SELECT
+        s.*,
+        RANK() OVER(PARTITION BY s.umd_nm ORDER BY s.common_per_hh) as umd_rank,
+        COUNT(*) OVER(PARTITION BY s.umd_nm) as umd_total,
+        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.common_per_hh) as sgg_rank,
+        COUNT(*) OVER(PARTITION BY s.sgg_nm) as sgg_total,
+        RANK() OVER(ORDER BY s.common_per_hh) as seoul_rank,
+        COUNT(*) OVER() as seoul_total,
+        AVG(s.common_per_hh) OVER() as seoul_avg_common,
+        AVG(s.security_per_hh) OVER() as seoul_avg_security,
+        AVG(s.common_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_common,
+        AVG(s.security_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_security,
+        AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common
+      FROM snapshot s
     )
-    SELECT
-      s.*,
-      RANK() OVER(PARTITION BY s.umd_nm ORDER BY s.common_per_hh) as umd_rank,
-      COUNT(*) OVER(PARTITION BY s.umd_nm) as umd_total,
-      RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.common_per_hh) as sgg_rank,
-      COUNT(*) OVER(PARTITION BY s.sgg_nm) as sgg_total,
-      RANK() OVER(ORDER BY s.common_per_hh) as seoul_rank,
-      COUNT(*) OVER() as seoul_total,
-      AVG(s.common_per_hh) OVER() as seoul_avg_common,
-      AVG(s.security_per_hh) OVER() as seoul_avg_security,
-      AVG(s.common_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_common,
-      AVG(s.security_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_security,
-      AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common
-    FROM snapshot s
-    WHERE s.kapt_code = ?
+    SELECT * FROM ranked
+    WHERE kapt_code = ?
     LIMIT 1
   `;
 
