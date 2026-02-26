@@ -26,6 +26,24 @@
 
 ---
 
+# 관리비 결과 페이지 UI 개편 — 주요 항목 비교 추가
+
+## 작업 목록
+
+- [x] `src/types/management-fee.ts` — `common_ratio_rank`, `personal_ratio_rank` 제거 → `seoul_avg_total`, `sgg_avg_total`, `common_seoul_rank`, `common_sgg_rank`, `personal_seoul_rank`, `personal_sgg_rank` 추가
+- [x] `src/lib/db/management-fee.ts` — SQL window 함수 교체 (비율 RANK → 금액 RANK + AVG), mock 데이터 동기화
+- [x] `src/components/apt-mgmt/AptMgmtSummaryCards.tsx` — 바차트 3개만 유지, "주요 항목 비교" 섹션 추가
+- [x] `npm run build` 성공 확인 (TypeScript 오류 없음)
+- [x] 커밋 & 배포 (git push → Cloudflare 자동 빌드)
+
+## 결과
+
+- 바차트: 서울시/구내/동내 순위 3개만 표시 (공용·개인 비율 순위 제거)
+- 주요 항목 비교 카드: 총 관리비·공동관리비·개인관리비 각각 금액 + 서울 상위 % + 구평균 대비 ±% 표시
+- 색상: 구평균보다 비쌈 → red-500 ▲, 저렴 → emerald-500 ▼
+
+---
+
 # 공유 버튼 조건부 렌더링
 
 ## 작업 목록

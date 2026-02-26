@@ -99,9 +99,17 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   seoul_avg_common: number | null;
   seoul_avg_security: number | null;
 
-  // 비중 비율 순위 (서울 전체)
-  common_ratio_rank: number | null;   // 공용관리비 비중 순위
-  personal_ratio_rank: number | null; // 개인관리비 비중 순위
+  // 서울 평균 금액
+  seoul_avg_total: number | null;
+  sgg_avg_total: number | null;
+
+  // 공동관리비 순위
+  common_seoul_rank: number | null;
+  common_sgg_rank: number | null;
+
+  // 개인관리비 순위 (total - common)
+  personal_seoul_rank: number | null;
+  personal_sgg_rank: number | null;
 }
 
 /** 월별 이력 (차트용) */
