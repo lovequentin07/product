@@ -64,48 +64,26 @@ function BarRow({ label, dotColor, score }: BarRowProps) {
 interface CompareRowProps {
   label: string;
   amount: number | null;
-  seoulRank: number | null;
-  seoulTotal: number | null;
-  sggDiff: number | null;  // actual - avg (양수 = 비쌈, 음수 = 저렴)
+  sggRank: number | null;
+  sggTotal: number | null;
   sggAvg: number | null;
 }
 
-function CompareRow({ label, amount, seoulRank, seoulTotal, sggDiff, sggAvg }: CompareRowProps) {
-  const seoulPct = seoulRank && seoulTotal
-    ? Math.round((seoulRank / seoulTotal) * 100)
-    : null;
-
-  const diffPct = sggDiff != null && sggAvg && sggAvg > 0
-    ? Math.round((sggDiff / sggAvg) * 100)
-    : null;
-
-  const diffPositive = diffPct != null && diffPct > 0;
-  const diffNegative = diffPct != null && diffPct < 0;
-
+function CompareRow({ label, amount, sggRank, sggTotal, sggAvg }: CompareRowProps) {
   return (
-    <div className="flex items-start justify-between gap-2 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-20 shrink-0 pt-0.5">
+    <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
         {label}
       </span>
-      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 w-24 text-right shrink-0 pt-0.5">
+      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 text-right whitespace-nowrap">
         {amount != null ? `${amount.toLocaleString()}원` : '-'}
       </span>
-      <div className="flex flex-col items-end gap-0.5 min-w-0">
-        {seoulPct != null ? (
-          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            서울 상위 {seoulPct}%
-          </span>
-        ) : (
-          <span className="text-xs text-gray-400">-</span>
-        )}
-        {diffPct != null && diffPct !== 0 ? (
-          <span className={`text-xs font-semibold whitespace-nowrap ${diffPositive ? 'text-red-500' : diffNegative ? 'text-emerald-500' : 'text-gray-400'}`}>
-            구평균 대비 {diffPct > 0 ? `+${diffPct}` : diffPct}% {diffPositive ? '▲' : '▼'}
-          </span>
-        ) : diffPct === 0 ? (
-          <span className="text-xs text-gray-400 whitespace-nowrap">구평균과 동일</span>
-        ) : null}
-      </div>
+      <span className="text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
+        {sggRank != null && sggTotal != null ? `${sggRank.toLocaleString()}위 / ${sggTotal.toLocaleString()}개` : '-'}
+      </span>
+      <span className="text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">
+        평균 {sggAvg != null ? `${Math.round(sggAvg).toLocaleString()}원` : '-'}
+      </span>
     </div>
   );
 }
@@ -201,34 +179,31 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
           주요 항목 비교
         </p>
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
+          <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구내 순위</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구 평균</span>
+        </div>
         <CompareRow
           label="총 관리비"
           amount={result.total_per_hh}
-          seoulRank={result.seoul_rank}
-          seoulTotal={result.seoul_total}
-          sggDiff={result.total_per_hh != null && result.sgg_avg_total != null
-            ? result.total_per_hh - result.sgg_avg_total
-            : null}
+          sggRank={result.sgg_rank}
+          sggTotal={result.sgg_total}
           sggAvg={result.sgg_avg_total}
         />
         <CompareRow
           label="공동관리비"
           amount={result.common_per_hh}
-          seoulRank={result.common_seoul_rank}
-          seoulTotal={result.seoul_total}
-          sggDiff={result.common_per_hh != null && result.sgg_avg_common != null
-            ? result.common_per_hh - result.sgg_avg_common
-            : null}
+          sggRank={result.common_sgg_rank}
+          sggTotal={result.sgg_total}
           sggAvg={result.sgg_avg_common}
         />
         <CompareRow
           label="개인관리비"
           amount={personalFee}
-          seoulRank={result.personal_seoul_rank}
-          seoulTotal={result.seoul_total}
-          sggDiff={personalFee != null && sggAvgPersonal != null
-            ? personalFee - sggAvgPersonal
-            : null}
+          sggRank={result.personal_sgg_rank}
+          sggTotal={result.sgg_total}
           sggAvg={sggAvgPersonal}
         />
       </div>
