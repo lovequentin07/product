@@ -7,14 +7,37 @@ export default function AptMgmtShareButtons() {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // 두 방법 모두 실패 — 무시
+      }
+    }
   };
 
   const handleShare = async () => {
     if (navigator.share) {
-      await navigator.share({ url: window.location.href });
+      try {
+        await navigator.share({ url: window.location.href });
+      } catch {
+        // 취소 또는 실패 — 무시
+      }
     } else {
       handleCopy();
     }

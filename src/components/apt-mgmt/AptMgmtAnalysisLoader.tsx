@@ -40,7 +40,7 @@ export default function AptMgmtAnalysisLoader({ onComplete }: Props) {
   if (done) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 space-y-6">
+    <div className="flex flex-col items-center justify-center py-10 sm:py-20 space-y-6">
       {/* 스피너 */}
       <div className="relative w-16 h-16">
         <div className="absolute inset-0 rounded-full border-4 border-blue-100 dark:border-blue-900" />
@@ -58,7 +58,7 @@ export default function AptMgmtAnalysisLoader({ onComplete }: Props) {
       </div>
 
       {/* 진행 바 */}
-      <div className="w-64 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="w-full max-w-[16rem] h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
           className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${((stepIdx + 1) / STEPS.length) * 100}%` }}

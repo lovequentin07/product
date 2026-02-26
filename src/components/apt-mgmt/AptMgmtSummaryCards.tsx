@@ -44,7 +44,7 @@ interface BarRowProps {
 function BarRow({ label, dotColor, score }: BarRowProps) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1.5 w-28 shrink-0">
+      <div className="flex items-center gap-1.5 w-20 sm:w-28 shrink-0">
         <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
         <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
       </div>
@@ -106,11 +106,11 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       {/* 메인 결과 */}
       <div className="text-center space-y-4">
         {percentLabel && (
-          <p className={`text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
+          <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
             {percentLabel}
           </p>
         )}
-        <h3 className={`text-xl font-bold leading-snug ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
+        <h3 className={`text-lg sm:text-xl font-bold leading-snug ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
           {title}
         </h3>
         {desc && (

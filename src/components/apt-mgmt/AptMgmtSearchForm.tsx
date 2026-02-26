@@ -84,7 +84,7 @@ export default function AptMgmtSearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-6 space-y-4">
       <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">아파트 관리비 분석</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
