@@ -40,13 +40,8 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     notFound();
   }
 
-  let result;
-  try {
-    result = await getMgmtFeeResult(kaptCode);
-  } catch (e) {
-    console.error('[apt-mgmt] getMgmtFeeResult failed:', kaptCode, e);
-    notFound();
-  }
+  // DB 에러 시 error.tsx가 처리 (try-catch로 notFound() 하지 않음)
+  const result = await getMgmtFeeResult(kaptCode);
 
   if (!result) {
     notFound();
