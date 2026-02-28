@@ -39,13 +39,25 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     notFound();
   }
 
-  const result = await getMgmtFeeResult(kaptCode);
+  let result;
+  try {
+    result = await getMgmtFeeResult(kaptCode);
+  } catch (e) {
+    console.error('[apt-mgmt] getMgmtFeeResult failed:', kaptCode, e);
+    throw e;
+  }
 
   if (!result) {
     notFound();
   }
 
-  const topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, kaptCode);
+  let topApts;
+  try {
+    topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, kaptCode);
+  } catch (e) {
+    console.error('[apt-mgmt] getMgmtFeeTopApts failed:', kaptCode, e);
+    throw e;
+  }
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
