@@ -94,8 +94,10 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       ? Math.round((rank / total) * 100)
       : Math.round(((total - rank) / total) * 100) + 1
     : null;
+  // Tier C(중간)는 "상위 N%" 표현 대신 "중간 수준"으로 명확하게 표시
   const percentLabel = percent !== null
-    ? isGood ? `상위 ${percent}%` : `하위 ${percent}%`
+    ? tier === 'C' ? '중간 수준'
+    : isGood ? `상위 ${percent}%` : `하위 ${percent}%`
     : null;
 
   const config = tier ? tierConfig[tier] : null;

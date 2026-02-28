@@ -185,6 +185,7 @@ async function getD1MgmtFeeResult(
       SELECT * FROM apt_mgmt_fee
       WHERE billing_ym = ? AND sido = '서울특별시'
         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+        AND household_cnt >= 10
     ),
     ranked AS (
       SELECT

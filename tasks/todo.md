@@ -21,8 +21,37 @@
 
 ## 다음 할 일
 
-- [ ] 프로덕션 검증: 실데이터로 순위 결과 확인
+- [x] 프로덕션 검증: 실데이터로 순위 결과 확인
 - [ ] 애드센스 심사 승인 대기
+
+---
+
+# 관리비 데이터 이상 검증 및 수정
+
+## 검증 결과 (2026-02-28)
+
+포레나송파 검색 결과 수치가 이상해 보여 D1 SQL로 전면 검증 진행.
+
+**결론: 데이터 정확 + 이상값 1건 + UI 표현 문제 발견**
+
+| 수치 | 검증 | 결과 |
+|------|------|------|
+| 서울시 24점 | seoul_rank=1928/2543 → (2543-1928+1)/2543×100=24 | ✅ 정확 |
+| 구내 47점 | sgg_rank=71/132 → (132-71+1)/132×100=47 | ✅ 정확 |
+| 동내 40점 | umd_rank=10/15 → (15-10+1)/15×100=40 | ✅ 정확 |
+| total_per_hh 332,306원 | (134400605+278511616+13104193)/1282=332,306 | ✅ 정확 |
+| billing_ym 왜곡 | 포레나송파=202512, 2543개 단지 비교 | ✅ 왜곡 없음 |
+
+**발견된 문제:**
+1. 동대문구 래미안크레시티: household_cnt=1(오염) → total_per_hh=557,043,719원 이상값
+2. Tier C "상위 54%" 표현: 중간 수준인데 "상위"로 표시 → 오해 유발
+
+## 수정 완료
+
+- [x] `management-fee.ts` snapshot에 `AND household_cnt >= 10` 조건 추가 (이상값 필터)
+- [x] `AptMgmtSummaryCards.tsx` Tier C → "중간 수준" 고정 텍스트 (% 표시 제거)
+- [x] `npm run build` 성공 확인
+- [x] 커밋 & 배포
 
 ---
 
@@ -60,6 +89,6 @@
 
 ## Cloudflare 설정 (수동 필요)
 
-- [ ] SSL/TLS → Edge Certificates → **Always Use HTTPS** ON
-- [ ] **Automatic HTTPS Rewrites** ON
+- [x] SSL/TLS → Edge Certificates → **Always Use HTTPS** ON
+- [x] **Automatic HTTPS Rewrites** ON
 - [ ] (선택) HSTS 활성화
