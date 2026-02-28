@@ -265,7 +265,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v8:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v9:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     try {
@@ -276,98 +276,88 @@ async function getD1MgmtFeeResult(
     }
   }
 
-  // Step 1: 메인 행 + 사전집계 평균 (순위 없음 — 단순 JOIN)
+  // Step 1: 메인 행 (SELECT * — D1 100컬럼 한계로 JOIN 제거)
   const row = await db
-    .prepare(`
-      SELECT f.*,
-        sr_s.avg_common_per_hh   AS seoul_avg_common,
-        sr_s.avg_security_per_hh AS seoul_avg_security,
-        sr_s.avg_total_per_hh    AS seoul_avg_total,
-        sr_g.avg_common_per_hh       AS sgg_avg_common,
-        sr_g.avg_security_per_hh     AS sgg_avg_security,
-        sr_g.avg_total_per_hh        AS sgg_avg_total,
-        sr_g.avg_cleaning_per_hh     AS sgg_avg_cleaning,
-        sr_g.avg_heating_per_hh      AS sgg_avg_heating,
-        sr_g.avg_electricity_per_hh  AS sgg_avg_electricity,
-        sr_g.avg_water_per_hh        AS sgg_avg_water,
-        sr_g.avg_ltm_per_hh          AS sgg_avg_ltm,
-        sr_g.avg_labor_per_hh        AS sgg_avg_labor,
-        sr_g.avg_elevator_per_hh     AS sgg_avg_elevator,
-        sr_g.avg_repair_per_hh       AS sgg_avg_repair,
-        sr_g.avg_trust_mgmt_per_hh   AS sgg_avg_trust_mgmt,
-        sr_g.avg_hot_water_per_hh    AS sgg_avg_hot_water,
-        sr_g.avg_gas_per_hh          AS sgg_avg_gas,
-        sr_g.avg_office_per_hh       AS sgg_avg_office,
-        sr_g.avg_tax_per_hh          AS sgg_avg_tax,
-        sr_g.avg_clothing_per_hh     AS sgg_avg_clothing,
-        sr_g.avg_training_per_hh     AS sgg_avg_training,
-        sr_g.avg_vehicle_per_hh      AS sgg_avg_vehicle,
-        sr_g.avg_other_overhead_per_hh AS sgg_avg_other_overhead,
-        sr_g.avg_disinfection_per_hh AS sgg_avg_disinfection,
-        sr_g.avg_network_per_hh      AS sgg_avg_network,
-        sr_g.avg_facility_per_hh     AS sgg_avg_facility,
-        sr_g.avg_safety_per_hh       AS sgg_avg_safety,
-        sr_g.avg_disaster_per_hh     AS sgg_avg_disaster,
-        sr_g.avg_tv_per_hh           AS sgg_avg_tv,
-        sr_g.avg_sewage_per_hh       AS sgg_avg_sewage,
-        sr_g.avg_waste_per_hh        AS sgg_avg_waste,
-        sr_g.avg_tenant_rep_per_hh   AS sgg_avg_tenant_rep,
-        sr_g.avg_insurance_per_hh    AS sgg_avg_insurance,
-        sr_g.avg_election_per_hh     AS sgg_avg_election,
-        sr_g.avg_other_indiv_per_hh  AS sgg_avg_other_indiv,
-        sr_u.avg_common_per_hh       AS umd_avg_common,
-        sr_u.avg_total_per_hh        AS umd_avg_total,
-        sr_u.avg_security_per_hh     AS umd_avg_security,
-        sr_u.avg_cleaning_per_hh     AS umd_avg_cleaning,
-        sr_u.avg_heating_per_hh      AS umd_avg_heating,
-        sr_u.avg_electricity_per_hh  AS umd_avg_electricity,
-        sr_u.avg_water_per_hh        AS umd_avg_water,
-        sr_u.avg_ltm_per_hh          AS umd_avg_ltm,
-        sr_u.avg_labor_per_hh        AS umd_avg_labor,
-        sr_u.avg_elevator_per_hh     AS umd_avg_elevator,
-        sr_u.avg_repair_per_hh       AS umd_avg_repair,
-        sr_u.avg_trust_mgmt_per_hh   AS umd_avg_trust_mgmt,
-        sr_u.avg_hot_water_per_hh    AS umd_avg_hot_water,
-        sr_u.avg_gas_per_hh          AS umd_avg_gas,
-        sr_u.avg_office_per_hh       AS umd_avg_office,
-        sr_u.avg_tax_per_hh          AS umd_avg_tax,
-        sr_u.avg_clothing_per_hh     AS umd_avg_clothing,
-        sr_u.avg_training_per_hh     AS umd_avg_training,
-        sr_u.avg_vehicle_per_hh      AS umd_avg_vehicle,
-        sr_u.avg_other_overhead_per_hh AS umd_avg_other_overhead,
-        sr_u.avg_disinfection_per_hh AS umd_avg_disinfection,
-        sr_u.avg_network_per_hh      AS umd_avg_network,
-        sr_u.avg_facility_per_hh     AS umd_avg_facility,
-        sr_u.avg_safety_per_hh       AS umd_avg_safety,
-        sr_u.avg_disaster_per_hh     AS umd_avg_disaster,
-        sr_u.avg_tv_per_hh           AS umd_avg_tv,
-        sr_u.avg_sewage_per_hh       AS umd_avg_sewage,
-        sr_u.avg_waste_per_hh        AS umd_avg_waste,
-        sr_u.avg_tenant_rep_per_hh   AS umd_avg_tenant_rep,
-        sr_u.avg_insurance_per_hh    AS umd_avg_insurance,
-        sr_u.avg_election_per_hh     AS umd_avg_election,
-        sr_u.avg_other_indiv_per_hh  AS umd_avg_other_indiv
-      FROM apt_mgmt_fee f
-      LEFT JOIN apt_mgmt_fee_summary sr_s
-        ON sr_s.billing_ym = ? AND sr_s.sgg_nm = '' AND sr_s.umd_nm = ''
-      LEFT JOIN apt_mgmt_fee_summary sr_g
-        ON sr_g.billing_ym = ? AND sr_g.sgg_nm = f.sgg_nm AND sr_g.umd_nm = ''
-      LEFT JOIN apt_mgmt_fee_summary sr_u
-        ON sr_u.billing_ym = ? AND sr_u.sgg_nm = f.sgg_nm
-           AND sr_u.umd_nm = COALESCE(f.umd_nm, '')
-      WHERE f.kapt_code = ? AND f.billing_ym = ?
-    `)
-    .bind(billing_ym, billing_ym, billing_ym, kapt_code, billing_ym)
+    .prepare(`SELECT * FROM apt_mgmt_fee WHERE kapt_code = ? AND billing_ym = ?`)
+    .bind(kapt_code, billing_ym)
     .first<Record<string, unknown>>();
 
   if (!row) return null;
 
-  // Step 2: 순위 계산 — db.batch()로 10개 COUNT 쿼리를 한 번에 전송
-  // 실패해도 페이지는 렌더링 (순위 섹션만 미표시)
-  const total = row.total_per_hh as number | null;
-  const common = row.common_per_hh as number | null;
   const sgg = row.sgg_nm as string;
   const umd = row.umd_nm as string | null;
+
+  // Step 2: 사전집계 평균 (최대 3행 × 36컬럼 — D1 한계 안전)
+  try {
+    const sumRows = await db
+      .prepare(`
+        SELECT * FROM apt_mgmt_fee_summary
+        WHERE billing_ym = ?
+          AND ((sgg_nm = '' AND umd_nm = '')
+            OR (sgg_nm = ? AND umd_nm = '')
+            OR (sgg_nm = ? AND umd_nm = COALESCE(?, '')))
+      `)
+      .bind(billing_ym, sgg, sgg, umd)
+      .all<Record<string, unknown>>();
+
+    const seoulSum = sumRows.results.find(r => r.sgg_nm === '' && r.umd_nm === '');
+    const sggSum   = sumRows.results.find(r => r.sgg_nm === sgg && r.umd_nm === '');
+    const umdSum   = sumRows.results.find(r => r.sgg_nm === sgg && r.umd_nm === (umd ?? ''));
+
+    if (seoulSum) {
+      row.seoul_avg_common   = seoulSum.avg_common_per_hh   ?? null;
+      row.seoul_avg_security = seoulSum.avg_security_per_hh ?? null;
+      row.seoul_avg_total    = seoulSum.avg_total_per_hh    ?? null;
+    }
+
+    const SUMMARY_MAP: [string, string][] = [
+      ['avg_common_per_hh',        'avg_common'],
+      ['avg_security_per_hh',      'avg_security'],
+      ['avg_total_per_hh',         'avg_total'],
+      ['avg_cleaning_per_hh',      'avg_cleaning'],
+      ['avg_heating_per_hh',       'avg_heating'],
+      ['avg_electricity_per_hh',   'avg_electricity'],
+      ['avg_water_per_hh',         'avg_water'],
+      ['avg_ltm_per_hh',           'avg_ltm'],
+      ['avg_labor_per_hh',         'avg_labor'],
+      ['avg_elevator_per_hh',      'avg_elevator'],
+      ['avg_repair_per_hh',        'avg_repair'],
+      ['avg_trust_mgmt_per_hh',    'avg_trust_mgmt'],
+      ['avg_hot_water_per_hh',     'avg_hot_water'],
+      ['avg_gas_per_hh',           'avg_gas'],
+      ['avg_office_per_hh',        'avg_office'],
+      ['avg_tax_per_hh',           'avg_tax'],
+      ['avg_clothing_per_hh',      'avg_clothing'],
+      ['avg_training_per_hh',      'avg_training'],
+      ['avg_vehicle_per_hh',       'avg_vehicle'],
+      ['avg_other_overhead_per_hh','avg_other_overhead'],
+      ['avg_disinfection_per_hh',  'avg_disinfection'],
+      ['avg_network_per_hh',       'avg_network'],
+      ['avg_facility_per_hh',      'avg_facility'],
+      ['avg_safety_per_hh',        'avg_safety'],
+      ['avg_disaster_per_hh',      'avg_disaster'],
+      ['avg_tv_per_hh',            'avg_tv'],
+      ['avg_sewage_per_hh',        'avg_sewage'],
+      ['avg_waste_per_hh',         'avg_waste'],
+      ['avg_tenant_rep_per_hh',    'avg_tenant_rep'],
+      ['avg_insurance_per_hh',     'avg_insurance'],
+      ['avg_election_per_hh',      'avg_election'],
+      ['avg_other_indiv_per_hh',   'avg_other_indiv'],
+    ];
+
+    if (sggSum) {
+      for (const [src, sfx] of SUMMARY_MAP) row[`sgg_${sfx}`] = sggSum[src] ?? null;
+    }
+    if (umdSum) {
+      for (const [src, sfx] of SUMMARY_MAP) row[`umd_${sfx}`] = umdSum[src] ?? null;
+    }
+  } catch (e) {
+    console.error('[apt-mgmt] summary query failed:', kapt_code, e);
+  }
+
+  // Step 3: 순위 계산 — db.batch()로 10개 COUNT 쿼리를 한 번에 전송
+  const total = row.total_per_hh as number | null;
+  const common = row.common_per_hh as number | null;
   const personal = (total ?? 0) - (common ?? 0);
 
   const BASE = `billing_ym=? AND total_per_hh IS NOT NULL AND total_per_hh > 0 AND household_cnt >= 10`;
