@@ -84,30 +84,62 @@ function CompareRow({ label, amount, sggAvg }: CompareRowProps) {
 }
 
 export default function AptMgmtSummaryCards({ result }: Props) {
-  const tier = toTier(result.sgg_rank, result.sgg_total);
-  const rank = result.sgg_rank ?? 0;
-  const total = result.sgg_total ?? 0;
+  // 기준 결정: umd_total >= 5이면 동 기준, 아니면 구 기준 fallback
+  const useUmd = (result.umd_total ?? 0) >= 5;
+  const activeRank  = useUmd ? result.umd_rank  : result.sgg_rank;
+  const activeTotal = useUmd ? result.umd_total : result.sgg_total;
 
-  const isGood = tier === 'A' || tier === 'B' || tier === 'C';
-  const percent = total > 0
-    ? isGood
-      ? Math.round((rank / total) * 100)
-      : Math.round(((total - rank) / total) * 100) + 1
-    : null;
-  // Tier C(중간)는 "상위 N%" 표현 대신 "중간 수준"으로 명확하게 표시
-  const percentLabel = percent !== null
-    ? tier === 'C' ? '중간 수준'
-    : isGood ? `상위 ${percent}%` : `하위 ${percent}%`
-    : null;
-
+  const tier = toTier(activeRank, activeTotal);
   const config = tier ? tierConfig[tier] : null;
 
-  const title = config && percent !== null
-    ? interpolate(config.title, { apt_nm: result.apt_nm, sgg_nm: result.sgg_nm, total_count: total.toLocaleString(), rank: rank.toLocaleString(), percent })
+  // 절약점수 (활성 기준)
+  const score = rankScore(activeRank, activeTotal);
+  const scoreLabel = `절약점수 ${score}점`;
+
+  // 부제 (어떤 기준인지 명시)
+  const subtitle = useUmd
+    ? `서울시 ${result.sgg_nm} ${result.umd_nm ?? ''} 기준`
+    : `서울시 ${result.sgg_nm} 기준`;
+
+  // 동 기준 percent (A/B: 상위, D/E: 하위)
+  const isGood = tier === 'A' || tier === 'B' || tier === 'C';
+  const umdPercent = activeTotal && activeRank
+    ? isGood
+      ? Math.round((activeRank / activeTotal) * 100)
+      : Math.round(((activeTotal - activeRank) / activeTotal) * 100) + 1
+    : null;
+
+  // 구 기준 percent (fallback 텍스트용)
+  const sggRank  = result.sgg_rank  ?? 0;
+  const sggTotal = result.sgg_total ?? 0;
+  const sggPercent = sggTotal > 0
+    ? isGood
+      ? Math.round((sggRank / sggTotal) * 100)
+      : Math.round(((sggTotal - sggRank) / sggTotal) * 100) + 1
+    : null;
+
+  // 동/구 기준에 따라 템플릿 선택
+  const titleTemplate = useUmd ? config?.title         : config?.fallbackTitle;
+  const descTemplate  = useUmd ? config?.desc          : config?.fallbackDesc;
+
+  const templateVars = {
+    apt_nm:      result.apt_nm,
+    sgg_nm:      result.sgg_nm,
+    umd_nm:      result.umd_nm ?? result.sgg_nm,
+    umd_rank:    activeRank  ?? 0,
+    umd_total:   activeTotal ?? 0,
+    umd_percent: umdPercent  ?? 0,
+    rank:        sggRank,
+    total_count: sggTotal,
+    percent:     sggPercent  ?? 0,
+  };
+
+  const title = titleTemplate
+    ? interpolate(titleTemplate, templateVars)
     : result.apt_nm;
 
-  const desc = config && percent !== null
-    ? interpolate(config.desc, { apt_nm: result.apt_nm, sgg_nm: result.sgg_nm, total_count: total.toLocaleString(), rank: rank.toLocaleString(), percent })
+  const desc = descTemplate
+    ? interpolate(descTemplate, templateVars)
     : null;
 
   // 개인관리비 = 총 관리비 - 공동관리비
@@ -133,11 +165,12 @@ export default function AptMgmtSummaryCards({ result }: Props) {
 
       {/* 메인 결과 */}
       <div className="text-center space-y-4">
-        {percentLabel && (
-          <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
-            {percentLabel}
-          </p>
-        )}
+        <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
+          {scoreLabel}
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">
+          {subtitle}
+        </p>
         <h3 className={`text-lg sm:text-xl font-bold leading-snug break-words ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
           {title}
         </h3>
@@ -152,22 +185,22 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         )}
       </div>
 
-      {/* 바 차트 */}
+      {/* 바 차트 (동→구→서울) */}
       <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl px-5 py-6 space-y-4">
         <BarRow
-          label="서울시 순위"
-          dotColor="bg-blue-400"
-          score={rankScore(result.seoul_rank, result.seoul_total)}
+          label="동네 절약점수"
+          dotColor="bg-cyan-400"
+          score={rankScore(result.umd_rank, result.umd_total)}
         />
         <BarRow
-          label="구내 순위"
+          label="구 절약점수"
           dotColor="bg-violet-400"
           score={rankScore(result.sgg_rank, result.sgg_total)}
         />
         <BarRow
-          label="동내 순위"
-          dotColor="bg-cyan-400"
-          score={rankScore(result.umd_rank, result.umd_total)}
+          label="서울 절약점수"
+          dotColor="bg-blue-400"
+          score={rankScore(result.seoul_rank, result.seoul_total)}
         />
       </div>
 
