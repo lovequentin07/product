@@ -104,6 +104,31 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   seoul_avg_total: number | null;
   sgg_avg_total: number | null;
 
+  // 세부항목 동/구 평균
+  umd_avg_security: number | null;
+  sgg_avg_cleaning: number | null;
+  umd_avg_cleaning: number | null;
+  sgg_avg_heating: number | null;
+  umd_avg_heating: number | null;
+  sgg_avg_electricity: number | null;
+  umd_avg_electricity: number | null;
+  sgg_avg_water: number | null;
+  umd_avg_water: number | null;
+  sgg_avg_ltm: number | null;
+  umd_avg_ltm: number | null;
+  sgg_avg_labor: number | null;
+  umd_avg_labor: number | null;
+  sgg_avg_elevator: number | null;
+  umd_avg_elevator: number | null;
+  sgg_avg_repair: number | null;
+  umd_avg_repair: number | null;
+  sgg_avg_trust_mgmt: number | null;
+  umd_avg_trust_mgmt: number | null;
+  sgg_avg_hot_water: number | null;
+  umd_avg_hot_water: number | null;
+  sgg_avg_gas: number | null;
+  umd_avg_gas: number | null;
+
   // 공용관리비 순위
   common_seoul_rank: number | null;
   common_sgg_rank: number | null;
@@ -111,6 +136,53 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   // 개인관리비 순위 (total - common)
   personal_seoul_rank: number | null;
   personal_sgg_rank: number | null;
+
+  // 세부항목 동/구 평균 (18개 신규)
+  sgg_avg_office: number | null;
+  umd_avg_office: number | null;
+  sgg_avg_tax: number | null;
+  umd_avg_tax: number | null;
+  sgg_avg_clothing: number | null;
+  umd_avg_clothing: number | null;
+  sgg_avg_training: number | null;
+  umd_avg_training: number | null;
+  sgg_avg_vehicle: number | null;
+  umd_avg_vehicle: number | null;
+  sgg_avg_other_overhead: number | null;
+  umd_avg_other_overhead: number | null;
+  sgg_avg_disinfection: number | null;
+  umd_avg_disinfection: number | null;
+  sgg_avg_network: number | null;
+  umd_avg_network: number | null;
+  sgg_avg_facility: number | null;
+  umd_avg_facility: number | null;
+  sgg_avg_safety: number | null;
+  umd_avg_safety: number | null;
+  sgg_avg_disaster: number | null;
+  umd_avg_disaster: number | null;
+  sgg_avg_tv: number | null;
+  umd_avg_tv: number | null;
+  sgg_avg_sewage: number | null;
+  umd_avg_sewage: number | null;
+  sgg_avg_waste: number | null;
+  umd_avg_waste: number | null;
+  sgg_avg_tenant_rep: number | null;
+  umd_avg_tenant_rep: number | null;
+  sgg_avg_insurance: number | null;
+  umd_avg_insurance: number | null;
+  sgg_avg_election: number | null;
+  umd_avg_election: number | null;
+  sgg_avg_other_indiv: number | null;
+  umd_avg_other_indiv: number | null;
+}
+
+/** 관리비 절약 1위 추천 (동/서울) */
+export interface MgmtFeeTopApt {
+  apt_nm: string;
+  sgg_nm: string;
+  umd_nm: string | null;
+  kapt_code: string;
+  total_per_hh: number;
 }
 
 /** 월별 이력 (차트용) */

@@ -119,3 +119,50 @@ K-APT Excel은 세부 항목을 **이미 집계된 값**으로 제공 → DB는 
 - [x] SSL/TLS → Edge Certificates → **Always Use HTTPS** ON
 - [x] **Automatic HTTPS Rewrites** ON
 - [ ] (선택) HSTS 활성화
+
+---
+
+# 루트 `/` 페이지 콘텐츠 허브 전환
+
+## 목표
+
+네이버 크롤러가 루트에서 내부 링크를 발견하지 못해 다른 페이지 색인 실패 → 실제 콘텐츠 페이지로 교체.
+
+## 작업 목록 (2026-02-28)
+
+- [x] `src/app/page.tsx` 전면 재작성 (permanentRedirect 제거)
+  - WebSite JSON-LD + SearchAction 추가
+  - 서비스 카드 2개: 관리비 지킴이(`/apt-mgmt`), 실거래가(`/apt`)
+  - canonical, OG 메타태그 직접 지정 (title 템플릿 우회)
+- [x] sitemap.ts — 루트 `/` 이미 `priority: 1` 포함 확인 (수정 불필요)
+- [x] robots.ts — `allow: "/"` 확인 (수정 불필요)
+- [x] `npm run build` 성공 (`/` → `○ Static` 렌더링 확인)
+- [x] 커밋 & 배포 (git push → Cloudflare 자동 빌드)
+
+## 결과
+
+- 루트 `/`: 308 redirect → 정적 200 허브 페이지
+- 봇이 루트에서 `/apt-mgmt`, `/apt` 내부 링크 발견 경로 확보
+- WebSite JSON-LD로 구글 사이트링크 검색 박스 노출 기반 마련
+
+---
+
+# 결과 카드 헤더 개편 + apt_mgmt_fee_summary 테이블
+
+## 작업 목록 (2026-02-28)
+
+- [x] `summaryConfig.ts` — 모든 tier title/desc에서 `{apt_nm},` 제거 + 자연스러운 한국어 전면 수정
+- [x] `AptMgmtSummaryCards.tsx` — 헤더 교체: "관리비 분석 결과"(1줄) → 단지명(크게) + "관리비 분석 결과"(작게 회색 2줄)
+- [x] `src/data/schema.sql` — `apt_mgmt_fee_summary` 테이블 추가
+- [x] `src/data/migrate-mgmt-summary.sql` — 신규 마이그레이션 파일 생성 (서울 전체/구/동 3단계 집계)
+- [x] `src/types/management-fee.ts` — `MgmtFeeResult`에 신규 36개 필드 추가 (18개 항목 × sgg/umd)
+- [x] `src/lib/db/management-fee.ts` — AVG window function 26개 → summary 테이블 3×LEFT JOIN 교체, KV 캐시 v5→v6
+- [x] `AptMgmtSummaryCards.tsx` — 18개 activeAvg* 변수 추가 + CompareSection props 전달
+- [x] `AptMgmtCompareSection.tsx` — Props 18개 추가 + 모든 SubRow에 avg 연결
+- [x] `npm run build` 성공 확인
+
+## 마이그레이션 실행 (배포 후)
+
+```bash
+wrangler d1 execute apt-trade-db --remote --file=src/data/migrate-mgmt-summary.sql
+```

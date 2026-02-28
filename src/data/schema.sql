@@ -176,3 +176,52 @@ CREATE INDEX IF NOT EXISTS idx_mgmt_fee_rank       ON apt_mgmt_fee(sgg_nm, umd_n
 CREATE INDEX IF NOT EXISTS idx_mgmt_fee_apt_nm     ON apt_mgmt_fee(apt_nm);
 CREATE INDEX IF NOT EXISTS idx_mgmt_fee_billing_ym ON apt_mgmt_fee(billing_ym);
 CREATE INDEX IF NOT EXISTS idx_mgmt_fee_meta       ON apt_mgmt_fee(apt_meta_id);
+
+-- ============================================================
+-- apt_mgmt_fee_summary: 관리비 사전집계 요약 테이블
+-- 매 billing_ym × (서울전체 / 구 / 동) 별 평균을 미리 계산
+-- sentinel: sgg_nm='' AND umd_nm='' → 서울 전체
+--           sgg_nm=<구> AND umd_nm='' → 구 단위
+--           sgg_nm=<구> AND umd_nm=<동> → 동 단위
+-- ============================================================
+CREATE TABLE IF NOT EXISTS apt_mgmt_fee_summary (
+  billing_ym TEXT NOT NULL,
+  sgg_nm     TEXT NOT NULL,
+  umd_nm     TEXT NOT NULL,
+  cnt        INTEGER NOT NULL,
+  -- 기존 14개 항목
+  avg_total_per_hh        REAL,
+  avg_common_per_hh       REAL,
+  avg_security_per_hh     REAL,
+  avg_cleaning_per_hh     REAL,
+  avg_heating_per_hh      REAL,
+  avg_electricity_per_hh  REAL,
+  avg_water_per_hh        REAL,
+  avg_ltm_per_hh          REAL,
+  avg_labor_per_hh        REAL,
+  avg_elevator_per_hh     REAL,
+  avg_repair_per_hh       REAL,
+  avg_trust_mgmt_per_hh   REAL,
+  avg_hot_water_per_hh    REAL,
+  avg_gas_per_hh          REAL,
+  -- 신규 18개 항목
+  avg_office_per_hh        REAL,
+  avg_tax_per_hh           REAL,
+  avg_clothing_per_hh      REAL,
+  avg_training_per_hh      REAL,
+  avg_vehicle_per_hh       REAL,
+  avg_other_overhead_per_hh REAL,
+  avg_disinfection_per_hh  REAL,
+  avg_network_per_hh       REAL,
+  avg_facility_per_hh      REAL,
+  avg_safety_per_hh        REAL,
+  avg_disaster_per_hh      REAL,
+  avg_tv_per_hh            REAL,
+  avg_sewage_per_hh        REAL,
+  avg_waste_per_hh         REAL,
+  avg_tenant_rep_per_hh    REAL,
+  avg_insurance_per_hh     REAL,
+  avg_election_per_hh      REAL,
+  avg_other_indiv_per_hh   REAL,
+  PRIMARY KEY (billing_ym, sgg_nm, umd_nm)
+);

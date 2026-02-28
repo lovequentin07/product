@@ -4,7 +4,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getMgmtFeeResult } from '@/lib/db/management-fee';
+import { getMgmtFeeResult, getMgmtFeeTopApts } from '@/lib/db/management-fee';
 import AptMgmtResultClient from '@/components/apt-mgmt/AptMgmtResultClient';
 
 interface PageProps {
@@ -45,6 +45,8 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     notFound();
   }
 
+  const topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, kaptCode);
+
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -72,7 +74,7 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
         <span className="text-gray-600 dark:text-gray-300 font-medium">{aptName}</span>
       </nav>
 
-      <AptMgmtResultClient result={result} />
+      <AptMgmtResultClient result={result} topApts={topApts} />
     </div>
   );
 }

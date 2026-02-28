@@ -96,21 +96,21 @@ export default function AptMgmtPage() {
           </ul>
         </section>
 
-        <section aria-label="자주 묻는 질문" className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">자주 묻는 질문</h2>
-          <dl className="space-y-2">
+        <section aria-label="자주 묻는 질문" className="space-y-1.5">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">자주 묻는 질문</h2>
+          <dl className="space-y-1.5">
             {FAQ_ITEMS.map(({ question, answer }) => (
               <details
                 key={question}
                 className="group bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden"
               >
-                <summary className="flex items-center justify-between cursor-pointer px-5 py-4 font-medium text-gray-800 dark:text-gray-200 list-none">
+                <summary className="flex items-center justify-between cursor-pointer px-5 py-3 font-medium text-gray-800 dark:text-gray-200 list-none">
                   <dt>{question}</dt>
                   <span className="ml-3 shrink-0 text-gray-400 group-open:rotate-180 transition-transform">
                     ▾
                   </span>
                 </summary>
-                <dd className="px-5 pb-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                <dd className="px-5 pb-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                   {answer}
                 </dd>
               </details>

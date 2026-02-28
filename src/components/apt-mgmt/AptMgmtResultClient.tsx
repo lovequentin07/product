@@ -5,13 +5,15 @@
 import { useState } from 'react';
 import AptMgmtAnalysisLoader from './AptMgmtAnalysisLoader';
 import AptMgmtSummaryCards from './AptMgmtSummaryCards';
-import { MgmtFeeResult } from '@/types/management-fee';
+import AptMgmtTopAptRecommend from './AptMgmtTopAptRecommend';
+import { MgmtFeeResult, MgmtFeeTopApt } from '@/types/management-fee';
 
 interface Props {
   result: MgmtFeeResult;
+  topApts: { umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null };
 }
 
-export default function AptMgmtResultClient({ result }: Props) {
+export default function AptMgmtResultClient({ result, topApts }: Props) {
   const [showResult, setShowResult] = useState(false);
 
   if (!showResult) {
@@ -21,6 +23,12 @@ export default function AptMgmtResultClient({ result }: Props) {
   return (
     <div className="space-y-5 animate-fade-in">
       <AptMgmtSummaryCards result={result} />
+      <AptMgmtTopAptRecommend
+        topApts={topApts}
+        currentUmdNm={result.umd_nm}
+        currentUmdRank={result.umd_rank}
+        currentSeoulRank={result.seoul_rank}
+      />
     </div>
   );
 }

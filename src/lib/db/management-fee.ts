@@ -1,7 +1,7 @@
 // src/lib/db/management-fee.ts
 // 관리비 지킴이 D1 쿼리 함수
 
-import { MgmtFeeApt, MgmtFeeResult, MgmtFeeHistory } from '@/types/management-fee';
+import { MgmtFeeApt, MgmtFeeResult, MgmtFeeHistory, MgmtFeeTopApt } from '@/types/management-fee';
 
 // -------------------------
 // Mock 데이터 (로컬 개발용)
@@ -13,6 +13,57 @@ const MOCK_APTS: MgmtFeeApt[] = [
   { kapt_code: 'A10001003', apt_nm: '개포주공', umd_nm: '개포동', billing_ym: '202501' },
   { kapt_code: 'A10001004', apt_nm: '삼성현대', umd_nm: '삼성동', billing_ym: '202501' },
 ];
+
+// mock 데이터 세부 비용을 common_per_hh / personal_per_hh 비례 계산
+function mockCosts(commonPerHh: number, personalPerHh: number, hh: number) {
+  const c = commonPerHh * hh;
+  const p = personalPerHh * hh;
+  return {
+    // 공용 세부 (비율 합 = 1.0)
+    common_mgmt_total: c,
+    labor_cost:        Math.round(c * 0.400),
+    office_cost:       Math.round(c * 0.040),
+    tax_fee:           Math.round(c * 0.020),
+    clothing_cost:     Math.round(c * 0.010),
+    training_cost:     Math.round(c * 0.004),
+    vehicle_cost:      Math.round(c * 0.006),
+    other_overhead:    Math.round(c * 0.020),
+    cleaning_cost:     Math.round(c * 0.100),
+    security_cost:     Math.round(c * 0.200),
+    disinfection_cost: Math.round(c * 0.006),
+    elevator_cost:     Math.round(c * 0.060),
+    network_cost:      Math.round(c * 0.010),
+    repair_cost:       Math.round(c * 0.060),
+    facility_cost:     Math.round(c * 0.030),
+    safety_cost:       Math.round(c * 0.010),
+    disaster_cost:     Math.round(c * 0.004),
+    trust_mgmt_fee:    Math.round(c * 0.020),
+    cleaning_per_hh:   Math.round(c * 0.100 / hh),
+    security_per_hh:   Math.round(c * 0.200 / hh),
+    // 개인 세부 (비율 합 = 1.0)
+    indiv_usage_total:  p,
+    heating_common:     Math.round(p * 0.06250),
+    heating_indiv:      Math.round(p * 0.25000),
+    heating_per_hh:     Math.round(p * 0.31250 / hh),
+    hot_water_common:   Math.round(p * 0.01250),
+    hot_water_indiv:    Math.round(p * 0.06250),
+    gas_common:         0,
+    gas_indiv:          Math.round(p * 0.03750),
+    electricity_common: Math.round(p * 0.10000),
+    electricity_indiv:  Math.round(p * 0.18750),
+    electricity_per_hh: Math.round(p * 0.28750 / hh),
+    water_common:       Math.round(p * 0.02500),
+    water_indiv:        Math.round(p * 0.10000),
+    water_per_hh:       Math.round(p * 0.12500 / hh),
+    tv_fee:             Math.round(p * 0.01250),
+    sewage_fee:         Math.round(p * 0.00625),
+    waste_fee:          Math.round(p * 0.01000),
+    tenant_rep_cost:    Math.round(p * 0.00375),
+    insurance_cost:     Math.round(p * 0.02500),
+    election_cost:      Math.round(p * 0.00125),
+    other_indiv:        Math.round(p * 0.10375),
+  };
+}
 
 // 공통 필드 (관리비 항목 등)
 const MOCK_BASE = {
@@ -68,6 +119,48 @@ const MOCK_BASE = {
   seoul_avg_security: 3800,
   umd_avg_common: 22000,
   umd_avg_total: 60000,
+  umd_avg_security: 18000,
+  sgg_avg_cleaning: 8000,
+  umd_avg_cleaning: 8000,
+  sgg_avg_heating: 9000,
+  umd_avg_heating: 9000,
+  sgg_avg_electricity: 7500,
+  umd_avg_electricity: 7500,
+  sgg_avg_water: 4000,
+  umd_avg_water: 4000,
+  sgg_avg_ltm: 18000,
+  umd_avg_ltm: 18000,
+  sgg_avg_labor: 35000,
+  umd_avg_labor: 38000,
+  sgg_avg_elevator: 5000,
+  umd_avg_elevator: 5500,
+  sgg_avg_repair: 5000,
+  umd_avg_repair: 5500,
+  sgg_avg_trust_mgmt: 1500,
+  umd_avg_trust_mgmt: 1800,
+  sgg_avg_hot_water: 9500,
+  umd_avg_hot_water: 10000,
+  sgg_avg_gas: 4500,
+  umd_avg_gas: 5500,
+  // 신규 18개 항목 (mock 평균값)
+  sgg_avg_office: 3500,   umd_avg_office: 3800,
+  sgg_avg_tax: 1800,      umd_avg_tax: 1900,
+  sgg_avg_clothing: 900,  umd_avg_clothing: 950,
+  sgg_avg_training: 350,  umd_avg_training: 370,
+  sgg_avg_vehicle: 520,   umd_avg_vehicle: 550,
+  sgg_avg_other_overhead: 1700, umd_avg_other_overhead: 1800,
+  sgg_avg_disinfection: 520,    umd_avg_disinfection: 550,
+  sgg_avg_network: 900,         umd_avg_network: 950,
+  sgg_avg_facility: 2600,       umd_avg_facility: 2800,
+  sgg_avg_safety: 870,          umd_avg_safety: 920,
+  sgg_avg_disaster: 350,        umd_avg_disaster: 370,
+  sgg_avg_tv: 1700,             umd_avg_tv: 1800,
+  sgg_avg_sewage: 850,          umd_avg_sewage: 900,
+  sgg_avg_waste: 1400,          umd_avg_waste: 1500,
+  sgg_avg_tenant_rep: 520,      umd_avg_tenant_rep: 550,
+  sgg_avg_insurance: 3500,      umd_avg_insurance: 3700,
+  sgg_avg_election: 170,        umd_avg_election: 180,
+  sgg_avg_other_indiv: 7000,    umd_avg_other_indiv: 7500,
 };
 
 // 5개 tier mock: sgg_rank/sgg_total 기준
@@ -76,9 +169,9 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
   // A등급: sgg 16%, seoul 10%, umd 25%
   A10001000: {
     ...MOCK_BASE,
+    ...mockCosts(14000, 31000, 500),
     id: 1, kapt_code: 'A10001000', apt_nm: '래미안대치팰리스', umd_nm: '대치동',
-    common_per_hh: 14000, heating_per_hh: 8000, electricity_per_hh: 7000, water_per_hh: 4000,
-    total_per_hh: 45000,
+    common_per_hh: 14000, total_per_hh: 45000,
     umd_rank: 3, umd_total: 12,
     sgg_rank: 45, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 320, seoul_total: 3200, seoul_avg_common: 18000,
@@ -89,9 +182,9 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
   // B등급: sgg 32%, seoul 25%, umd 42%
   A10001001: {
     ...MOCK_BASE,
+    ...mockCosts(18500, 39500, 500),
     id: 2, kapt_code: 'A10001001', apt_nm: '은마아파트', umd_nm: '대치동',
-    common_per_hh: 18500, heating_per_hh: 10000, electricity_per_hh: 9000, water_per_hh: 5000,
-    total_per_hh: 58000,
+    common_per_hh: 18500, total_per_hh: 58000,
     umd_rank: 5, umd_total: 12,
     sgg_rank: 90, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 800, seoul_total: 3200, seoul_avg_common: 18000,
@@ -102,9 +195,9 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
   // C등급: sgg 50%, seoul 50%, umd 50%
   A10001002: {
     ...MOCK_BASE,
+    ...mockCosts(20500, 47500, 500),
     id: 3, kapt_code: 'A10001002', apt_nm: '타워팰리스', umd_nm: '도곡동',
-    common_per_hh: 20500, heating_per_hh: 12000, electricity_per_hh: 11000, water_per_hh: 6000,
-    total_per_hh: 68000,
+    common_per_hh: 20500, total_per_hh: 68000,
     umd_rank: 6, umd_total: 12,
     sgg_rank: 140, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 1600, seoul_total: 3200, seoul_avg_common: 18000,
@@ -115,9 +208,9 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
   // D등급: sgg 71%, seoul 68%, umd 67%
   A10001003: {
     ...MOCK_BASE,
+    ...mockCosts(25000, 57000, 500),
     id: 4, kapt_code: 'A10001003', apt_nm: '개포주공', umd_nm: '개포동',
-    common_per_hh: 25000, heating_per_hh: 15000, electricity_per_hh: 13000, water_per_hh: 7000,
-    total_per_hh: 82000,
+    common_per_hh: 25000, total_per_hh: 82000,
     umd_rank: 8, umd_total: 12,
     sgg_rank: 200, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 2170, seoul_total: 3200, seoul_avg_common: 18000,
@@ -128,9 +221,9 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
   // E등급: sgg 93%, seoul 91%, umd 92%
   A10001004: {
     ...MOCK_BASE,
+    ...mockCosts(33000, 72000, 500),
     id: 5, kapt_code: 'A10001004', apt_nm: '삼성현대', umd_nm: '삼성동',
-    common_per_hh: 33000, heating_per_hh: 20000, electricity_per_hh: 18000, water_per_hh: 9000,
-    total_per_hh: 105000,
+    common_per_hh: 33000, total_per_hh: 105000,
     umd_rank: 11, umd_total: 12,
     sgg_rank: 260, sgg_total: 280, sgg_avg_common: 20000,
     seoul_rank: 2920, seoul_total: 3200, seoul_avg_common: 18000,
@@ -172,15 +265,15 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v3:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v6:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     const cached = await cache.get(cacheKey, 'json') as MgmtFeeResult | null;
     if (cached) return cached;
   }
 
-  // 2단계 CTE: snapshot(전체) → ranked(window 함수) → WHERE로 필터
-  // 주의: window 함수는 WHERE 이후 계산되므로 반드시 분리된 CTE 필요
+  // 2단계 CTE: snapshot(전체) → ranked(RANK/COUNT window 함수 + summary JOIN) → WHERE로 필터
+  // AVG는 사전집계된 apt_mgmt_fee_summary 테이블 JOIN으로 교체 (CPU 절감)
   const sql = `
     WITH snapshot AS (
       SELECT * FROM apt_mgmt_fee
@@ -197,19 +290,87 @@ async function getD1MgmtFeeResult(
         COUNT(*) OVER(PARTITION BY s.sgg_nm) as sgg_total,
         RANK() OVER(ORDER BY s.total_per_hh) as seoul_rank,
         COUNT(*) OVER() as seoul_total,
-        AVG(s.common_per_hh) OVER() as seoul_avg_common,
-        AVG(s.security_per_hh) OVER() as seoul_avg_security,
-        AVG(s.common_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_common,
-        AVG(s.security_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_security,
-        AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common,
-        AVG(s.total_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_total,
-        AVG(s.total_per_hh) OVER() as seoul_avg_total,
-        AVG(s.total_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_total,
         RANK() OVER(ORDER BY s.common_per_hh) as common_seoul_rank,
         RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.common_per_hh) as common_sgg_rank,
         RANK() OVER(ORDER BY (s.total_per_hh - s.common_per_hh)) as personal_seoul_rank,
-        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY (s.total_per_hh - s.common_per_hh)) as personal_sgg_rank
+        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY (s.total_per_hh - s.common_per_hh)) as personal_sgg_rank,
+        -- 서울 전체 평균 (summary 테이블)
+        sr_s.avg_common_per_hh   as seoul_avg_common,
+        sr_s.avg_security_per_hh as seoul_avg_security,
+        sr_s.avg_total_per_hh    as seoul_avg_total,
+        -- 구 단위 평균 (summary 테이블)
+        sr_g.avg_common_per_hh       as sgg_avg_common,
+        sr_g.avg_security_per_hh     as sgg_avg_security,
+        sr_g.avg_total_per_hh        as sgg_avg_total,
+        sr_g.avg_cleaning_per_hh     as sgg_avg_cleaning,
+        sr_g.avg_heating_per_hh      as sgg_avg_heating,
+        sr_g.avg_electricity_per_hh  as sgg_avg_electricity,
+        sr_g.avg_water_per_hh        as sgg_avg_water,
+        sr_g.avg_ltm_per_hh          as sgg_avg_ltm,
+        sr_g.avg_labor_per_hh        as sgg_avg_labor,
+        sr_g.avg_elevator_per_hh     as sgg_avg_elevator,
+        sr_g.avg_repair_per_hh       as sgg_avg_repair,
+        sr_g.avg_trust_mgmt_per_hh   as sgg_avg_trust_mgmt,
+        sr_g.avg_hot_water_per_hh    as sgg_avg_hot_water,
+        sr_g.avg_gas_per_hh          as sgg_avg_gas,
+        sr_g.avg_office_per_hh        as sgg_avg_office,
+        sr_g.avg_tax_per_hh           as sgg_avg_tax,
+        sr_g.avg_clothing_per_hh      as sgg_avg_clothing,
+        sr_g.avg_training_per_hh      as sgg_avg_training,
+        sr_g.avg_vehicle_per_hh       as sgg_avg_vehicle,
+        sr_g.avg_other_overhead_per_hh as sgg_avg_other_overhead,
+        sr_g.avg_disinfection_per_hh  as sgg_avg_disinfection,
+        sr_g.avg_network_per_hh       as sgg_avg_network,
+        sr_g.avg_facility_per_hh      as sgg_avg_facility,
+        sr_g.avg_safety_per_hh        as sgg_avg_safety,
+        sr_g.avg_disaster_per_hh      as sgg_avg_disaster,
+        sr_g.avg_tv_per_hh            as sgg_avg_tv,
+        sr_g.avg_sewage_per_hh        as sgg_avg_sewage,
+        sr_g.avg_waste_per_hh         as sgg_avg_waste,
+        sr_g.avg_tenant_rep_per_hh    as sgg_avg_tenant_rep,
+        sr_g.avg_insurance_per_hh     as sgg_avg_insurance,
+        sr_g.avg_election_per_hh      as sgg_avg_election,
+        sr_g.avg_other_indiv_per_hh   as sgg_avg_other_indiv,
+        -- 동 단위 평균 (summary 테이블)
+        sr_u.avg_common_per_hh       as umd_avg_common,
+        sr_u.avg_total_per_hh        as umd_avg_total,
+        sr_u.avg_security_per_hh     as umd_avg_security,
+        sr_u.avg_cleaning_per_hh     as umd_avg_cleaning,
+        sr_u.avg_heating_per_hh      as umd_avg_heating,
+        sr_u.avg_electricity_per_hh  as umd_avg_electricity,
+        sr_u.avg_water_per_hh        as umd_avg_water,
+        sr_u.avg_ltm_per_hh          as umd_avg_ltm,
+        sr_u.avg_labor_per_hh        as umd_avg_labor,
+        sr_u.avg_elevator_per_hh     as umd_avg_elevator,
+        sr_u.avg_repair_per_hh       as umd_avg_repair,
+        sr_u.avg_trust_mgmt_per_hh   as umd_avg_trust_mgmt,
+        sr_u.avg_hot_water_per_hh    as umd_avg_hot_water,
+        sr_u.avg_gas_per_hh          as umd_avg_gas,
+        sr_u.avg_office_per_hh        as umd_avg_office,
+        sr_u.avg_tax_per_hh           as umd_avg_tax,
+        sr_u.avg_clothing_per_hh      as umd_avg_clothing,
+        sr_u.avg_training_per_hh      as umd_avg_training,
+        sr_u.avg_vehicle_per_hh       as umd_avg_vehicle,
+        sr_u.avg_other_overhead_per_hh as umd_avg_other_overhead,
+        sr_u.avg_disinfection_per_hh  as umd_avg_disinfection,
+        sr_u.avg_network_per_hh       as umd_avg_network,
+        sr_u.avg_facility_per_hh      as umd_avg_facility,
+        sr_u.avg_safety_per_hh        as umd_avg_safety,
+        sr_u.avg_disaster_per_hh      as umd_avg_disaster,
+        sr_u.avg_tv_per_hh            as umd_avg_tv,
+        sr_u.avg_sewage_per_hh        as umd_avg_sewage,
+        sr_u.avg_waste_per_hh         as umd_avg_waste,
+        sr_u.avg_tenant_rep_per_hh    as umd_avg_tenant_rep,
+        sr_u.avg_insurance_per_hh     as umd_avg_insurance,
+        sr_u.avg_election_per_hh      as umd_avg_election,
+        sr_u.avg_other_indiv_per_hh   as umd_avg_other_indiv
       FROM snapshot s
+      LEFT JOIN apt_mgmt_fee_summary sr_s
+        ON sr_s.billing_ym = ? AND sr_s.sgg_nm = '' AND sr_s.umd_nm = ''
+      LEFT JOIN apt_mgmt_fee_summary sr_g
+        ON sr_g.billing_ym = ? AND sr_g.sgg_nm = s.sgg_nm AND sr_g.umd_nm = ''
+      LEFT JOIN apt_mgmt_fee_summary sr_u
+        ON sr_u.billing_ym = ? AND sr_u.sgg_nm = s.sgg_nm AND sr_u.umd_nm = COALESCE(s.umd_nm, '')
     )
     SELECT * FROM ranked
     WHERE kapt_code = ?
@@ -218,7 +379,7 @@ async function getD1MgmtFeeResult(
 
   let result: D1Result<MgmtFeeResult>;
   try {
-    result = await db.prepare(sql).bind(billing_ym, kapt_code).all<MgmtFeeResult>();
+    result = await db.prepare(sql).bind(billing_ym, billing_ym, billing_ym, billing_ym, kapt_code).all<MgmtFeeResult>();
   } catch (e) {
     throw new Error(`D1 apt_mgmt_fee query failed: ${(e as Error).message}`);
   }
@@ -231,6 +392,45 @@ async function getD1MgmtFeeResult(
   }
 
   return row;
+}
+
+async function getD1MgmtFeeTopApts(
+  db: D1Database,
+  billing_ym: string,
+  umd_nm: string | null,
+  exclude_kapt_code: string
+): Promise<{ umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null }> {
+  const seoulPromise = db
+    .prepare(
+      `SELECT apt_nm, sgg_nm, umd_nm, kapt_code, total_per_hh
+       FROM apt_mgmt_fee
+       WHERE billing_ym = ? AND sido = '서울특별시'
+         AND household_cnt >= 10 AND total_per_hh > 0
+         AND kapt_code != ?
+       ORDER BY total_per_hh ASC LIMIT 1`
+    )
+    .bind(billing_ym, exclude_kapt_code)
+    .first<MgmtFeeTopApt>();
+
+  if (!umd_nm) {
+    const seoul = await seoulPromise;
+    return { umd: null, seoul };
+  }
+
+  const umdPromise = db
+    .prepare(
+      `SELECT apt_nm, sgg_nm, umd_nm, kapt_code, total_per_hh
+       FROM apt_mgmt_fee
+       WHERE billing_ym = ? AND umd_nm = ? AND sido = '서울특별시'
+         AND household_cnt >= 10 AND total_per_hh > 0
+         AND kapt_code != ?
+       ORDER BY total_per_hh ASC LIMIT 1`
+    )
+    .bind(billing_ym, umd_nm, exclude_kapt_code)
+    .first<MgmtFeeTopApt>();
+
+  const [umd, seoul] = await Promise.all([umdPromise, seoulPromise]);
+  return { umd, seoul };
 }
 
 async function getD1MgmtFeeHistory(db: D1Database, kapt_code: string): Promise<MgmtFeeHistory[]> {
@@ -304,6 +504,46 @@ export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: 
     )
     .all<{ sgg_nm: string; apt_nm: string }>();
   return result.results ?? [];
+}
+
+export async function getMgmtFeeTopApts(
+  billing_ym: string,
+  umd_nm: string | null,
+  exclude_kapt_code: string
+): Promise<{ umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null }> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) {
+    const toTopApt = (r: MgmtFeeResult): MgmtFeeTopApt => ({
+      apt_nm: r.apt_nm,
+      sgg_nm: r.sgg_nm,
+      umd_nm: r.umd_nm,
+      kapt_code: r.kapt_code,
+      total_per_hh: r.total_per_hh ?? 0,
+    });
+    const candidates = Object.values(MOCK_RESULTS)
+      .filter(r => r.kapt_code !== exclude_kapt_code)
+      .sort((a, b) => (a.total_per_hh ?? 999999) - (b.total_per_hh ?? 999999));
+
+    const umdCandidate = umd_nm
+      ? candidates.find(r => r.umd_nm === umd_nm) ?? null
+      : null;
+    const seoulCandidate = candidates[0] ?? null;
+
+    return {
+      umd: umdCandidate ? toTopApt(umdCandidate) : null,
+      seoul: seoulCandidate ? toTopApt(seoulCandidate) : null,
+    };
+  }
+
+  return getD1MgmtFeeTopApts(db, billing_ym, umd_nm, exclude_kapt_code);
 }
 
 export async function getMgmtFeeHistory(kapt_code: string): Promise<MgmtFeeHistory[]> {
