@@ -268,8 +268,12 @@ async function getD1MgmtFeeResult(
   const cacheKey = `v8:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
-    const cached = await cache.get(cacheKey, 'json') as MgmtFeeResult | null;
-    if (cached) return cached;
+    try {
+      const cached = await cache.get(cacheKey, 'json') as MgmtFeeResult | null;
+      if (cached) return cached;
+    } catch (e) {
+      console.error('[apt-mgmt] cache.get failed:', kapt_code, e);
+    }
   }
 
   // Step 1: 메인 행 + 사전집계 평균 (순위 없음 — 단순 JOIN)
@@ -401,7 +405,11 @@ async function getD1MgmtFeeResult(
   }
 
   if (cache) {
-    await cache.put(cacheKey, JSON.stringify(row), { expirationTtl: 86400 });
+    try {
+      await cache.put(cacheKey, JSON.stringify(row), { expirationTtl: 86400 });
+    } catch (e) {
+      console.error('[apt-mgmt] cache.put failed:', kapt_code, e);
+    }
   }
 
   return row as unknown as MgmtFeeResult;
@@ -490,7 +498,12 @@ export async function getMgmtFeeResult(kapt_code: string): Promise<MgmtFeeResult
   }
 
   if (!db) return MOCK_RESULTS[kapt_code] ?? MOCK_RESULTS['A10001000'];
-  return getD1MgmtFeeResult(db, kapt_code, cache);
+  try {
+    return await getD1MgmtFeeResult(db, kapt_code, cache);
+  } catch (e) {
+    console.error('[getMgmtFeeResult] FATAL:', kapt_code, String(e), e instanceof Error ? e.stack : '');
+    throw e;
+  }
 }
 
 export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: string }[]> {
