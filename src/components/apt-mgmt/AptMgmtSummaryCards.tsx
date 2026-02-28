@@ -146,9 +146,14 @@ export default function AptMgmtSummaryCards({ result }: Props) {
   const personalFee = (result.total_per_hh != null && result.common_per_hh != null)
     ? result.total_per_hh - result.common_per_hh
     : null;
-  const sggAvgPersonal = (result.sgg_avg_total != null && result.sgg_avg_common != null)
-    ? result.sgg_avg_total - result.sgg_avg_common
+
+  // 비교 기준 평균 (동 기준 우선, fallback 구 기준)
+  const activeAvgTotal   = useUmd ? result.umd_avg_total   : result.sgg_avg_total;
+  const activeAvgCommon  = useUmd ? result.umd_avg_common  : result.sgg_avg_common;
+  const activeAvgPersonal = (activeAvgTotal != null && activeAvgCommon != null)
+    ? activeAvgTotal - activeAvgCommon
     : null;
+  const avgLabel = useUmd ? '동 평균' : '구 평균';
 
   return (
     <div className="space-y-8 py-2">
@@ -212,11 +217,11 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
           <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">구 평균</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 text-right">{avgLabel}</span>
         </div>
-        <CompareRow label="총 관리비" amount={result.total_per_hh} sggAvg={result.sgg_avg_total} />
-        <CompareRow label="공동관리비" amount={result.common_per_hh} sggAvg={result.sgg_avg_common} />
-        <CompareRow label="개인관리비" amount={personalFee} sggAvg={sggAvgPersonal} />
+        <CompareRow label="총 관리비" amount={result.total_per_hh} sggAvg={activeAvgTotal} />
+        <CompareRow label="공동관리비" amount={result.common_per_hh} sggAvg={activeAvgCommon} />
+        <CompareRow label="개인관리비" amount={personalFee} sggAvg={activeAvgPersonal} />
       </div>
 
       {/* 공유 버튼 */}

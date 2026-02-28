@@ -67,6 +67,7 @@ const MOCK_BASE = {
   sgg_avg_security: 4500,
   seoul_avg_security: 3800,
   umd_avg_common: 22000,
+  umd_avg_total: 60000,
 };
 
 // 5개 tier mock: sgg_rank/sgg_total 기준
@@ -171,7 +172,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v2:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v3:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     const cached = await cache.get(cacheKey, 'json') as MgmtFeeResult | null;
@@ -201,6 +202,7 @@ async function getD1MgmtFeeResult(
         AVG(s.common_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_common,
         AVG(s.security_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_security,
         AVG(s.common_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_common,
+        AVG(s.total_per_hh) OVER(PARTITION BY s.umd_nm) as umd_avg_total,
         AVG(s.total_per_hh) OVER() as seoul_avg_total,
         AVG(s.total_per_hh) OVER(PARTITION BY s.sgg_nm) as sgg_avg_total,
         RANK() OVER(ORDER BY s.common_per_hh) as common_seoul_rank,

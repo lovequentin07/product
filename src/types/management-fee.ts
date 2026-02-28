@@ -86,6 +86,7 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   umd_rank: number | null;
   umd_total: number | null;
   umd_avg_common: number | null;
+  umd_avg_total: number | null;
 
   // 구 단위 랭킹
   sgg_rank: number | null;
