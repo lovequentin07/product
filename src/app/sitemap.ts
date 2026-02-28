@@ -1,11 +1,15 @@
 import type { MetadataRoute } from "next";
 import { getLatestDealDate } from "@/lib/db/apt";
+import { getMgmtFeeAptUrlList } from "@/lib/db/management-fee";
 import { regions } from "@/data/regions";
 
 const BASE_URL = "https://datazip.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const latestDate = await getLatestDealDate();
+  const [latestDate, mgmtApts] = await Promise.all([
+    getLatestDealDate(),
+    getMgmtFeeAptUrlList(),
+  ]);
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
@@ -39,7 +43,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  // 관리비 지킴이 — 랜딩 페이지만 포함 (단지별 페이지는 D1 데이터 로드 후 추가)
+  // 관리비 지킴이 — 랜딩 + 개별 아파트 (apt_meta 상위 500개)
+  const mgmtAptUrls: MetadataRoute.Sitemap = mgmtApts.map(({ sgg_nm, apt_nm }) => ({
+    url: `${BASE_URL}/apt-mgmt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
+    lastModified: new Date('2026-02-26'),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   const mgmtUrls: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/apt-mgmt`,
@@ -47,6 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    ...mgmtAptUrls,
   ];
 
   return [...staticUrls, ...regionUrls, ...mgmtUrls];

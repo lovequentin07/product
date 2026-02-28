@@ -9,6 +9,7 @@ ALWAYS follow strict execution WORKFLOW.md workflow for Claude Code.
 - Repeated mistakes must be recorded in `tasks/lessons.md`.
 - Never mark work as done without verification.
 
+
 ## 프로젝트 개요
 
 공공데이터포털 API를 활용하여 유용한 정보를 제공하고, 고단가 애드센스 수익을 창출합니다.

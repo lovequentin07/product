@@ -73,6 +73,33 @@
 
 ---
 
+# 공용관리비 항목 누락 여부 검증
+
+## 작업 목록 (2026-02-28)
+
+- [x] `migrate-mgmt-fee.ts` COL 매핑 확인 (COL 7~24: 공용관리비 18개 컬럼)
+- [x] `schema.sql` `apt_mgmt_fee` 테이블 스키마 확인
+- [x] `create-apt-meta.ts` `step2_perHh()` 계산식 확인
+- [x] `types/management-fee.ts` 타입 정의 vs 원본 항목 대조
+
+## 검증 결과
+
+**결론: 35개 항목 모두 누락 없이 저장됨.**
+
+K-APT Excel은 세부 항목을 **이미 집계된 값**으로 제공 → DB는 집계값을 그대로 저장:
+
+| Excel 집계 컬럼 | DB 컬럼 | 포함 세부 항목 |
+|---|---|---|
+| 인건비 | `labor_cost` | 급여·제수당·상여금·퇴직금·4대보험·복리후생비 (9개) |
+| 제사무비 | `office_cost` | 사무용품·도서인쇄·여비·전기료·통신·우편 (6개) |
+| 차량유지비 | `vehicle_cost` | 연료비·수리비·보험료·기타차량유지비 (4개) |
+| 그밖의부대비용 | `other_overhead` | 관리용품·전문가자문·잡비 (3개) |
+| 나머지 13개 | 1:1 매핑 | 청소비·경비비·소독비·승강기·네트워크·수선·시설·안전·재해·위탁 등 |
+
+`common_per_hh = ROUND(common_mgmt_total / household_cnt)` — `common_mgmt_total`이 K-APT 원본 총계이므로 모든 항목 포함.
+
+---
+
 # 공유 버튼 조건부 렌더링
 
 ## 작업 목록

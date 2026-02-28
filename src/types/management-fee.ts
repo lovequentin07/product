@@ -104,7 +104,7 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   seoul_avg_total: number | null;
   sgg_avg_total: number | null;
 
-  // 공동관리비 순위
+  // 공용관리비 순위
   common_seoul_rank: number | null;
   common_sgg_rank: number | null;
 

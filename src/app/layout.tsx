@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "DataZip — 아파트 관리비·실거래가 비교",
     description: "우리 아파트 관리비가 동네·구·서울 전체 대비 어느 수준인지 확인하고, 실거래가까지 한눈에 조회하세요.",
   },

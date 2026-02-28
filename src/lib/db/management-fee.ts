@@ -282,6 +282,30 @@ export async function getMgmtFeeResult(kapt_code: string): Promise<MgmtFeeResult
   return getD1MgmtFeeResult(db, kapt_code, cache);
 }
 
+export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: string }[]> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) return [];
+
+  const result = await db
+    .prepare(
+      `SELECT DISTINCT m.sgg_nm, m.apt_nm
+       FROM apt_mgmt_fee f
+       JOIN apt_meta m ON m.kapt_code = f.kapt_code
+       WHERE m.sgg_nm IS NOT NULL AND m.apt_nm IS NOT NULL
+       LIMIT 500`
+    )
+    .all<{ sgg_nm: string; apt_nm: string }>();
+  return result.results ?? [];
+}
+
 export async function getMgmtFeeHistory(kapt_code: string): Promise<MgmtFeeHistory[]> {
   let db: D1Database | null = null;
   try {

@@ -49,16 +49,16 @@ export const tierConfig: Record<Tier, TierText> = {
   },
   D: {
     title: '{apt_nm}, 동네에서 관리비가 높은 편이에요',
-    desc: '{umd_nm} {umd_total}개 단지 중 {umd_rank}위로, 하위 {umd_percent}%예요.\n동네 평균보다 높은 수준이에요. 공용관리비 항목별로 점검해볼 필요가 있어요.\n관리비 절감 방법을 입주자 대표회의에 건의해보는 것도 좋아요.',
+    desc: '{umd_nm} {umd_total}개 단지 중 {umd_rank}위로, 하위 {umd_percent}%예요.\n동네 평균보다 높은 수준이에요. {problem_area} 항목별로 점검해볼 필요가 있어요.\n관리비 절감 방법을 입주자 대표회의에 건의해보는 것도 좋아요.',
     fallbackTitle: '{apt_nm}, 관리비가 조금 높은 편이에요',
-    fallbackDesc: '{sgg_nm} {total_count}개 단지 중 {rank}위로, 하위 {percent}%에 해당해요.\n구 평균보다 높은 수준이에요. 공용관리비 항목별로 점검해볼 필요가 있어요.\n관리비 절감 방법을 입주자 대표회의에 건의해보는 것도 좋아요.',
+    fallbackDesc: '{sgg_nm} {total_count}개 단지 중 {rank}위로, 하위 {percent}%에 해당해요.\n구 평균보다 높은 수준이에요. {problem_area} 항목별로 점검해볼 필요가 있어요.\n관리비 절감 방법을 입주자 대표회의에 건의해보는 것도 좋아요.',
     color: 'text-red-400',
   },
   E: {
     title: '{apt_nm}, 동네에서 관리비를 꼭 점검해보세요',
-    desc: '{umd_nm} {umd_total}개 단지 중 {umd_rank}위로, 하위 {umd_percent}%예요.\n관리비가 동네에서 높은 편이에요.\n공용관리비 세부 내역을 확인하고, 입주자 대표회의에 개선을 요청해보세요.',
+    desc: '{umd_nm} {umd_total}개 단지 중 {umd_rank}위로, 하위 {umd_percent}%예요.\n관리비가 동네에서 높은 편이에요.\n{problem_area} 세부 내역을 확인하고, 입주자 대표회의에 개선을 요청해보세요.',
     fallbackTitle: '{apt_nm}, 관리비를 꼭 점검해보세요',
-    fallbackDesc: '{sgg_nm} {total_count}개 단지 중 {rank}위로, 하위 {percent}%에 해당해요.\n관리비가 구 내에서 높은 편이에요.\n공용관리비 세부 내역을 확인하고, 입주자 대표회의에 개선을 요청해보세요.',
+    fallbackDesc: '{sgg_nm} {total_count}개 단지 중 {rank}위로, 하위 {percent}%에 해당해요.\n관리비가 구 내에서 높은 편이에요.\n{problem_area} 세부 내역을 확인하고, 입주자 대표회의에 개선을 요청해보세요.',
     color: 'text-red-600',
   },
 };

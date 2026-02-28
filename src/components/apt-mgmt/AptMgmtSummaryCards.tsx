@@ -118,31 +118,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       : Math.round(((sggTotal - sggRank) / sggTotal) * 100) + 1
     : null;
 
-  // 동/구 기준에 따라 템플릿 선택
-  const titleTemplate = useUmd ? config?.title         : config?.fallbackTitle;
-  const descTemplate  = useUmd ? config?.desc          : config?.fallbackDesc;
-
-  const templateVars = {
-    apt_nm:      result.apt_nm,
-    sgg_nm:      result.sgg_nm,
-    umd_nm:      result.umd_nm ?? result.sgg_nm,
-    umd_rank:    activeRank  ?? 0,
-    umd_total:   activeTotal ?? 0,
-    umd_percent: umdPercent  ?? 0,
-    rank:        sggRank,
-    total_count: sggTotal,
-    percent:     sggPercent  ?? 0,
-  };
-
-  const title = titleTemplate
-    ? interpolate(titleTemplate, templateVars)
-    : result.apt_nm;
-
-  const desc = descTemplate
-    ? interpolate(descTemplate, templateVars)
-    : null;
-
-  // 개인관리비 = 총 관리비 - 공동관리비
+  // 개인관리비 = 총 관리비 - 공용관리비
   const personalFee = (result.total_per_hh != null && result.common_per_hh != null)
     ? result.total_per_hh - result.common_per_hh
     : null;
@@ -154,6 +130,36 @@ export default function AptMgmtSummaryCards({ result }: Props) {
     ? activeAvgTotal - activeAvgCommon
     : null;
   const avgLabel = useUmd ? '동 평균' : '구 평균';
+
+  // D/E tier: 공용/개인 중 평균 초과 폭이 큰 쪽을 문제 항목으로 표시
+  const commonDiff   = (result.common_per_hh ?? 0) - (activeAvgCommon   ?? 0);
+  const personalDiff = (personalFee          ?? 0) - (activeAvgPersonal ?? 0);
+  const problemArea  = personalDiff >= commonDiff ? '개인관리비' : '공용관리비';
+
+  // 동/구 기준에 따라 템플릿 선택
+  const titleTemplate = useUmd ? config?.title         : config?.fallbackTitle;
+  const descTemplate  = useUmd ? config?.desc          : config?.fallbackDesc;
+
+  const templateVars = {
+    apt_nm:       result.apt_nm,
+    sgg_nm:       result.sgg_nm,
+    umd_nm:       result.umd_nm ?? result.sgg_nm,
+    umd_rank:     activeRank  ?? 0,
+    umd_total:    activeTotal ?? 0,
+    umd_percent:  umdPercent  ?? 0,
+    rank:         sggRank,
+    total_count:  sggTotal,
+    percent:      sggPercent  ?? 0,
+    problem_area: problemArea,
+  };
+
+  const title = titleTemplate
+    ? interpolate(titleTemplate, templateVars)
+    : result.apt_nm;
+
+  const desc = descTemplate
+    ? interpolate(descTemplate, templateVars)
+    : null;
 
   return (
     <div className="space-y-8 py-2">
@@ -220,7 +226,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
           <span className="text-xs text-gray-400 dark:text-gray-500 text-right">{avgLabel}</span>
         </div>
         <CompareRow label="총 관리비" amount={result.total_per_hh} sggAvg={activeAvgTotal} />
-        <CompareRow label="공동관리비" amount={result.common_per_hh} sggAvg={activeAvgCommon} />
+        <CompareRow label="공용관리비" amount={result.common_per_hh} sggAvg={activeAvgCommon} />
         <CompareRow label="개인관리비" amount={personalFee} sggAvg={activeAvgPersonal} />
       </div>
 
