@@ -27,6 +27,37 @@ JSONL 전체 스캔 + 이름 퍼지 매칭 로직을 작성함.
 Tailwind 반응형 프리픽스(`sm:`, `md:`) 적극 활용.
 수평 오버플로우 방지: 페이지/섹션 루트에 `overflow-x-hidden` 적용.
 
+## 2026-02-28: D1 Workers 100컬럼 제한
+
+**상황**: `apt_mgmt_fee`(59컬럼) + `apt_mgmt_fee_summary` 3중 LEFT JOIN(73컬럼) = 132컬럼 → `"D1_ERROR: too many columns in result set"` 에러 발생.
+
+**규칙**:
+- D1 쿼리 결과는 **100컬럼 이하** 유지. `SELECT *` 조인 전 반드시 `SELECT COUNT(*)`로 컬럼 수 추산.
+- 넓은 테이블 JOIN이 필요하면 별도 쿼리로 분리한 뒤 TypeScript에서 병합.
+
+## 2026-02-28: D1 Workers 동시 쿼리 금지
+
+**상황**: `Promise.all([db.prepare(...).first(), db.prepare(...).first()])` → Worker 비정상 종료, try-catch도 잡지 못함.
+
+**원인**: D1 Workers는 요청당 1개의 D1 쿼리만 in-flight 허용. 동시 실행 자체가 Worker 레벨에서 금지.
+
+**규칙**: 복수 D1 쿼리는 반드시 `db.batch([...])` 사용. `Promise.all`로 D1 쿼리 병렬화 절대 금지.
+
+## 2026-02-28: 에러를 notFound()로 변환하면 디버깅 불가
+
+**상황**: `page.tsx`에서 `catch(e) { notFound() }` → 실제 DB 에러가 404로 위장되어 원인 파악 불가.
+
+**규칙**: Server Component에서 DB 에러는 `throw`로 전파 → `error.tsx`가 처리. `notFound()`는 오직 "데이터 없음" 케이스에만 사용.
+
+## 2026-02-28: Workers 에러 디버깅 방법
+
+**유효한 방법 (우선순위 순)**:
+1. `wrangler tail` — 실시간 Worker 로그 스트리밍, 정확한 에러 메시지 확인
+2. 임시 디버그 API route — Workers 컨텍스트에서 개별 쿼리 단계 격리 테스트
+3. `wrangler d1 execute --remote` — 쿼리 자체는 통과해도 Workers 제한에 걸릴 수 있어 단독 테스트만으로 불충분
+
+**무효한 방법**: `npm run dev` 로컬 실행 (mock fallback 사용, Workers 제한 없음, 재현 불가)
+
 ## 2026-02-26: `export const runtime = 'edge'` 금지
 
 **상황**: Next.js API route (`/api/apt-mgmt/apts/route.ts`)에 `export const runtime = 'edge'` 선언 → 500 에러 반환.

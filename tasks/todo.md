@@ -1,3 +1,32 @@
+# apt-mgmt 결과 페이지 500 에러 수정 (2026-02-28)
+
+## 원인 분석
+
+`apt_mgmt_fee`(59컬럼) + `apt_mgmt_fee_summary` 3중 LEFT JOIN(73컬럼) = **132컬럼** → D1 Workers 100컬럼 제한 초과 → `"D1_ERROR: too many columns in result set"` → error.tsx 500 화면.
+
+추가 발견된 문제:
+- `getMgmtFeeTopApts`에서 `Promise.all([umdQ, seoulQ])` → D1 동시 쿼리 금지, Worker 비정상 종료
+- `page.tsx` catch 블록이 모든 예외를 `notFound()` 변환 → 404로 위장, 실 에러 은폐
+
+## 수정 내용
+
+- [x] `getD1MgmtFeeResult`: 3단계 분리
+  - Step 1: `SELECT * FROM apt_mgmt_fee` (59컬럼, 안전)
+  - Step 2: `SELECT * FROM apt_mgmt_fee_summary WHERE (3조건)` 최대 3행 → TS로 매핑
+  - Step 3: `db.batch()` 10개 COUNT 쿼리 → 순위 계산
+- [x] `getMgmtFeeTopApts`: `Promise.all` → `db.batch()`
+- [x] `page.tsx`: catch 블록 제거 → error.tsx로 전파
+- [x] KV 캐시 키 v9로 갱신 (stale 캐시 무효화)
+- [x] 임시 디버그 라우트 삭제 (`/api/apt-mgmt/debug`)
+- [x] `npm run build` 성공 / 커밋 & 배포
+
+## 디버깅 도구
+
+- `/api/apt-mgmt/debug?kaptCode=...` — Workers 컨텍스트에서 개별 쿼리 단계 격리 테스트
+- `wrangler tail` — 실시간 Worker 로그 스트리밍, 정확한 에러 메시지 확인 (`D1_ERROR: too many columns`)
+
+---
+
 # 관리비 지킴이 백엔드 완성
 
 ## 작업 목록
