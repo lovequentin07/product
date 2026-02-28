@@ -272,114 +272,150 @@ async function getD1MgmtFeeResult(
     if (cached) return cached;
   }
 
-  // 2단계 CTE: snapshot(전체) → ranked(RANK/COUNT window 함수 + summary JOIN) → WHERE로 필터
-  // AVG는 사전집계된 apt_mgmt_fee_summary 테이블 JOIN으로 교체 (CPU 절감)
+  // 단일 행 조회 + 상관 서브쿼리 순위 계산
+  // CTE로 전체 snapshot 메모리화 시 D1 Workers 처리 한계 초과 → 1행만 조회하도록 재작성
   const sql = `
-    WITH snapshot AS (
-      SELECT * FROM apt_mgmt_fee
-      WHERE billing_ym = ? AND sido = '서울특별시'
-        AND total_per_hh IS NOT NULL AND total_per_hh > 0
-        AND household_cnt >= 10
-    ),
-    ranked AS (
-      SELECT
-        s.*,
-        RANK() OVER(PARTITION BY s.umd_nm ORDER BY s.total_per_hh) as umd_rank,
-        COUNT(*) OVER(PARTITION BY s.umd_nm) as umd_total,
-        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.total_per_hh) as sgg_rank,
-        COUNT(*) OVER(PARTITION BY s.sgg_nm) as sgg_total,
-        RANK() OVER(ORDER BY s.total_per_hh) as seoul_rank,
-        COUNT(*) OVER() as seoul_total,
-        RANK() OVER(ORDER BY s.common_per_hh) as common_seoul_rank,
-        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY s.common_per_hh) as common_sgg_rank,
-        RANK() OVER(ORDER BY (s.total_per_hh - s.common_per_hh)) as personal_seoul_rank,
-        RANK() OVER(PARTITION BY s.sgg_nm ORDER BY (s.total_per_hh - s.common_per_hh)) as personal_sgg_rank,
-        -- 서울 전체 평균 (summary 테이블)
-        sr_s.avg_common_per_hh   as seoul_avg_common,
-        sr_s.avg_security_per_hh as seoul_avg_security,
-        sr_s.avg_total_per_hh    as seoul_avg_total,
-        -- 구 단위 평균 (summary 테이블)
-        sr_g.avg_common_per_hh       as sgg_avg_common,
-        sr_g.avg_security_per_hh     as sgg_avg_security,
-        sr_g.avg_total_per_hh        as sgg_avg_total,
-        sr_g.avg_cleaning_per_hh     as sgg_avg_cleaning,
-        sr_g.avg_heating_per_hh      as sgg_avg_heating,
-        sr_g.avg_electricity_per_hh  as sgg_avg_electricity,
-        sr_g.avg_water_per_hh        as sgg_avg_water,
-        sr_g.avg_ltm_per_hh          as sgg_avg_ltm,
-        sr_g.avg_labor_per_hh        as sgg_avg_labor,
-        sr_g.avg_elevator_per_hh     as sgg_avg_elevator,
-        sr_g.avg_repair_per_hh       as sgg_avg_repair,
-        sr_g.avg_trust_mgmt_per_hh   as sgg_avg_trust_mgmt,
-        sr_g.avg_hot_water_per_hh    as sgg_avg_hot_water,
-        sr_g.avg_gas_per_hh          as sgg_avg_gas,
-        sr_g.avg_office_per_hh        as sgg_avg_office,
-        sr_g.avg_tax_per_hh           as sgg_avg_tax,
-        sr_g.avg_clothing_per_hh      as sgg_avg_clothing,
-        sr_g.avg_training_per_hh      as sgg_avg_training,
-        sr_g.avg_vehicle_per_hh       as sgg_avg_vehicle,
-        sr_g.avg_other_overhead_per_hh as sgg_avg_other_overhead,
-        sr_g.avg_disinfection_per_hh  as sgg_avg_disinfection,
-        sr_g.avg_network_per_hh       as sgg_avg_network,
-        sr_g.avg_facility_per_hh      as sgg_avg_facility,
-        sr_g.avg_safety_per_hh        as sgg_avg_safety,
-        sr_g.avg_disaster_per_hh      as sgg_avg_disaster,
-        sr_g.avg_tv_per_hh            as sgg_avg_tv,
-        sr_g.avg_sewage_per_hh        as sgg_avg_sewage,
-        sr_g.avg_waste_per_hh         as sgg_avg_waste,
-        sr_g.avg_tenant_rep_per_hh    as sgg_avg_tenant_rep,
-        sr_g.avg_insurance_per_hh     as sgg_avg_insurance,
-        sr_g.avg_election_per_hh      as sgg_avg_election,
-        sr_g.avg_other_indiv_per_hh   as sgg_avg_other_indiv,
-        -- 동 단위 평균 (summary 테이블)
-        sr_u.avg_common_per_hh       as umd_avg_common,
-        sr_u.avg_total_per_hh        as umd_avg_total,
-        sr_u.avg_security_per_hh     as umd_avg_security,
-        sr_u.avg_cleaning_per_hh     as umd_avg_cleaning,
-        sr_u.avg_heating_per_hh      as umd_avg_heating,
-        sr_u.avg_electricity_per_hh  as umd_avg_electricity,
-        sr_u.avg_water_per_hh        as umd_avg_water,
-        sr_u.avg_ltm_per_hh          as umd_avg_ltm,
-        sr_u.avg_labor_per_hh        as umd_avg_labor,
-        sr_u.avg_elevator_per_hh     as umd_avg_elevator,
-        sr_u.avg_repair_per_hh       as umd_avg_repair,
-        sr_u.avg_trust_mgmt_per_hh   as umd_avg_trust_mgmt,
-        sr_u.avg_hot_water_per_hh    as umd_avg_hot_water,
-        sr_u.avg_gas_per_hh          as umd_avg_gas,
-        sr_u.avg_office_per_hh        as umd_avg_office,
-        sr_u.avg_tax_per_hh           as umd_avg_tax,
-        sr_u.avg_clothing_per_hh      as umd_avg_clothing,
-        sr_u.avg_training_per_hh      as umd_avg_training,
-        sr_u.avg_vehicle_per_hh       as umd_avg_vehicle,
-        sr_u.avg_other_overhead_per_hh as umd_avg_other_overhead,
-        sr_u.avg_disinfection_per_hh  as umd_avg_disinfection,
-        sr_u.avg_network_per_hh       as umd_avg_network,
-        sr_u.avg_facility_per_hh      as umd_avg_facility,
-        sr_u.avg_safety_per_hh        as umd_avg_safety,
-        sr_u.avg_disaster_per_hh      as umd_avg_disaster,
-        sr_u.avg_tv_per_hh            as umd_avg_tv,
-        sr_u.avg_sewage_per_hh        as umd_avg_sewage,
-        sr_u.avg_waste_per_hh         as umd_avg_waste,
-        sr_u.avg_tenant_rep_per_hh    as umd_avg_tenant_rep,
-        sr_u.avg_insurance_per_hh     as umd_avg_insurance,
-        sr_u.avg_election_per_hh      as umd_avg_election,
-        sr_u.avg_other_indiv_per_hh   as umd_avg_other_indiv
-      FROM snapshot s
-      LEFT JOIN apt_mgmt_fee_summary sr_s
-        ON sr_s.billing_ym = ? AND sr_s.sgg_nm = '' AND sr_s.umd_nm = ''
-      LEFT JOIN apt_mgmt_fee_summary sr_g
-        ON sr_g.billing_ym = ? AND sr_g.sgg_nm = s.sgg_nm AND sr_g.umd_nm = ''
-      LEFT JOIN apt_mgmt_fee_summary sr_u
-        ON sr_u.billing_ym = ? AND sr_u.sgg_nm = s.sgg_nm AND sr_u.umd_nm = COALESCE(s.umd_nm, '')
-    )
-    SELECT * FROM ranked
-    WHERE kapt_code = ?
-    LIMIT 1
+    SELECT
+      f.*,
+      -- 서울 전체 평균
+      sr_s.avg_common_per_hh   AS seoul_avg_common,
+      sr_s.avg_security_per_hh AS seoul_avg_security,
+      sr_s.avg_total_per_hh    AS seoul_avg_total,
+      -- 구 단위 평균
+      sr_g.avg_common_per_hh       AS sgg_avg_common,
+      sr_g.avg_security_per_hh     AS sgg_avg_security,
+      sr_g.avg_total_per_hh        AS sgg_avg_total,
+      sr_g.avg_cleaning_per_hh     AS sgg_avg_cleaning,
+      sr_g.avg_heating_per_hh      AS sgg_avg_heating,
+      sr_g.avg_electricity_per_hh  AS sgg_avg_electricity,
+      sr_g.avg_water_per_hh        AS sgg_avg_water,
+      sr_g.avg_ltm_per_hh          AS sgg_avg_ltm,
+      sr_g.avg_labor_per_hh        AS sgg_avg_labor,
+      sr_g.avg_elevator_per_hh     AS sgg_avg_elevator,
+      sr_g.avg_repair_per_hh       AS sgg_avg_repair,
+      sr_g.avg_trust_mgmt_per_hh   AS sgg_avg_trust_mgmt,
+      sr_g.avg_hot_water_per_hh    AS sgg_avg_hot_water,
+      sr_g.avg_gas_per_hh          AS sgg_avg_gas,
+      sr_g.avg_office_per_hh       AS sgg_avg_office,
+      sr_g.avg_tax_per_hh          AS sgg_avg_tax,
+      sr_g.avg_clothing_per_hh     AS sgg_avg_clothing,
+      sr_g.avg_training_per_hh     AS sgg_avg_training,
+      sr_g.avg_vehicle_per_hh      AS sgg_avg_vehicle,
+      sr_g.avg_other_overhead_per_hh AS sgg_avg_other_overhead,
+      sr_g.avg_disinfection_per_hh AS sgg_avg_disinfection,
+      sr_g.avg_network_per_hh      AS sgg_avg_network,
+      sr_g.avg_facility_per_hh     AS sgg_avg_facility,
+      sr_g.avg_safety_per_hh       AS sgg_avg_safety,
+      sr_g.avg_disaster_per_hh     AS sgg_avg_disaster,
+      sr_g.avg_tv_per_hh           AS sgg_avg_tv,
+      sr_g.avg_sewage_per_hh       AS sgg_avg_sewage,
+      sr_g.avg_waste_per_hh        AS sgg_avg_waste,
+      sr_g.avg_tenant_rep_per_hh   AS sgg_avg_tenant_rep,
+      sr_g.avg_insurance_per_hh    AS sgg_avg_insurance,
+      sr_g.avg_election_per_hh     AS sgg_avg_election,
+      sr_g.avg_other_indiv_per_hh  AS sgg_avg_other_indiv,
+      -- 동 단위 평균
+      sr_u.avg_common_per_hh       AS umd_avg_common,
+      sr_u.avg_total_per_hh        AS umd_avg_total,
+      sr_u.avg_security_per_hh     AS umd_avg_security,
+      sr_u.avg_cleaning_per_hh     AS umd_avg_cleaning,
+      sr_u.avg_heating_per_hh      AS umd_avg_heating,
+      sr_u.avg_electricity_per_hh  AS umd_avg_electricity,
+      sr_u.avg_water_per_hh        AS umd_avg_water,
+      sr_u.avg_ltm_per_hh          AS umd_avg_ltm,
+      sr_u.avg_labor_per_hh        AS umd_avg_labor,
+      sr_u.avg_elevator_per_hh     AS umd_avg_elevator,
+      sr_u.avg_repair_per_hh       AS umd_avg_repair,
+      sr_u.avg_trust_mgmt_per_hh   AS umd_avg_trust_mgmt,
+      sr_u.avg_hot_water_per_hh    AS umd_avg_hot_water,
+      sr_u.avg_gas_per_hh          AS umd_avg_gas,
+      sr_u.avg_office_per_hh       AS umd_avg_office,
+      sr_u.avg_tax_per_hh          AS umd_avg_tax,
+      sr_u.avg_clothing_per_hh     AS umd_avg_clothing,
+      sr_u.avg_training_per_hh     AS umd_avg_training,
+      sr_u.avg_vehicle_per_hh      AS umd_avg_vehicle,
+      sr_u.avg_other_overhead_per_hh AS umd_avg_other_overhead,
+      sr_u.avg_disinfection_per_hh AS umd_avg_disinfection,
+      sr_u.avg_network_per_hh      AS umd_avg_network,
+      sr_u.avg_facility_per_hh     AS umd_avg_facility,
+      sr_u.avg_safety_per_hh       AS umd_avg_safety,
+      sr_u.avg_disaster_per_hh     AS umd_avg_disaster,
+      sr_u.avg_tv_per_hh           AS umd_avg_tv,
+      sr_u.avg_sewage_per_hh       AS umd_avg_sewage,
+      sr_u.avg_waste_per_hh        AS umd_avg_waste,
+      sr_u.avg_tenant_rep_per_hh   AS umd_avg_tenant_rep,
+      sr_u.avg_insurance_per_hh    AS umd_avg_insurance,
+      sr_u.avg_election_per_hh     AS umd_avg_election,
+      sr_u.avg_other_indiv_per_hh  AS umd_avg_other_indiv,
+      -- 순위 (상관 서브쿼리 — 전체 스냅샷 메모리화 없음)
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sido='서울특별시'
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10 AND total_per_hh < f.total_per_hh) AS seoul_rank,
+      (SELECT COUNT(*) FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sido='서울특별시'
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10)                                     AS seoul_total,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sgg_nm=f.sgg_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10 AND total_per_hh < f.total_per_hh) AS sgg_rank,
+      (SELECT COUNT(*) FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sgg_nm=f.sgg_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10)                                     AS sgg_total,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND umd_nm IS f.umd_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10 AND total_per_hh < f.total_per_hh) AS umd_rank,
+      (SELECT COUNT(*) FROM apt_mgmt_fee
+       WHERE billing_ym=? AND umd_nm IS f.umd_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10)                                     AS umd_total,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sido='서울특별시'
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10 AND common_per_hh < f.common_per_hh) AS common_seoul_rank,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sgg_nm=f.sgg_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10 AND common_per_hh < f.common_per_hh) AS common_sgg_rank,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sido='서울특별시'
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10
+         AND (total_per_hh - COALESCE(common_per_hh, 0))
+           < (f.total_per_hh - COALESCE(f.common_per_hh, 0))) AS personal_seoul_rank,
+      (SELECT COUNT(*)+1 FROM apt_mgmt_fee
+       WHERE billing_ym=? AND sgg_nm=f.sgg_nm
+         AND total_per_hh IS NOT NULL AND total_per_hh > 0
+         AND household_cnt >= 10
+         AND (total_per_hh - COALESCE(common_per_hh, 0))
+           < (f.total_per_hh - COALESCE(f.common_per_hh, 0))) AS personal_sgg_rank
+    FROM apt_mgmt_fee f
+    LEFT JOIN apt_mgmt_fee_summary sr_s
+      ON sr_s.billing_ym = ? AND sr_s.sgg_nm = '' AND sr_s.umd_nm = ''
+    LEFT JOIN apt_mgmt_fee_summary sr_g
+      ON sr_g.billing_ym = ? AND sr_g.sgg_nm = f.sgg_nm AND sr_g.umd_nm = ''
+    LEFT JOIN apt_mgmt_fee_summary sr_u
+      ON sr_u.billing_ym = ? AND sr_u.sgg_nm = f.sgg_nm
+         AND sr_u.umd_nm = COALESCE(f.umd_nm, '')
+    WHERE f.kapt_code = ? AND f.billing_ym = ?
   `;
 
   let result: D1Result<MgmtFeeResult>;
   try {
-    result = await db.prepare(sql).bind(billing_ym, billing_ym, billing_ym, billing_ym, kapt_code).all<MgmtFeeResult>();
+    result = await db.prepare(sql).bind(
+      billing_ym, billing_ym,  // seoul_rank, seoul_total
+      billing_ym, billing_ym,  // sgg_rank, sgg_total
+      billing_ym, billing_ym,  // umd_rank, umd_total
+      billing_ym,              // common_seoul_rank
+      billing_ym,              // common_sgg_rank
+      billing_ym,              // personal_seoul_rank
+      billing_ym,              // personal_sgg_rank
+      billing_ym, billing_ym, billing_ym,  // sr_s, sr_g, sr_u JOIN
+      kapt_code, billing_ym   // WHERE
+    ).all<MgmtFeeResult>();
   } catch (e) {
     throw new Error(`D1 apt_mgmt_fee query failed: ${(e as Error).message}`);
   }
