@@ -1,8 +1,6 @@
 // 임시 디버그 라우트 — 에러 원인 파악 후 삭제
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 export async function GET(req: NextRequest) {
   const kaptCode = new URL(req.url).searchParams.get('kaptCode') ?? 'A10023709';
 
