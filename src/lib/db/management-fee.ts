@@ -413,37 +413,35 @@ async function getD1MgmtFeeTopApts(
   umd_nm: string | null,
   exclude_kapt_code: string
 ): Promise<{ umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null }> {
-  const seoulPromise = db
-    .prepare(
-      `SELECT apt_nm, sgg_nm, umd_nm, kapt_code, total_per_hh
-       FROM apt_mgmt_fee
-       WHERE billing_ym = ? AND sido = '서울특별시'
-         AND household_cnt >= 10 AND total_per_hh > 0
-         AND kapt_code != ?
-       ORDER BY total_per_hh ASC LIMIT 1`
-    )
-    .bind(billing_ym, exclude_kapt_code)
-    .first<MgmtFeeTopApt>();
+  const SEOUL_SQL = `SELECT apt_nm, sgg_nm, umd_nm, kapt_code, total_per_hh
+     FROM apt_mgmt_fee
+     WHERE billing_ym = ? AND sido = '서울특별시'
+       AND household_cnt >= 10 AND total_per_hh > 0
+       AND kapt_code != ?
+     ORDER BY total_per_hh ASC LIMIT 1`;
 
   if (!umd_nm) {
-    const seoul = await seoulPromise;
+    const seoul = await db.prepare(SEOUL_SQL).bind(billing_ym, exclude_kapt_code).first<MgmtFeeTopApt>();
     return { umd: null, seoul };
   }
 
-  const umdPromise = db
-    .prepare(
+  // D1 Workers는 동시 쿼리 금지 → db.batch()로 한 번에 전송
+  const [umdRes, seoulRes] = await db.batch<MgmtFeeTopApt>([
+    db.prepare(
       `SELECT apt_nm, sgg_nm, umd_nm, kapt_code, total_per_hh
        FROM apt_mgmt_fee
        WHERE billing_ym = ? AND umd_nm = ? AND sido = '서울특별시'
          AND household_cnt >= 10 AND total_per_hh > 0
          AND kapt_code != ?
        ORDER BY total_per_hh ASC LIMIT 1`
-    )
-    .bind(billing_ym, umd_nm, exclude_kapt_code)
-    .first<MgmtFeeTopApt>();
+    ).bind(billing_ym, umd_nm, exclude_kapt_code),
+    db.prepare(SEOUL_SQL).bind(billing_ym, exclude_kapt_code),
+  ]);
 
-  const [umd, seoul] = await Promise.all([umdPromise, seoulPromise]);
-  return { umd, seoul };
+  return {
+    umd: umdRes.results[0] ?? null,
+    seoul: seoulRes.results[0] ?? null,
+  };
 }
 
 async function getD1MgmtFeeHistory(db: D1Database, kapt_code: string): Promise<MgmtFeeHistory[]> {
