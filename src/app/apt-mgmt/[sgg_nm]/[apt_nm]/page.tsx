@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getMgmtFeeResult, getMgmtFeeTopApts } from '@/lib/db/management-fee';
+import type { MgmtFeeTopApt } from '@/types/management-fee';
 import AptMgmtResultClient from '@/components/apt-mgmt/AptMgmtResultClient';
 
 interface PageProps {
@@ -44,19 +45,19 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     result = await getMgmtFeeResult(kaptCode);
   } catch (e) {
     console.error('[apt-mgmt] getMgmtFeeResult failed:', kaptCode, e);
-    throw e;
+    notFound();
   }
 
   if (!result) {
     notFound();
   }
 
-  let topApts;
+  let topApts: { umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null } = { umd: null, seoul: null };
   try {
     topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, kaptCode);
   } catch (e) {
     console.error('[apt-mgmt] getMgmtFeeTopApts failed:', kaptCode, e);
-    throw e;
+    // 페이지 자체는 렌더링 (추천 섹션만 미표시)
   }
 
   const breadcrumbJsonLd = {
