@@ -120,8 +120,8 @@ export default function AptMgmtCompareSection({
       </p>
       <div className="grid grid-cols-[1fr_5.5rem_5.5rem] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
         <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지(m²)</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">{avgLabel}(m²)</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">{avgLabel}</span>
       </div>
 
       <MainRow label="총 관리비" amount={result.total_per_hh} avg={activeAvgTotal} />
