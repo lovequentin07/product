@@ -99,10 +99,10 @@ interface MgmtData {
 
 // ─── 유틸 ────────────────────────────────────────────────────────────────────
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /** 실행일 기준 직전 n개월 반환 (당월 제외). 오래된 순. */
-function getRecentMonths(n = 3): string[] {
+export function getRecentMonths(n = 3): string[] {
   const months: string[] = [];
   const now = new Date();
   for (let i = 1; i <= n; i++) {
@@ -115,7 +115,7 @@ function getRecentMonths(n = 3): string[] {
 
 // ─── API 호출 ─────────────────────────────────────────────────────────────────
 
-async function callEndpoint(
+export async function callEndpoint(
   apiKey: string,
   baseUrl: string,
   endpoint: string,
@@ -125,7 +125,7 @@ async function callEndpoint(
   const params = new URLSearchParams({
     serviceKey: apiKey,
     kaptCode,
-    inqYm: ym,
+    searchDate: ym,
     _type: 'json',
     numOfRows: '1',
     pageNo: '1',
@@ -148,17 +148,16 @@ async function callEndpoint(
     const body = json?.response?.body;
     if (!body) return null;
 
-    const totalCount = Number(body.totalCount ?? 0);
-    if (totalCount === 0) return null;
+    // body.item 직접 접근 (이 API는 totalCount/items 래퍼 없이 item 직접 반환)
+    if (body.item) return body.item as Record<string, unknown>;
 
-    // items.item 또는 item 직접 접근
+    // items.item 래퍼 구조 fallback
     const items = body.items;
     if (items && !Array.isArray(items) && typeof items === 'object') {
       const item = (items as { item?: Record<string, unknown> | Record<string, unknown>[] }).item;
       if (Array.isArray(item)) return item[0] ?? null;
       return item ?? null;
     }
-    if (body.item) return body.item as Record<string, unknown>;
 
     return null;
   } catch {
@@ -167,7 +166,7 @@ async function callEndpoint(
 }
 
 /** 공용관리비 17개 엔드포인트 순차 호출 */
-async function fetchCommon(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['common']> {
+export async function fetchCommon(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['common']> {
   const call = async (ep: string) => {
     const result = await callEndpoint(apiKey, COMMON_BASE, ep, kaptCode, ym);
     await sleep(INNER_DELAY_MS);
@@ -196,7 +195,7 @@ async function fetchCommon(apiKey: string, kaptCode: string, ym: string): Promis
 }
 
 /** 개별사용료 10개 엔드포인트 순차 호출 */
-async function fetchPrivate(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['private']> {
+export async function fetchPrivate(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['private']> {
   const call = async (ep: string) => {
     const result = await callEndpoint(apiKey, PRIVATE_BASE, ep, kaptCode, ym);
     await sleep(INNER_DELAY_MS);
@@ -218,7 +217,7 @@ async function fetchPrivate(apiKey: string, kaptCode: string, ym: string): Promi
 }
 
 /** 장기수선충당금 4개 엔드포인트 순차 호출 */
-async function fetchRepair(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['repair']> {
+export async function fetchRepair(apiKey: string, kaptCode: string, ym: string): Promise<MgmtData['repair']> {
   const call = async (ep: string) => {
     const result = await callEndpoint(apiKey, REPAIR_BASE, ep, kaptCode, ym);
     await sleep(INNER_DELAY_MS);
@@ -366,7 +365,13 @@ async function main() {
   console.log(`👉 다음 단계: npx tsx src/scripts/migrate-kapt-mgmt.ts`);
 }
 
-main().catch(err => {
-  console.error('\n❌ 오류:', err);
-  process.exit(1);
-});
+// 직접 실행 시에만 main() 호출 (import 시 실행 방지)
+const isDirectRun = process.argv[1]?.endsWith('fetch-kapt-mgmt.ts') ||
+  process.argv[1]?.endsWith('fetch-kapt-mgmt.js');
+
+if (isDirectRun) {
+  main().catch(err => {
+    console.error('\n❌ 오류:', err);
+    process.exit(1);
+  });
+}

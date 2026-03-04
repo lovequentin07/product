@@ -1,3 +1,25 @@
+# K-APT 관리비 주간 결측치 수집 (sync-kapt-mgmt.ts) — 2026-03-04
+
+## 작업 완료
+
+- [x] `fetch-kapt-mgmt.ts` — `fetchCommon/fetchPrivate/fetchRepair/callEndpoint/sleep/getRecentMonths` export 추가
+- [x] `fetch-kapt-mgmt.ts` — `isDirectRun` 가드 추가 (import 시 main() 실행 방지)
+- [x] `sync-kapt-mgmt.ts` 신규 생성 (schedule.json 기반 결측치 추적)
+- [x] `fetch-kapt-mgmt.ts` `callEndpoint()` 버그 수정
+  - `inqYm` → `searchDate` (파라미터명)
+  - `totalCount` 체크 제거 → `body.item` 직접 접근 (응답 구조 대응)
+- [x] 단일 테스트 성공: `A10025110` + `202512` → 인건비 데이터 정상 수신
+
+## 다음 할 일
+
+- [ ] `sync-kapt-mgmt.ts` 본격 실행 (pending 45,694건)
+  ```bash
+  DATA_GO_KR_API_KEY=<키> npx tsx src/scripts/sync-kapt-mgmt.ts
+  ```
+- [ ] done=0인 기존 65개 "done" 항목 정리 (실제 데이터 없는 빈 파일 — schedule.json에서 pending으로 리셋 또는 삭제 후 재수집)
+
+---
+
 # apt-mgmt 결과 페이지 500 에러 수정 (2026-02-28)
 
 ## 원인 분석
