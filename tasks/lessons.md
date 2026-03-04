@@ -1,5 +1,15 @@
 # Lessons Learned
 
+## 2026-03-04: bash에서 `=` 포함 env 값 추출 시 `cut -d= -f2` 금지
+
+**상황**: API 키(`...Aw==`)를 `grep KEY .env.local | cut -d= -f2`로 추출 → 끝의 `==` 유실 (88자 → 86자) → API 인증 401.
+
+**올바른 방법**: `grep KEY .env.local | sed 's/^KEY_NAME=//'`
+
+**교훈**: Base64 키처럼 `=`가 값에 포함된 경우 `cut -d= -f2`는 첫 번째 `=`에서 잘림. `sed`로 키 이름만 제거할 것.
+
+---
+
 ## 2026-03-04: K-APT API callEndpoint 버그 2가지 (searchDate + totalCount)
 
 **상황**: `sync-kapt-mgmt.ts` 실행 시 100건 처리 후 완료=0, 전부 null.

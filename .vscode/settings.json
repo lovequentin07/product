@@ -1,3 +1,14 @@
 {
-  "IDX.agenticWorkspace": true
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.open-next": true,
+    "**/.wrangler": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

@@ -4,10 +4,19 @@
  *
  * 사용법:
  *   DATA_GO_KR_API_KEY=<키> npx tsx src/scripts/sync-kapt-mgmt.ts [--dry-run]
+ *   DATA_GO_KR_API_KEY=<키> npx tsx src/scripts/sync-kapt-mgmt.ts --shard <n> <total> [--dry-run]
+ *
+ * 샤드 병렬화 (예: 4개 인스턴스):
+ *   npx tsx src/scripts/sync-kapt-mgmt.ts --shard 0 4 &
+ *   npx tsx src/scripts/sync-kapt-mgmt.ts --shard 1 4 &
+ *   npx tsx src/scripts/sync-kapt-mgmt.ts --shard 2 4 &
+ *   npx tsx src/scripts/sync-kapt-mgmt.ts --shard 3 4 &
+ *   → 각 shard는 schedule-{n}.json 파일을 독립적으로 사용
  *
  * 파일시스템 구조:
- *   raw-data/kapt-info/{kaptCode}.json    ← 단지 정보 (kaptUsedate 포함)
- *   raw-data/kapt-mgmt/schedule.json      ← 결측치 추적 (이 스크립트의 핵심)
+ *   raw-data/kapt-info/{kaptCode}.json      ← 단지 정보 (kaptUsedate 포함)
+ *   raw-data/kapt-mgmt/schedule.json        ← 결측치 추적 (단일 인스턴스)
+ *   raw-data/kapt-mgmt/schedule-{n}.json    ← 결측치 추적 (샤드 n)
  *   raw-data/kapt-mgmt/{kaptCode}/{ym}.json ← 수집된 관리비 데이터
  *
  * 4가지 상태:
@@ -27,7 +36,6 @@ import {
   fetchCommon,
   fetchPrivate,
   fetchRepair,
-  sleep,
   getRecentMonths,
 } from './fetch-kapt-mgmt';
 
@@ -35,9 +43,8 @@ import {
 
 const KAPT_INFO_DIR = path.join(process.cwd(), 'raw-data/kapt-info');
 const OUT_DIR = path.join(process.cwd(), 'raw-data/kapt-mgmt');
-const SCHEDULE_FILE = path.join(OUT_DIR, 'schedule.json');
 
-const ITEM_DELAY_MS = 200;
+const CONCURRENCY = 10;
 const CHECKPOINT_EVERY = 50;
 const MONTHS_LOOKBACK = 14; // 2026-03 기준 → 2025-01까지 커버
 const NOT_REGISTERED_THRESHOLD = 3;
@@ -63,16 +70,16 @@ interface KaptInfo {
 
 // ─── 유틸 ────────────────────────────────────────────────────────────────────
 
-function loadSchedule(): Schedule {
-  if (fs.existsSync(SCHEDULE_FILE)) {
-    return JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf-8')) as Schedule;
+function loadSchedule(scheduleFile: string): Schedule {
+  if (fs.existsSync(scheduleFile)) {
+    return JSON.parse(fs.readFileSync(scheduleFile, 'utf-8')) as Schedule;
   }
   return { updatedAt: new Date().toISOString(), items: {} };
 }
 
-function saveSchedule(schedule: Schedule): void {
+function saveSchedule(schedule: Schedule, scheduleFile: string): void {
   schedule.updatedAt = new Date().toISOString();
-  fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(schedule, null, 2), 'utf-8');
+  fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2), 'utf-8');
 }
 
 function jsonFileExists(kaptCode: string, ym: string): boolean {
@@ -92,9 +99,16 @@ function isTooNew(kaptUsedate: string | undefined, ym: string): boolean {
 
 // ─── Step 1: schedule.json 갱신 ───────────────────────────────────────────────
 
-function updateSchedule(schedule: Schedule): { newItems: number; totalKapts: number } {
+function updateSchedule(
+  schedule: Schedule,
+  shardIdx: number | null,
+  shardTotal: number,
+): { newItems: number; totalKapts: number } {
   const months = getRecentMonths(MONTHS_LOOKBACK);
-  const kaptInfoFiles = fs.readdirSync(KAPT_INFO_DIR).filter(f => f.endsWith('.json'));
+  const allFiles = fs.readdirSync(KAPT_INFO_DIR).filter(f => f.endsWith('.json')).sort();
+  const kaptInfoFiles = shardIdx !== null
+    ? allFiles.filter((_, i) => i % shardTotal === shardIdx)
+    : allFiles;
 
   let newItems = 0;
 
@@ -148,13 +162,14 @@ function updateSchedule(schedule: Schedule): { newItems: number; totalKapts: num
     }
   }
 
-  return { newItems, totalKapts: kaptInfoFiles.length };
+  return { newItems, totalKapts: allFiles.length };
 }
 
 // ─── Step 2: pending 항목 수집 ────────────────────────────────────────────────
 
 async function collectPending(
   schedule: Schedule,
+  scheduleFile: string,
   apiKey: string,
   dryRun: boolean,
 ): Promise<void> {
@@ -186,17 +201,36 @@ async function collectPending(
   let doneCount = 0;
   let notRegisteredCount = 0;
 
-  for (const { kaptCode, ym } of pendingList) {
+  // concurrency 제어용 semaphore
+  let active = 0;
+  let idx = 0;
+
+  await new Promise<void>((resolve, reject) => {
+    function next() {
+      while (active < CONCURRENCY && idx < pendingList.length) {
+        const { kaptCode, ym } = pendingList[idx++];
+        active++;
+        processItem(kaptCode, ym).then(() => {
+          active--;
+          if (processed === pendingList.length) resolve();
+          else next();
+        }).catch(reject);
+      }
+    }
+    next();
+  });
+
+  async function processItem(kaptCode: string, ym: string) {
     const entry = schedule.items[kaptCode][ym];
 
     // JSON 파일이 이미 존재하면 done 처리
     if (jsonFileExists(kaptCode, ym)) {
       entry.status = 'done';
       processed++;
-      continue;
+      return;
     }
 
-    // API 호출
+    // API 호출 (공용·개별·장기수선 병렬)
     const [common, priv, repair] = await Promise.all([
       fetchCommon(apiKey, kaptCode, ym),
       fetchPrivate(apiKey, kaptCode, ym),
@@ -234,23 +268,38 @@ async function collectPending(
 
     processed++;
 
-    // 진행 출력 + checkpoint
+    // 진행 출력 + checkpoint (동기화 필요 없음 — Node.js 단일 스레드)
     if (processed % CHECKPOINT_EVERY === 0 || processed === pendingList.length) {
-      saveSchedule(schedule);
+      saveSchedule(schedule, scheduleFile);
       process.stdout.write(
         `\r  → ${processed}/${pendingList.length} (완료: ${doneCount}, 미등록: ${notRegisteredCount})`
       );
     }
-
-    await sleep(ITEM_DELAY_MS);
   }
 }
 
 // ─── 메인 ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
   const apiKey = process.env.DATA_GO_KR_API_KEY;
+
+  // --shard <n> <total> 파싱
+  let shardIdx: number | null = null;
+  let shardTotal = 1;
+  const shardArgIdx = args.indexOf('--shard');
+  if (shardArgIdx !== -1) {
+    shardIdx = parseInt(args[shardArgIdx + 1], 10);
+    shardTotal = parseInt(args[shardArgIdx + 2], 10);
+    if (isNaN(shardIdx) || isNaN(shardTotal) || shardIdx < 0 || shardIdx >= shardTotal) {
+      console.error('❌ --shard 사용법: --shard <n> <total>  (0-indexed, 예: --shard 0 4)');
+      process.exit(1);
+    }
+  }
+
+  const shardSuffix = shardIdx !== null ? `-${shardIdx}` : '';
+  const SCHEDULE_FILE = path.join(OUT_DIR, `schedule${shardSuffix}.json`);
 
   if (!dryRun && !apiKey) {
     console.error('❌ DATA_GO_KR_API_KEY 환경변수 미설정');
@@ -261,12 +310,14 @@ async function main() {
     fs.mkdirSync(OUT_DIR, { recursive: true });
   }
 
+  const shardLabel = shardIdx !== null ? ` [shard ${shardIdx}/${shardTotal}]` : '';
+
   // Step 1: schedule.json 갱신
-  console.log('\n[Step 1] schedule.json 갱신 중...');
-  const schedule = loadSchedule();
+  console.log(`\n[Step 1]${shardLabel} ${SCHEDULE_FILE} 갱신 중...`);
+  const schedule = loadSchedule(SCHEDULE_FILE);
   const existed = fs.existsSync(SCHEDULE_FILE);
-  const { newItems, totalKapts } = updateSchedule(schedule);
-  saveSchedule(schedule);
+  const { newItems, totalKapts } = updateSchedule(schedule, shardIdx, shardTotal);
+  saveSchedule(schedule, SCHEDULE_FILE);
 
   // 통계
   let pendingCount = 0, doneCount = 0, notRegisteredCount = 0, tooNewCount = 0;
@@ -279,16 +330,16 @@ async function main() {
     }
   }
 
-  console.log(`   단지: ${totalKapts}개, 월: 최근 ${MONTHS_LOOKBACK}개월`);
+  console.log(`   단지: ${totalKapts}개 전체 / 이 shard: ${shardIdx !== null ? Math.ceil(totalKapts / shardTotal) : totalKapts}개, 월: 최근 ${MONTHS_LOOKBACK}개월`);
   console.log(`   ${existed ? '기존 schedule 업데이트' : '신규 schedule 생성'} — 신규 항목: ${newItems}개`);
   console.log(`   상태: pending=${pendingCount}, done=${doneCount}, not_registered=${notRegisteredCount}, too_new=${tooNewCount}`);
 
   // Step 2: pending 수집
-  console.log('\n[Step 2] pending 항목 수집');
-  await collectPending(schedule, apiKey ?? '', dryRun);
+  console.log(`\n[Step 2]${shardLabel} pending 항목 수집`);
+  await collectPending(schedule, SCHEDULE_FILE, apiKey ?? '', dryRun);
 
   // 최종 저장
-  saveSchedule(schedule);
+  saveSchedule(schedule, SCHEDULE_FILE);
 
   // 최종 통계
   pendingCount = 0; doneCount = 0; notRegisteredCount = 0; tooNewCount = 0;
@@ -301,9 +352,9 @@ async function main() {
     }
   }
 
-  console.log(`\n\n✅ 완료`);
+  console.log(`\n\n✅ 완료${shardLabel}`);
   console.log(`   pending=${pendingCount} | done=${doneCount} | not_registered=${notRegisteredCount} | too_new=${tooNewCount}`);
-  console.log(`💾 schedule.json: ${SCHEDULE_FILE}`);
+  console.log(`💾 schedule 파일: ${SCHEDULE_FILE}`);
 }
 
 main().catch(err => {

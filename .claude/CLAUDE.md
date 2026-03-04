@@ -12,7 +12,7 @@ ALWAYS follow strict execution WORKFLOW.md workflow for Claude Code.
 
 ## 프로젝트 개요
 
-공공데이터포털 API를 활용하여 유용한 정보를 제공하고, 고단가 애드센스 수익을 창출합니다.
+공공데이터포털 API를 활용하여 유용한 정보를 제공하고, 고단가 애드센스 수익을 창출합니포다.
 
 - **도메인**: `datazip.net`
 - **핵심 가치**:
@@ -134,4 +134,5 @@ tasks/
 └── lessons.md                    # 반복 실수 기록
 ```
 
+.env.local                        # 키
 
