@@ -74,4 +74,64 @@ npm run lint             # ESLint 실행
 
 `@/*` → `./src/*` (`tsconfig.json` 설정)
 
+## 폴더 구조
+
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── layout.tsx                # 루트 레이아웃 (AdSense·GA4·Clarity 스크립트)
+│   ├── page.tsx                  # 허브 홈 페이지
+│   ├── robots.ts / sitemap.ts    # SEO
+│   ├── api/
+│   │   ├── transactions/         # GET /api/transactions (실거래가)
+│   │   └── apt-mgmt/apts/        # GET /api/apt-mgmt/apts (관리비)
+│   ├── apt/                      # 실거래가 서비스
+│   │   ├── page.tsx              # 검색 페이지
+│   │   └── [sgg_nm]/[apt_nm]/    # 단지 상세 페이지
+│   ├── apt-mgmt/                 # 관리비 지킴이 서비스
+│   │   ├── page.tsx              # 검색 페이지
+│   │   └── [sgg_nm]/[apt_nm]/    # 단지 상세 페이지
+│   └── privacy-policy/           # 개인정보처리방침
+├── components/
+│   ├── apartment/                # 실거래가 UI 컴포넌트
+│   ├── apt-detail/               # 단지 상세 UI (차트 포함)
+│   ├── apt-mgmt/                 # 관리비 UI 컴포넌트
+│   └── Footer.tsx
+├── lib/
+│   ├── api/
+│   │   ├── client.ts             # 외부 API fetch 공통 클라이언트 (직접 fetch 대신 이것 사용)
+│   │   └── apartment.ts          # 실거래가 API 헬퍼
+│   └── db/
+│       ├── apt.ts                # 실거래가 D1 쿼리
+│       ├── transactions.ts       # 거래 내역 D1 쿼리
+│       ├── management-fee.ts     # 관리비 D1 쿼리
+│       ├── apt-meta.ts           # 단지 메타 D1 쿼리
+│       ├── mock-data.ts          # 로컬 개발용 mock fallback
+│       └── types.ts              # DB 레이어 내부 타입
+├── types/
+│   ├── real-estate.ts            # 실거래가 타입
+│   ├── management-fee.ts         # 관리비 타입
+│   └── apt-meta.ts               # 단지 메타 타입
+├── data/
+│   ├── schema.sql                # D1 테이블 정의
+│   ├── migrate-v4.sql            # 마이그레이션 스크립트
+│   ├── migrate-mgmt-summary.sql  # 관리비 summary 마이그레이션
+│   └── regions.ts                # 지역 코드 목록
+└── scripts/                      # 일회성 데이터 수집·마이그레이션 스크립트
+    ├── fetch-kapt-mgmt.ts        # K-APT 관리비 API fetch
+    ├── sync-kapt-mgmt.ts         # K-APT 관리비 D1 동기화
+    └── ...
+
+.claude/
+├── CLAUDE.md                     # 이 파일 (프로젝트 지침)
+├── WORKFLOW.md                   # 작업 실행 규칙
+├── dev-guide.md                  # 개발 환경 상세
+├── api/                          # 외부 API 명세
+└── services/                     # 서비스별 상세 문서
+
+tasks/
+├── todo.md                       # 작업 계획·진행 추적
+└── lessons.md                    # 반복 실수 기록
+```
+
 
