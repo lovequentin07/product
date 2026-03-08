@@ -55,4 +55,5 @@ next-env.d.ts
 .wrangler/
 .claude/data_source/*.xlsx
 .claude/img_check/
+.claude/img_result/
 .idx/

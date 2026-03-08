@@ -1,3 +1,39 @@
+# 농수축산물 시세 서비스 (`/market`) — 2026-03-06 기준
+
+## 브랜치: `feat/market`
+
+## 완료 (프론트 1차)
+
+- [x] `src/types/market.ts` — Category, ItemKind, Mart, PriceChange, PriceByKind, MartPrice, PricePoint, TrendMeta, ItemDetail
+- [x] `src/lib/db/market-mock.ts` — 10개 품목 mock + generateTrend/computeTrendMeta/computeMartPrices
+- [x] `src/components/market/Sparkline.tsx` — 순수 SVG 스파크라인 (서버 컴포넌트 호환)
+- [x] `src/components/market/MarketHero.tsx` — bg-red-500 Coupang 스타일 헤더 + 검색창
+- [x] `src/components/market/MarketSearchInput.tsx` — 품목명 검색 → 상세 이동
+- [x] `src/components/market/PriceChangeList.tsx` — 2열 그리드 + 30일 스파크라인
+- [x] `src/components/market/PopularSection.tsx` — 가로 스크롤 인기 품목
+- [x] `src/components/market/PriceTrendChart.tsx` — Recharts 1년 추이 (3M/6M/1Y 탭)
+- [x] `src/components/market/ItemDetailClient.tsx` — 등급 토글 + 도매/소매 비교 + 유통마진 + 쿠팡 CTA
+- [x] `src/components/market/MarketFAQ.tsx` — FAQ 아코디언 (SEO)
+- [x] `src/app/market/page.tsx` — 홈 (저렴해진 품목 → 인기 → 비싸진 품목 → FAQ)
+- [x] `src/app/market/[item]/page.tsx` — 상세 (30일 스파크라인 헤더 + 등급 비교 + 1년 차트)
+- [x] `npm run build` 성공 (TypeScript 오류 없음, 23개 정적 경로)
+
+## 디자인 확정 사항
+
+- **색상**: `bg-red-500` 메인 (Coupang 스타일), 다크모드 미지원, 흰 배경 고정
+- **가격 하락**: `text-emerald-600` / **가격 상승**: `text-red-500`
+- **MartPriceList 제거**: 마트별 개별 API 없음 → 도매/소매 비교 + 유통마진으로 대체
+- **쿠팡파트너스 CTA**: 상세 페이지 하단 링크 버튼 (크론잡 연동은 백엔드 단계)
+
+## 다음 할 일 (백엔드 단계)
+
+- [ ] KAMIS API 연동 (인증키 발급 → 도매/소매 일별 데이터)
+- [ ] 쿠팡파트너스 API 크론잡 (D1에 가격 저장 → 실 링크로 교체)
+- [ ] D1 market 테이블 스키마 설계
+- [ ] sitemap에 `/market`, `/market/[item]` 추가
+
+---
+
 # K-APT 관리비 주간 결측치 수집 (sync-kapt-mgmt.ts) — 2026-03-04
 
 ## 작업 완료
