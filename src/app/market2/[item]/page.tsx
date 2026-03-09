@@ -26,38 +26,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const item = getMockItem(id)
   if (!item) return {}
 
-  const todayPrice = item.trend[item.trend.length - 1]?.retail ?? item.kinds[0].retailPrice
-  const rate = item.trendMeta.vsYearAvgRate
-  const changeStr = rate < 0
-    ? `▼ ${Math.abs(rate).toFixed(1)}% 저렴`
-    : `▲ ${Math.abs(rate).toFixed(1)}% 비쌈`
-  const title = `${item.name} 오늘 ${todayPrice.toLocaleString()}원/${item.unit} — ${changeStr}`
-  const description = `${item.name} 오늘 소매가 ${todayPrice.toLocaleString()}원/${item.unit}. 1년 평균 대비 ${Math.abs(rate).toFixed(1)}% ${rate < 0 ? '저렴' : '비쌈'}. 1년 가격 추이를 확인하세요.`
+  const primary = item.kinds[0]
+  const day = primary.dayChange
+  const isDown = day.rate < 0
+  const changeStr = isDown
+    ? `▼ ${Math.abs(day.rate).toFixed(1)}% 하락`
+    : `▲ ${Math.abs(day.rate).toFixed(1)}% 상승`
+  const title = `${item.name} 소매가 오늘 ${primary.retailPrice.toLocaleString()}원 — ${changeStr}`
+  const description = `${item.name} 오늘 소매가 ${primary.retailPrice.toLocaleString()}원/${item.unit}. 1년 평균 대비 ${Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}% ${item.trendMeta.vsYearAvgRate < 0 ? '저렴' : '비쌈'}. 1년 가격 추이를 확인하세요.`
 
   return {
     title,
     description,
-    alternates: { canonical: `/market/${id}` },
-    openGraph: { title, description, url: `/market/${id}` },
+    alternates: { canonical: `/market2/${id}` },
+    openGraph: { title, description, url: `/market2/${id}` },
   }
 }
 
-export default async function ItemPage({ params }: Props) {
+export default async function Item2Page({ params }: Props) {
   const { item: id } = await params
   const item = getMockItem(id)
   if (!item) notFound()
 
+  const primary = item.kinds[0]
   const priceData = getDefaultKind(item)
+  // 차트와 일치하는 오늘 가격 (trend 마지막 포인트 = 전체 등급 기준)
   const todayPrice = item.trend[item.trend.length - 1]?.retail ?? priceData.retailPrice
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: item.name,
-    description: `${item.name} 오늘 소매가 ${todayPrice.toLocaleString()}원/${item.unit}`,
+    description: `${item.name} 오늘 소매가 ${primary.retailPrice.toLocaleString()}원/${item.unit}`,
     offers: {
       '@type': 'Offer',
-      price: todayPrice,
+      price: primary.retailPrice,
       priceCurrency: 'KRW',
     },
   }
@@ -69,12 +72,12 @@ export default async function ItemPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 헤더 */}
+      {/* 헤더: 네비 + 상품명 */}
       <div className="bg-white">
         <div className="max-w-2xl mx-auto">
           <div className="h-14 px-4 flex items-center justify-between">
             <Link
-              href="/market"
+              href="/market2"
               className="text-sm text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1 min-h-[44px]"
             >
               ← 시세 홈
@@ -85,15 +88,13 @@ export default async function ItemPage({ params }: Props) {
           </div>
           <div className="px-4 pb-4">
             <p className="text-3xl font-bold text-gray-800">{item.name}</p>
+            {/* 가격 + % 지표 */}
             <div className="flex items-baseline gap-1.5 mt-1">
               <span className="font-bold text-gray-900 leading-none" style={{ fontSize: '28px' }}>
                 {todayPrice.toLocaleString()}원
               </span>
               <span className="text-base text-gray-400">/{item.unit}</span>
-              <span
-                className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`}
-                style={{ fontSize: '20px' }}
-              >
+              <span className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`} style={{ fontSize: '20px' }}>
                 {item.trendMeta.vsYearAvgRate < 0 ? '▼' : '▲'} {Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}%
               </span>
             </div>
@@ -101,10 +102,14 @@ export default async function ItemPage({ params }: Props) {
         </div>
       </div>
 
-      {/* 1년 가격 차트 */}
+      {/* 소매가 추이 차트 */}
       <div className="bg-white border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
-          <PriceTrendChart2 trend={item.trend} unit={item.unit} trendMeta={item.trendMeta} />
+          <PriceTrendChart2
+            trend={item.trend}
+            unit={item.unit}
+            trendMeta={item.trendMeta}
+          />
         </div>
       </div>
 

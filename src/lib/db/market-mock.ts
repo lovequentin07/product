@@ -1,7 +1,7 @@
 import { ItemDetail, PricePoint, TrendMeta, MartPrice, Mart, getDefaultKind } from '@/types/market'
 
-// 1년치 추세 데이터 생성
-function generateTrend(baseWholesale: number, retailMult: number, days = 365): PricePoint[] {
+// 1년치 추세 데이터 생성 (targetRetail: 오늘 소매가 — 마지막 포인트에 고정)
+function generateTrend(baseWholesale: number, retailMult: number, targetRetail: number, days = 365): PricePoint[] {
   const result: PricePoint[] = []
   const today = new Date(2026, 2, 6)
   let ws = baseWholesale * 1.05
@@ -19,6 +19,13 @@ function generateTrend(baseWholesale: number, retailMult: number, days = 365): P
       wholesale: w,
       retail: Math.round((w * retailMult) / 10) * 10,
     })
+  }
+  // 마지막 포인트(오늘)를 targetRetail에 맞춤
+  const last = result[result.length - 1]
+  result[result.length - 1] = {
+    ...last,
+    retail: targetRetail,
+    wholesale: Math.round((targetRetail / retailMult) / 10) * 10,
   }
   return result
 }
@@ -56,16 +63,16 @@ function computeMartPrices(prices: Partial<Record<Mart, number>>): MartPrice[] {
 }
 
 // 추세 데이터 (아이템별 미리 생성)
-const carrotTrend = generateTrend(3420, 1.49)
-const onionTrend = generateTrend(1950, 1.53)
-const cabbageTrend = generateTrend(4100, 1.44)
-const potatoTrend = generateTrend(2800, 1.39)
-const garlicTrend = generateTrend(8500, 1.51)
-const appleTrend = generateTrend(7200, 1.36)
-const strawberryTrend = generateTrend(12500, 1.42)
-const mackerelTrend = generateTrend(3200, 1.38)
-const squidTrend = generateTrend(4800, 1.44)
-const porkTrend = generateTrend(2650, 1.31)
+const carrotTrend = generateTrend(3420, 1.49, 5100)
+const onionTrend = generateTrend(1950, 1.53, 2980)
+const cabbageTrend = generateTrend(4100, 1.44, 5900)
+const potatoTrend = generateTrend(2800, 1.39, 3900)
+const garlicTrend = generateTrend(8500, 1.51, 12800)
+const appleTrend = generateTrend(7200, 1.36, 9800)
+const strawberryTrend = generateTrend(12500, 1.42, 17800)
+const mackerelTrend = generateTrend(3200, 1.38, 4400)
+const squidTrend = generateTrend(4800, 1.44, 6900)
+const porkTrend = generateTrend(2650, 1.31, 3480)
 
 export const MOCK_ITEMS: ItemDetail[] = [
   {

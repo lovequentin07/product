@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { ItemDetail, getDefaultKind } from '@/types/market'
-import Sparkline from './Sparkline'
 import CategoryQuickAccess from './CategoryQuickAccess'
 
 interface Props {
@@ -40,10 +39,7 @@ export default function PriceChangeList({ items, title }: Props) {
       <div className="grid grid-cols-2 gap-2 mt-3">
         {items.map((item) => {
           const primary = getDefaultKind(item)
-          const { yearMin, yearMax } = item.trendMeta
-          const rangePos = yearMax > yearMin
-            ? Math.round(((primary.retailPrice - yearMin) / (yearMax - yearMin)) * 100)
-            : 0
+          const rate = Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)
 
           return (
             <Link
@@ -51,23 +47,18 @@ export default function PriceChangeList({ items, title }: Props) {
               href={`/market/${item.id}`}
               className="bg-white border border-gray-100 rounded-xl p-3 active:scale-[0.97] transition-transform"
             >
-              {/* 품목명 + 배지 + 가격 한 줄 */}
-              <div className="flex items-start justify-between mb-2">
+              {/* 품목명 + 배지 */}
+              <div className="flex items-start justify-between mb-1">
                 <span className="text-sm font-bold text-gray-900">{item.name}</span>
-                <div className="flex flex-col items-end gap-0.5">
-                  <span className="bg-blue-50 text-blue-600 text-xs font-bold px-1.5 py-0.5 rounded-full">
-                    ▼ {Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}%
-                  </span>
-                  <p className="text-[11px] font-semibold text-gray-600">
-                    {primary.retailPrice.toLocaleString()}원
-                    <span className="text-xs font-normal text-gray-400 ml-0.5">/{item.unit}</span>
-                  </p>
-                </div>
+                <span className="bg-blue-50 text-blue-600 text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                  ▼ {rate}%
+                </span>
               </div>
-
-              {/* 스파크라인 — 1년 데이터, 하단 고정 */}
-              <span className="block text-[10px] text-gray-400 leading-none mb-0.5">1년 추이</span>
-              <Sparkline data={item.trend.map((p) => p.retail)} height={28} isDown={true} showArea />
+              {/* 가격 */}
+              <p className="text-[13px] font-semibold text-gray-800">
+                {primary.retailPrice.toLocaleString()}원
+                <span className="text-[11px] font-normal text-gray-400 ml-0.5">/{item.unit}</span>
+              </p>
             </Link>
           )
         })}
