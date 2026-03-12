@@ -1,36 +1,220 @@
-# 농수축산물 시세 서비스 (`/market`) — 2026-03-06 기준
+# 농수축산물 시세 서비스 (`/market`) — 2026-03-10 기준
 
 ## 브랜치: `feat/market`
 
-## 완료 (프론트 1차)
+## 완료 (프론트)
 
-- [x] `src/types/market.ts` — Category, ItemKind, Mart, PriceChange, PriceByKind, MartPrice, PricePoint, TrendMeta, ItemDetail
-- [x] `src/lib/db/market-mock.ts` — 10개 품목 mock + generateTrend/computeTrendMeta/computeMartPrices
-- [x] `src/components/market/Sparkline.tsx` — 순수 SVG 스파크라인 (서버 컴포넌트 호환)
-- [x] `src/components/market/MarketHero.tsx` — bg-red-500 Coupang 스타일 헤더 + 검색창
-- [x] `src/components/market/MarketSearchInput.tsx` — 품목명 검색 → 상세 이동
-- [x] `src/components/market/PriceChangeList.tsx` — 2열 그리드 + 30일 스파크라인
+- [x] `src/types/market.ts` — Category, PriceChange, PriceByKind, PricePoint, TrendMeta, ItemDetail
+- [x] `src/lib/db/market-mock.ts` — 10개 품목 mock 데이터
+- [x] `src/components/market/MarketHero.tsx` — Hero 헤더 + 검색창
+- [x] `src/components/market/MarketSearchInput.tsx` — 품목명 검색
+- [x] `src/components/market/PriceChangeList.tsx` — 2열 그리드 drop 카드
+- [x] `src/components/market/CategoryQuickAccess.tsx` — 카테고리 필터
 - [x] `src/components/market/PopularSection.tsx` — 가로 스크롤 인기 품목
-- [x] `src/components/market/PriceTrendChart.tsx` — Recharts 1년 추이 (3M/6M/1Y 탭)
-- [x] `src/components/market/ItemDetailClient.tsx` — 등급 토글 + 도매/소매 비교 + 유통마진 + 쿠팡 CTA
-- [x] `src/components/market/MarketFAQ.tsx` — FAQ 아코디언 (SEO)
-- [x] `src/app/market/page.tsx` — 홈 (저렴해진 품목 → 인기 → 비싸진 품목 → FAQ)
-- [x] `src/app/market/[item]/page.tsx` — 상세 (30일 스파크라인 헤더 + 등급 비교 + 1년 차트)
-- [x] `npm run build` 성공 (TypeScript 오류 없음, 23개 정적 경로)
+- [x] `src/components/market/PriceTrendChart2.tsx` — 폴센트 스타일 월별 차트 (Recharts)
+- [x] `src/components/market/MarketFAQ.tsx` — FAQ 아코디언
+- [x] `src/app/market/page.tsx` — 홈 (Hero → drop 카드 → 인기 품목 → FAQ)
+- [x] `src/app/market/[item]/page.tsx` — 상세 (헤더 → 차트 → 보관가이드 → FAQ)
+- [x] 불필요한 컴포넌트 삭제 (PriceSection, BuyingTimingBanner×2, SeasonalSection, MartPriceList, ItemsSection, PriceTrendChart, Sparkline, market2/)
+- [x] `npm run build` 성공
 
-## 디자인 확정 사항
+## 일별 데이터 파이프라인 완성 (2026-03-12)
 
-- **색상**: `bg-red-500` 메인 (Coupang 스타일), 다크모드 미지원, 흰 배경 고정
-- **가격 하락**: `text-emerald-600` / **가격 상승**: `text-red-500`
-- **MartPriceList 제거**: 마트별 개별 API 없음 → 도매/소매 비교 + 유통마진으로 대체
-- **쿠팡파트너스 CTA**: 상세 페이지 하단 링크 버튼 (크론잡 연동은 백엔드 단계)
+- [x] `src/scripts/fetch-market-daily.ts` — perDay API로 87개 품목 일별 수집 → `market-prices-daily-raw.json`
+- [x] `src/scripts/analyze-market-daily.ts` — daily + stats → `market-daily-stats.json` (vs_avg_rate, range_pct, is_cheap)
+- [x] `src/scripts/analyze-market-prices.ts` 수정 — market-mapping 특정 조합(item_cd+vrty_cd+grd_cd+se_cd) 필터링으로 재산출
+- [x] `src/data/market-stats.json` 재생성 (88개 품목, 동일 기준)
 
-## 다음 할 일 (백엔드 단계)
+**perDay `exmn_dd_cnvs_prc` 환산 규칙 확인**:
+- 중량(kg/g): per-1kg 가격 → `× unit_sz` (또는 `× unit_sz/1000` for g)로 per-package 변환
+- 개수(개/마리/포기 등): 이미 per-package
 
-- [ ] KAMIS API 연동 (인증키 발급 → 도매/소매 일별 데이터)
-- [ ] 쿠팡파트너스 API 크론잡 (D1에 가격 저장 → 실 링크로 교체)
-- [ ] D1 market 테이블 스키마 설계
-- [ ] sitemap에 `/market`, `/market/[item]` 추가
+---
+
+## 과제: 등급 토글 기능 (大/中/小) — 설계 검토 필요
+
+갈치·고등어 등 등급(大/中/小)에 따라 가격 차이가 2~5배인 품목이 존재.
+현재는 월별 최다 coverage (vrty_cd, grd_cd) 콤보 1개만 표시 → 등급 정보 손실.
+
+### 설계 방향 (미결)
+
+**A안 — `market-stats.json` 구조 변경**
+- 현재: `item_cd` 당 1개 `monthly[]`
+- 변경: `item_cd` 당 `grades: [{ vrty_cd, grd_cd, grd_nm, monthly[] }]` 배열
+- 장점: 데이터 완전 보존 / 단점: JSON 파일 크기 증가, `ItemDetail` 타입 대폭 수정
+
+**B안 — 별도 등급 파일**
+- `market-stats.json` 유지 (기본 등급만)
+- `market-stats-grades.json`: 등급별 monthly 데이터 추가 보관
+- 상세 페이지에서 필요 시 동적 로드
+
+**C안 — 토글 대상 품목 지정 + grd_nm 표시**
+- `market-mapping.ts`에 `grades?: string[]` 필드 추가 (대상 품목만)
+- 토글 대상 품목: 갈치(601), 고등어(611), 오징어(619) 등 수산물 위주
+- 토글 클릭 시 해당 grd_cd의 monthly 데이터로 교체 (클라이언트 상태)
+
+### 결정 필요 사항
+1. 어떤 방식으로 저장할지 (A/B/C안)
+2. 토글 대상 품목 기준 (수산물 전체? 등급 가격차 > N배인 품목?)
+3. 토글 레이블: `grd_nm` 그대로? (`大`/`中`/`小` vs `특대`/`대`/`소`)
+4. 홈 카드는 기본 등급(최다 coverage) 고정 유지
+
+---
+
+## 다음 할 일 (백엔드 단계) — 2026-03-10 계획 확정
+
+### 사용 API (인증키 1개, 동일 키 모두 사용)
+
+| API | Endpoint | 용도 | 최신성 |
+|-----|----------|------|--------|
+| 가격 등락 정보 | `https://apis.data.go.kr/B552845/risesAndFalls/info` | ~~홈 저렴한 품목~~ **사용 불가** | ~3주 lag (2026-02-20 확인) — 실시간성 부족으로 사용 어려움 |
+| 연월별 도,소매가격정보 | `https://apis.data.go.kr/B552845/perYearMonth/price` | 상세 월별 차트 + yearAvg | 전월까지 |
+| 일별 도,소매가격정보 | `https://apis.data.go.kr/B552845/perDay/price` | 상세 최근 가격 | 전일까지 (~1일 lag) |
+
+**risesAndFalls 필수 파라미터**: `serviceKey`, `returnType`, `pageNo`, `numOfRows`, `cond[exmn_ymd::EQ]` (단일 날짜)
+**risesAndFalls 응답 핵심 필드**: `ctgry_cd`, `item_cd`, `item_nm`, `vrty_cd`, `grd_cd`, `se_cd`, `unit`, `unit_sz`, `exmn_dd_avg_prc`, `exmn_dd_cnvs_avg_prc`, `dd1_bfr_cmpr_rafrt`(1일전%), `ww1_bfr_cmpr_rafrt`(1주전%), `mm1_bfr_cmpr_rafrt`(1개월전%), `yy1_bfr_cmpr_rafrt`(1년전%)
+**perDay 필수**: `serviceKey`, `cond[exmn_ymd::GTE/LTE]`, `cond[item_cd::EQ]` (item_cd 없으면 0건)
+
+### 확정 품목 코드표
+
+| slug | name | ctgry_cd | item_cd | vrty_cd | grd_cd | 확인 |
+|------|------|----------|---------|---------|--------|------|
+| carrot | 당근 | 200 | 232 | 00 | 04 | ✅ |
+| onion | 양파 | 200 | 245 | 00 | 04 | ✅ |
+| cabbage | 배추 | 200 | 211 | 01 | 04 | ✅ |
+| potato | 감자 | 200 | 152 | 01 | 04 | ✅ |
+| garlic | 마늘 | 200 | 244 | 01 | 04 | ✅ |
+| apple | 사과 | 400 | 411 | 00 | 04 | ✅ |
+| strawberry | 딸기 | 200 | 226 | 00 | 04 | ✅ |
+| mackerel | 고등어 | 600 | 611 | - | - | ✅ |
+| squid | 오징어(물오징어) | 600 | 619 | 03 | 21 | ✅ |
+| pork-belly | 삼겹살 | 500 | 4304 | 27 | 1 | ✅ |
+
+### 섹션별 API 매핑
+
+**홈 — "오늘 저렴한 품목" (PriceChangeList)**
+- `risesAndFalls` 검토했으나 ~3주 lag으로 **사용 불가**
+- → 대안 미정, 추후 결정 필요
+
+**상세 — `/market/[item]`**
+- `perDay`: 최근 가격 (`item_cd` 필수)
+- `perYearMonth`: 12개월 차트 데이터 (`pmm_lwprc`/`pmm_hgprc`)
+- vsYearAvgRate = trailing 12개월 `pmm_avgprc` 평균으로 직접 계산 (`pyy_avgprc` 사용 불가 — 당해연도만)
+
+### Step 1 — `src/data/market-items.ts` (신규) ✅ 완료 2026-03-11
+
+slug ↔ API 코드 매핑. vrty_cd/grd_cd는 market-mapping.ts에 분리.
+
+| slug | name | ctgry | item | vrty | grd | se | 확인 |
+|------|------|-------|------|------|-----|----|------|
+| carrot | 당근 | 200 | 232 | 01 | 04 | 01 | ✅ |
+| onion | 양파 | 200 | 245 | 00 | 04 | 01 | ✅ |
+| cabbage | 배추 | 200 | 211 | 06 | 04 | 01 | ✅ |
+| potato | 감자 | **100** | 152 | 01 | 04 | 01 | ✅ (식량작물) |
+| garlic | 마늘 | 200 | 244 | 22 | 04 | **02** | ✅ (도매만) |
+| apple | 사과 | 400 | 411 | 05 | 04 | 01 | ✅ |
+| strawberry | 딸기 | 200 | 226 | 00 | 04 | 01 | ✅ |
+| mackerel | 고등어 | 600 | 611 | 05 | 20 | 01 | ✅ |
+| squid | 오징어 | 600 | 619 | 05 | 21 | 01 | ✅ |
+| pork-belly | 삼겹살 | 500 | 27 | - | - | - | ⚠️ API 데이터 없음 |
+
+**API 발견사항 (2026-03-11)**:
+- B552845 perYearMonth 카테고리: 100(식량작물), 200(채소류), 400(과일류), 600(수산물) — 축산물(ctgry=500) 없음
+- 삼겹살: katCode/goods에 표준코드 27 존재하지만 가격 API 미제공 → 별도 API 필요
+- 감자: ctgry_cd=100 (식량작물), todo.md 이전 기록 200은 오류
+- 마늘: se_cd=01 소매 데이터 없음, se_cd=02 도매만 존재
+- perDay API: 모든 쿼리에서 totalCount=0 (원인 미상, perYearMonth만 사용)
+
+- [x] `src/data/market-items.ts` 작성
+- [x] `src/scripts/fetch-market-codes.ts` 작성 → `src/data/market-codes.json` 생성 (17,561개)
+- [x] `src/scripts/update-market-mapping.ts` 작성 → `src/data/market-mapping.ts` 자동 생성
+
+### Step 2 — `src/types/market.ts` 타입 추가
+기존 타입 수정 없이 파일 끝에 API 원시 응답 타입 추가.
+
+```ts
+export interface PerDayItem {
+  exmn_ymd: string        // YYYYMMDD
+  se_cd: string           // 01=소매, 02=중도매
+  item_cd: string; item_nm: string
+  vrty_cd: string; grd_cd: string; grd_nm: string
+  mrkt_cd: string; unit: string; unit_sz: string
+  exmn_dd_prc: string     // 조사일가격
+}
+
+export interface PerYearMonthItem {
+  exmn_ym: string         // YYYYMM
+  se_cd: string
+  item_cd: string; item_nm: string
+  vrty_cd: string; grd_cd: string; grd_nm: string
+  unit: string; unit_sz: string
+  pmm_avgprc: string      // 월별평균가
+  pmm_hgprc: string       // 월별최고가 → trend mMax
+  pmm_lwprc: string       // 월별최저가 → trend mMin
+  pyy_avgprc: string      // 연별평균가 → vsYearAvgRate 계산
+  pyy_hgprc: string; pyy_lwprc: string
+}
+```
+
+- [ ] `src/types/market.ts` 타입 추가
+
+### Step 3 — `src/lib/api/market.ts` (신규)
+외부 API 호출 함수 + `ItemDetail` 변환.
+
+```ts
+// perDay 호출 (오늘~2일전, 소매 or 중도매)
+fetchPerDay(params): Promise<PerDayItem[]>
+
+// perYearMonth 호출 (최근 13개월)
+fetchPerYearMonth(params): Promise<PerYearMonthItem[]>
+
+// 날짜별 평균가 Map (시장별 행 평균)
+avgByDate(items: PerDayItem[]): Map<string, number>
+
+// API 응답 → ItemDetail
+buildItemDetail(config, { daily, monthly }): ItemDetail
+```
+
+`trend[]` 구성 (PriceTrendChart2 호환):
+- 월별 2포인트: `YYYY-MM-01` retail=`pmm_lwprc`, `YYYY-MM-28` retail=`pmm_hgprc`
+- → 차트 내부에서 월별 max=pmm_hgprc, min=pmm_lwprc 자동 집계
+
+`vsYearAvgRate` = `(최근 소매가 - trailing 12개월 pmm_avgprc 평균) / trailing 12개월 pmm_avgprc 평균 × 100`
+
+- [ ] `src/lib/api/market.ts` 작성
+
+### Step 4 — `src/app/api/market/price/route.ts` (신규)
+```
+GET /api/market/price?slug=carrot  →  ItemDetail JSON
+```
+1. slug → `findItemBySlug()` → 없으면 404
+2. KV 캐시: `market:price:v1:{slug}:{yyyymm}` (TTL 6h)
+3. 캐시 미스 → 병렬 2회:
+   - `fetchPerDay(se_cd=01, 오늘~2일전)` — 오늘 가격 + 전일 변동
+   - `fetchPerYearMonth(se_cd=01, 13개월)` — 차트 + vsYearAvgRate
+4. `buildItemDetail()` → KV 저장 → 응답
+
+- [ ] `src/app/api/market/price/route.ts` 작성
+
+### Step 5 — `src/app/api/market/list/route.ts` (신규)
+```
+GET /api/market/list  →  { drop: ItemDetail[], all: ItemDetail[] }
+```
+1. KV 캐시: `market:list:v1:{yyyymm}` (TTL 6h)
+2. `MARKET_ITEMS` 전체 → `fetchPerDay` + `fetchPerYearMonth` 품목별 2회 병렬
+3. drop 필터: `(오늘가 - pyy_lwprc) / (pyy_hgprc - pyy_lwprc) < 0.30`
+4. KV 저장 → 응답
+
+- [ ] `src/app/api/market/list/route.ts` 작성
+
+### Step 6 — 페이지 연결 (컴포넌트 변경 없음)
+- [ ] `market/page.tsx`: mock import → `/api/market/list` fetch
+- [ ] `market/[item]/page.tsx`: mock import → `/api/market/price` fetch, `generateStaticParams` → `MARKET_ITEMS`
+
+### Step 7 — 마무리
+- [ ] `src/app/sitemap.ts`에 `/market`, `/market/[item]` 추가
+- [ ] `npm run build` 통과
+- [ ] 실제 API 호출 검증 (당근 테스트)
 
 ---
 

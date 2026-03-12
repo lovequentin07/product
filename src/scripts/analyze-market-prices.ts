@@ -104,13 +104,15 @@ async function main() {
     for (const ym of allYms) {
       const byMonth = rows.filter(r => r.exmn_ym === ym);
 
-      // 월별 최다 레코드 vrty_cd 선택
-      const vrtyCnt = new Map<string, number>();
+      // 월별 최다 레코드 (vrty_cd, grd_cd) 조합 선택 — 등급 혼합 방지
+      const comboCnt = new Map<string, number>();
       for (const r of byMonth) {
-        vrtyCnt.set(r.vrty_cd, (vrtyCnt.get(r.vrty_cd) ?? 0) + 1);
+        const key = `${r.vrty_cd}|${r.grd_cd}`;
+        comboCnt.set(key, (comboCnt.get(key) ?? 0) + 1);
       }
-      const bestVrty = [...vrtyCnt.entries()].sort((a, b) => b[1] - a[1])[0][0];
-      const selected = byMonth.filter(r => r.vrty_cd === bestVrty);
+      const bestCombo = [...comboCnt.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      const [bestVrty, bestGrd] = bestCombo.split('|');
+      const selected = byMonth.filter(r => r.vrty_cd === bestVrty && r.grd_cd === bestGrd);
 
       // 선택된 품종의 지역별 행 집계 후 IQR 이상치 제거
       const rawHighs: number[] = [];
