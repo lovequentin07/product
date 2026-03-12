@@ -2,9 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MOCK_ITEMS } from '@/lib/db/market-mock'
 
-export default function MarketSearchInput() {
+interface SearchItem {
+  id: string
+  name: string
+}
+
+interface Props {
+  items: SearchItem[]
+}
+
+export default function MarketSearchInput({ items }: Props) {
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -12,7 +20,7 @@ export default function MarketSearchInput() {
     e.preventDefault()
     const trimmed = query.trim()
     if (!trimmed) return
-    const found = MOCK_ITEMS.find((item) => item.name.includes(trimmed) || item.id === trimmed)
+    const found = items.find((item) => item.name.includes(trimmed) || item.id === trimmed)
     if (found) router.push(`/market/${found.id}`)
   }
 
@@ -26,7 +34,7 @@ export default function MarketSearchInput() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="당근, 양파, 삼겹살..."
+          placeholder="시금치, 딸기, 고등어..."
           className="flex-1 bg-transparent text-sm text-gray-800 placeholder:text-gray-400 outline-none ml-2"
         />
       </div>

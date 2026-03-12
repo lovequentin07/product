@@ -275,7 +275,7 @@ export const MOCK_ITEMS: ItemDetail[] = [
   {
     id: 'pork-belly',
     name: '삼겹살',
-    category: 'meat',
+    category: 'food',
     unit: '100g',
     popularRank: 2,
     tips: [

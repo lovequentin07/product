@@ -17,7 +17,8 @@ export default function PopularSection({ items }: { items: ItemDetail[] }) {
       <div className="flex gap-2.5 px-4 overflow-x-auto scrollbar-none">
         {items.map((item) => {
           const primary = item.kinds[0]
-          const isDown = primary.dayChange.rate < 0
+          const rate = item.trendMeta.vsYearAvgRate
+          const isDown = rate < 0
           return (
             <Link
               key={item.id}
@@ -37,7 +38,7 @@ export default function PopularSection({ items }: { items: ItemDetail[] }) {
                 <span className="text-xs font-normal text-gray-400 ml-0.5">/{item.unit}</span>
               </span>
               <span className={`text-xs font-semibold ${isDown ? 'text-blue-600' : 'text-orange-500'}`}>
-                {isDown ? '▼' : '▲'} {Math.abs(primary.dayChange.rate).toFixed(1)}%
+                {isDown ? '▼' : '▲'} {Math.abs(rate).toFixed(1)}%
               </span>
             </Link>
           )

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getMockItem, MOCK_ITEMS } from '@/lib/db/market-mock'
+import { getAllItems, getItemBySlug } from '@/lib/market-data'
 import { Category, getDefaultKind } from '@/types/market'
 import PriceTrendChart2 from '@/components/market/PriceTrendChart2'
 import MarketFAQ from '@/components/market/MarketFAQ'
@@ -14,19 +14,21 @@ const CATEGORY_LABELS: Record<Category, string> = {
   vegetable: '채소',
   fruit: '과일',
   seafood: '수산',
-  meat: '축산',
+  grain: '곡물',
+  food: '식품',
+  special: '특용',
 }
 
 export async function generateStaticParams() {
-  return MOCK_ITEMS.map((item) => ({ item: item.id }))
+  return getAllItems().map((item) => ({ item: item.id }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { item: id } = await params
-  const item = getMockItem(id)
+  const item = getItemBySlug(id)
   if (!item) return {}
 
-  const todayPrice = item.trend[item.trend.length - 1]?.retail ?? item.kinds[0].retailPrice
+  const todayPrice = getDefaultKind(item).retailPrice
   const rate = item.trendMeta.vsYearAvgRate
   const changeStr = rate < 0
     ? `▼ ${Math.abs(rate).toFixed(1)}% 저렴`
@@ -44,11 +46,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ItemPage({ params }: Props) {
   const { item: id } = await params
-  const item = getMockItem(id)
+  const item = getItemBySlug(id)
   if (!item) notFound()
 
   const priceData = getDefaultKind(item)
-  const todayPrice = item.trend[item.trend.length - 1]?.retail ?? priceData.retailPrice
+  const todayPrice = priceData.retailPrice
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -108,7 +110,7 @@ export default async function ItemPage({ params }: Props) {
         </div>
       </div>
 
-      {/* 보관 & 선택 가이드 */}
+      {/* 보관 & 선택 가이드 — tips가 있을 때만 표시 */}
       {item.tips.length > 0 && (
         <div className="bg-white border-t border-gray-100 py-6">
           <div className="max-w-2xl mx-auto px-4">
@@ -131,7 +133,7 @@ export default async function ItemPage({ params }: Props) {
         <div className="max-w-2xl mx-auto">
           <MarketFAQ />
           <div className="px-4 pb-2 text-xs text-gray-400 text-center">
-            가격 정보 출처: 한국농수산식품유통공사(aT) KAMIS · 공공데이터포털
+            가격 정보 출처: 한국농수산식품유통공사(aT) · 공공데이터포털
           </div>
         </div>
       </div>

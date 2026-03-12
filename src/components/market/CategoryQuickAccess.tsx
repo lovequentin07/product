@@ -11,9 +11,11 @@ interface CategoryOption {
 const CATEGORIES: CategoryOption[] = [
   { value: 'all', label: '전체' },
   { value: 'vegetable', label: '채소' },
+  { value: 'grain', label: '곡물' },
   { value: 'fruit', label: '과일' },
   { value: 'seafood', label: '수산' },
-  { value: 'meat', label: '축산' },
+  { value: 'food', label: '식품' },
+  { value: 'special', label: '특용' },
 ]
 
 export default function CategoryQuickAccess() {

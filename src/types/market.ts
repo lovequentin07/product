@@ -1,4 +1,4 @@
-export type Category = 'vegetable' | 'fruit' | 'seafood' | 'meat'
+export type Category = 'vegetable' | 'fruit' | 'seafood' | 'grain' | 'food' | 'special'
 export type ItemKind = '전체' | '특' | '상' | '중' | '하' | '수입'
 export type Mart = 'coupang' | 'emart' | 'homeplus' | 'lotte'
 
@@ -14,8 +14,8 @@ export interface PriceByKind {
   kind: ItemKind
   wholesalePrice: number
   retailPrice: number
-  dayChange: PriceChange   // 전일 대비
-  weekChange: PriceChange  // 전주 대비
+  dayChange?: PriceChange   // 전일 대비 (optional)
+  weekChange?: PriceChange  // 전주 대비 (optional)
 }
 
 // 마트별 소매가
