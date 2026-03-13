@@ -1,6 +1,7 @@
 import dailyStatsRaw from '@/data/market-daily-stats.json'
 import marketStatsRaw from '@/data/market-stats.json'
-import { Category, ItemDetail, PricePoint, TrendMeta } from '@/types/market'
+import gradeGroupsRaw from '@/data/market-stats-grades.json'
+import { Category, GradeGroup, ItemDetail, PricePoint, TrendMeta } from '@/types/market'
 
 // ----------------------------------------------------------------
 // 원본 JSON 타입 정의
@@ -20,6 +21,8 @@ interface DailyStat {
   all_time_low: number
   vs_avg_rate: number
   range_pct: number
+  grd_label?: string
+  vrty_label?: string
 }
 
 interface MonthlyPoint {
@@ -104,6 +107,7 @@ function buildTrendMeta(
 // ----------------------------------------------------------------
 const dailyStats = dailyStatsRaw as DailyStat[]
 const marketStats = marketStatsRaw as MarketStat[]
+const gradeGroups = gradeGroupsRaw as Record<string, GradeGroup>
 
 // item_cd 기준으로 market-stats 인덱싱
 const statsMap = new Map<string, MarketStat>()
@@ -120,6 +124,8 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
     const unitDisplay = buildUnitDisplay(d.unit, d.unit_sz)
     const trend = monthlyToTrend(stat.monthly)
     const trendMeta = buildTrendMeta(d, stat.monthly)
+
+    const gradeGroup = gradeGroups[d.item_cd] as GradeGroup | undefined
 
     return {
       id: d.item_cd,
@@ -138,6 +144,9 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
       trendMeta,
       martPrices: [],
       tips: [],
+      gradeGroup,
+      grd_label: d.grd_label,
+      vrty_label: d.vrty_label,
     }
   })
   .filter((item): item is ItemDetail => item !== null)

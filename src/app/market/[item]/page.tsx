@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getAllItems, getItemBySlug } from '@/lib/market-data'
 import { Category, getDefaultKind } from '@/types/market'
 import PriceTrendChart2 from '@/components/market/PriceTrendChart2'
+import GradeSelector from '@/components/market/GradeSelector'
 import MarketFAQ from '@/components/market/MarketFAQ'
 
 interface Props {
@@ -51,6 +52,7 @@ export default async function ItemPage({ params }: Props) {
 
   const priceData = getDefaultKind(item)
   const todayPrice = priceData.retailPrice
+  const hasGradeToggle = !!item.gradeGroup
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -87,27 +89,38 @@ export default async function ItemPage({ params }: Props) {
           </div>
           <div className="px-4 pb-4">
             <p className="text-3xl font-bold text-gray-800">{item.name}</p>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="font-bold text-gray-900 leading-none" style={{ fontSize: '28px' }}>
-                {todayPrice.toLocaleString()}원
-              </span>
-              <span className="text-base text-gray-400">/{item.unit}</span>
-              <span
-                className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`}
-                style={{ fontSize: '20px' }}
-              >
-                {item.trendMeta.vsYearAvgRate < 0 ? '▼' : '▲'} {Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}%
-              </span>
-            </div>
+            {/* gradeGroup 없는 경우에만 헤더에 가격 표시 (있으면 GradeSelector에서 표시) */}
+            {!hasGradeToggle && (
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="font-bold text-gray-900 leading-none" style={{ fontSize: '28px' }}>
+                  {todayPrice.toLocaleString()}원
+                </span>
+                <span className="text-base text-gray-400">/{item.unit}</span>
+                <span
+                  className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`}
+                  style={{ fontSize: '20px' }}
+                >
+                  {item.trendMeta.vsYearAvgRate < 0 ? '▼' : '▲'} {Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}%
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 1년 가격 차트 */}
-      <div className="bg-white border-t border-gray-100">
-        <div className="max-w-2xl mx-auto">
-          <PriceTrendChart2 trend={item.trend} unit={item.unit} trendMeta={item.trendMeta} />
-        </div>
+      {/* 가격 차트 + 등급 토글 */}
+      <div className="max-w-2xl mx-auto">
+        {hasGradeToggle ? (
+          <GradeSelector
+            gradeGroup={item.gradeGroup!}
+            defaultPrice={todayPrice}
+            unit={item.unit}
+          />
+        ) : (
+          <div className="bg-white border-t border-gray-100">
+            <PriceTrendChart2 trend={item.trend} unit={item.unit} trendMeta={item.trendMeta} />
+          </div>
+        )}
       </div>
 
       {/* 보관 & 선택 가이드 — tips가 있을 때만 표시 */}

@@ -8,10 +8,47 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { MARKET_MAPPING } from '../data/market-mapping';
 
 const DAILY_FILE = path.join(process.cwd(), 'src/data/market-prices-daily-raw.json');
 const STATS_FILE = path.join(process.cwd(), 'src/data/market-stats.json');
+const GRADES_FILE = path.join(process.cwd(), 'src/data/market-stats-grades.json');
 const OUT_FILE = path.join(process.cwd(), 'src/data/market-daily-stats.json');
+
+// ----------------------------------------------------------------
+// 수산물 신선도 정규화 (analyze-market-prices.ts와 동일)
+// ----------------------------------------------------------------
+const FRESHNESS_MAP: Record<string, string> = {
+  '생선': '신선',
+  '냉장': '신선',
+  '신선냉장': '신선',
+  '국산(신선 냉장)': '신선',
+  '국산(냉장)': '신선',
+  '연근해(신선 냉장)': '신선',
+  '참조기(신선 냉장)': '신선',
+  '냉동': '냉동',
+  '국산(냉동)': '냉동',
+  '원양(냉동)': '냉동',
+  '연근해(냉동)': '냉동',
+  '국산(냉동,원양)': '냉동',
+  '냉동(원양수입통합)': '냉동',
+  '냉동가공': '냉동',
+  '수입산(냉동)': '냉동',
+  '참조기(냉동)': '냉동',
+  '염장': '염장',
+  '수입산(염장)': '염장',
+  '국산(염장)': '염장',
+};
+
+// grd_cd → 라벨
+const GRD_LABEL_MAP: Record<string, string> = {
+  '20': '대',
+  '21': '중',
+  '22': '소',
+  '27': '대멸',
+  '28': '중멸',
+  '29': '세멸',
+};
 
 interface DailyRaw {
   item_cd: string;
@@ -54,6 +91,8 @@ interface DailyStats {
   all_time_low: number;
   vs_avg_rate: number;   // (최신가 - avg_avg_price) / avg_avg_price × 100, 음수=평균보다 저렴
   range_pct: number;     // (최신가 - all_time_low) / (all_time_high - all_time_low) × 100, 0%=역대최저, 100%=역대최고
+  grd_label?: string;    // 등급 라벨 (大→대, 中→중 등)
+  vrty_label?: string;   // 신선도 라벨 (신선/냉동/염장)
 }
 
 function round1(n: number): number {
@@ -69,6 +108,30 @@ async function main() {
 
   const daily: DailyRaw[] = JSON.parse(fs.readFileSync(DAILY_FILE, 'utf-8'));
   const statsArr: ItemStats[] = JSON.parse(fs.readFileSync(STATS_FILE, 'utf-8'));
+
+  // market-stats-grades.json 로드 (있으면)
+  interface GradeGroup {
+    grades: Array<{
+      grd_cd: string;
+      grd_label: string;
+      is_default: boolean;
+      varieties: Array<{ vrty_label: string; is_default: boolean }>;
+    }>;
+  }
+  const gradeGroups: Record<string, GradeGroup> = fs.existsSync(GRADES_FILE)
+    ? JSON.parse(fs.readFileSync(GRADES_FILE, 'utf-8'))
+    : {};
+
+  // item_cd → (grd_label, vrty_label) 기본값 맵 구성
+  const defaultLabelMap = new Map<string, { grd_label?: string; vrty_label?: string }>();
+  for (const [item_cd, gg] of Object.entries(gradeGroups)) {
+    const defaultGrade = gg.grades.find(g => g.is_default) ?? gg.grades[0];
+    const defaultVariety = defaultGrade?.varieties.find(v => v.is_default) ?? defaultGrade?.varieties[0];
+    defaultLabelMap.set(item_cd, {
+      grd_label: defaultGrade?.grd_label,
+      vrty_label: defaultVariety?.vrty_label,
+    });
+  }
 
   // item_nm 기준 stats 맵 (analyze-market-prices.ts가 item_nm 키로 저장)
   const statsMap = new Map<string, ItemStats>();
@@ -103,6 +166,13 @@ async function main() {
     const range_pct = round1(
       (d.latest_price - stat.all_time_low) / (stat.all_time_high - stat.all_time_low) * 100
     );
+    // grd_label/vrty_label: grades 파일에 있으면 is_default 기준, 없으면 mapping 기준
+    const gradeLookup = defaultLabelMap.get(d.item_cd);
+    const mapping = MARKET_MAPPING[d.item_cd];
+    const grd_label = gradeLookup?.grd_label
+      ?? (mapping?.grd_cd ? (GRD_LABEL_MAP[mapping.grd_cd] ?? mapping.grd_nm) : undefined);
+    const vrty_label = gradeLookup?.vrty_label;
+
     results.push({
       item_cd: d.item_cd,
       item_nm: d.item_nm,
@@ -118,6 +188,8 @@ async function main() {
       all_time_low: stat.all_time_low,
       vs_avg_rate,
       range_pct,
+      ...(grd_label !== undefined && { grd_label }),
+      ...(vrty_label !== undefined && { vrty_label }),
     });
     matched++;
   }

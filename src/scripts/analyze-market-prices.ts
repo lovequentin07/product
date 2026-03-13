@@ -6,7 +6,7 @@
  * 데이터가 없는 월은 공백으로 남김 (connectNulls 제거 대응).
  *
  * 사용법: npx tsx src/scripts/analyze-market-prices.ts
- * 출력: src/data/market-stats.json
+ * 출력: src/data/market-stats.json, src/data/market-stats-grades.json
  */
 
 import * as fs from 'fs';
@@ -15,6 +15,43 @@ import { MARKET_MAPPING } from '../data/market-mapping';
 
 const IN_FILE = path.join(process.cwd(), 'src/data/market-prices-raw.json');
 const OUT_FILE = path.join(process.cwd(), 'src/data/market-stats.json');
+const OUT_GRADES_FILE = path.join(process.cwd(), 'src/data/market-stats-grades.json');
+
+// ----------------------------------------------------------------
+// 수산물 신선도 정규화 매핑
+// vrty_nm → 표준 신선도 라벨
+// ----------------------------------------------------------------
+const FRESHNESS_MAP: Record<string, string> = {
+  '생선': '신선',
+  '냉장': '신선',
+  '신선냉장': '신선',
+  '국산(신선 냉장)': '신선',
+  '국산(냉장)': '신선',
+  '연근해(신선 냉장)': '신선',
+  '참조기(신선 냉장)': '신선',
+  '냉동': '냉동',
+  '국산(냉동)': '냉동',
+  '원양(냉동)': '냉동',
+  '연근해(냉동)': '냉동',
+  '국산(냉동,원양)': '냉동',
+  '냉동(원양수입통합)': '냉동',
+  '냉동가공': '냉동',
+  '수입산(냉동)': '냉동',
+  '참조기(냉동)': '냉동',
+  '염장': '염장',
+  '수입산(염장)': '염장',
+  '국산(염장)': '염장',
+};
+
+// grd_cd → 라벨
+const GRD_LABEL_MAP: Record<string, string> = {
+  '20': '대',
+  '21': '중',
+  '22': '소',
+};
+
+// 크기 등급 set
+const SIZE_GRD_CODES = new Set(['20', '21', '22']);
 
 interface PriceItem {
   exmn_ym: string;
@@ -32,6 +69,25 @@ interface PriceItem {
   pmm_avgprc: string;
   pmm_hgprc: string;
   pmm_lwprc: string;
+}
+
+interface VarietyStats {
+  vrty_cd: string;
+  vrty_label: string;
+  is_default: boolean;
+  coverage: number;
+  monthly: MonthlyStats[];
+}
+
+interface GradeStats {
+  grd_cd: string;
+  grd_label: string;
+  is_default: boolean;
+  varieties: VarietyStats[];
+}
+
+interface GradeGroup {
+  grades: GradeStats[];
 }
 
 interface MonthlyStats {
@@ -185,6 +241,157 @@ async function main() {
   }
 
   console.log(`\n✅ 저장: ${OUT_FILE}`);
+
+  // ----------------------------------------------------------------
+  // market-stats-grades.json 생성: 크기 등급(大/中/小) 토글 품목
+  // ----------------------------------------------------------------
+  await buildGradeStats(raw);
+}
+
+async function buildGradeStats(raw: PriceItem[]) {
+  // item_cd별로 se_cd=01 소매 데이터 + 크기 등급(20/21/22) 필터
+  const itemCds = [...new Set(raw.map(r => r.item_cd))];
+  const gradeGroups: Record<string, GradeGroup> = {};
+
+  for (const item_cd of itemCds) {
+    const rows = raw.filter(r =>
+      r.item_cd === item_cd &&
+      r.se_cd === '01' &&
+      SIZE_GRD_CODES.has(r.grd_cd)
+    );
+    if (rows.length === 0) continue;
+
+    // (grd_cd, freshness_label) 조합별 coverage + 대표 vrty_cd 수집
+    type ComboKey = string; // `${grd_cd}|${freshness_label}`
+    const comboYms = new Map<ComboKey, Set<string>>();
+    const comboVrty = new Map<ComboKey, { vrty_cd: string; vrty_nm: string }>();
+
+    for (const r of rows) {
+      const fresh = FRESHNESS_MAP[r.vrty_nm];
+      if (!fresh) continue; // 매핑 없는 신선도는 제외
+      const key: ComboKey = `${r.grd_cd}|${fresh}`;
+      if (!comboYms.has(key)) {
+        comboYms.set(key, new Set());
+        comboVrty.set(key, { vrty_cd: r.vrty_cd, vrty_nm: r.vrty_nm });
+      }
+      comboYms.get(key)!.add(r.exmn_ym);
+    }
+
+    // coverage >= 6 조합만
+    const validCombos = [...comboYms.entries()]
+      .filter(([, yms]) => yms.size >= 6)
+      .map(([key, yms]) => {
+        const [grd_cd, vrty_label] = key.split('|');
+        const vrtyInfo = comboVrty.get(key)!;
+        return { grd_cd, vrty_label, vrty_cd: vrtyInfo.vrty_cd, vrty_nm: vrtyInfo.vrty_nm, coverage: yms.size };
+      });
+
+    if (validCombos.length === 0) continue;
+
+    // grd_cd 별로 그룹화
+    const grdMap = new Map<string, typeof validCombos>();
+    for (const c of validCombos) {
+      if (!grdMap.has(c.grd_cd)) grdMap.set(c.grd_cd, []);
+      grdMap.get(c.grd_cd)!.push(c);
+    }
+
+    // 크기 등급 2개 이상인 품목만
+    const validGrdCds = [...grdMap.keys()].filter(grd_cd => SIZE_GRD_CODES.has(grd_cd));
+    if (validGrdCds.length < 2) continue;
+
+    // 각 등급별 coverage 최대 조합 (is_default)
+    const defaultGrdCd = validGrdCds.reduce((best, grd_cd) => {
+      const maxCoverage = Math.max(...grdMap.get(grd_cd)!.map(c => c.coverage));
+      const bestMaxCoverage = Math.max(...grdMap.get(best)!.map(c => c.coverage));
+      return maxCoverage > bestMaxCoverage ? grd_cd : best;
+    }, validGrdCds[0]);
+
+    const grades: GradeStats[] = [];
+
+    for (const grd_cd of validGrdCds.sort()) {
+      const combos = grdMap.get(grd_cd)!;
+      const defaultVrtyLabel = combos.reduce((best, c) => c.coverage > best.coverage ? c : best).vrty_label;
+
+      const varieties: VarietyStats[] = [];
+
+      for (const combo of combos) {
+        // 해당 (grd_cd, vrty_nm_normalized) 조합 rows
+        const comboRows = rows.filter(r => {
+          const fresh = FRESHNESS_MAP[r.vrty_nm];
+          return r.grd_cd === grd_cd && fresh === combo.vrty_label;
+        });
+
+        // 월별 집계
+        const allYms = [...new Set(comboRows.map(r => r.exmn_ym))].sort();
+        const monthly: MonthlyStats[] = [];
+
+        for (const ym of allYms) {
+          const byMonth = comboRows.filter(r => r.exmn_ym === ym);
+          const rawHighs: number[] = [];
+          const rawLows: number[] = [];
+          const rawAvgs: number[] = [];
+
+          for (const r of byMonth) {
+            const h = parseNum(r.pmm_hgprc);
+            const l = parseNum(r.pmm_lwprc);
+            const a = parseNum(r.pmm_avgprc);
+            if (h !== null) rawHighs.push(h);
+            if (l !== null) rawLows.push(l);
+            if (a !== null) rawAvgs.push(a);
+          }
+
+          const mHighs = removeOutliers(rawHighs);
+          const mLows  = removeOutliers(rawLows);
+          const mAvgs  = removeOutliers(rawAvgs);
+
+          if (mHighs.length === 0 || mLows.length === 0 || mAvgs.length === 0) continue;
+
+          monthly.push({
+            ym,
+            high: Math.max(...mHighs),
+            low: Math.min(...mLows),
+            avg: Math.round(mAvgs.reduce((s, v) => s + v, 0) / mAvgs.length),
+          });
+        }
+
+        if (monthly.length === 0) continue;
+
+        varieties.push({
+          vrty_cd: combo.vrty_cd,
+          vrty_label: combo.vrty_label,
+          is_default: combo.vrty_label === defaultVrtyLabel,
+          coverage: combo.coverage,
+          monthly,
+        });
+      }
+
+      if (varieties.length === 0) continue;
+
+      grades.push({
+        grd_cd,
+        grd_label: GRD_LABEL_MAP[grd_cd] ?? grd_cd,
+        is_default: grd_cd === defaultGrdCd,
+        varieties,
+      });
+    }
+
+    if (grades.length >= 2) {
+      gradeGroups[item_cd] = { grades };
+    }
+  }
+
+  fs.writeFileSync(OUT_GRADES_FILE, JSON.stringify(gradeGroups, null, 2), 'utf-8');
+
+  console.log(`\n✅ 저장: ${OUT_GRADES_FILE}`);
+  console.log(`   등급 토글 품목: ${Object.keys(gradeGroups).length}개`);
+  for (const [item_cd, gg] of Object.entries(gradeGroups)) {
+    const row = raw.find(r => r.item_cd === item_cd);
+    const item_nm = row?.item_nm ?? item_cd;
+    const gradeInfo = gg.grades.map(g =>
+      `${g.grd_label}(${g.varieties.map(v => v.vrty_label).join('/')})`
+    ).join(' | ');
+    console.log(`  ${item_nm}(${item_cd}): ${gradeInfo}`);
+  }
 }
 
 main().catch(err => {

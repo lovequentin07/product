@@ -13,7 +13,8 @@
     "all_time_high": 3890,
     "all_time_low": 382,
     "vs_avg_rate": -31.9,
-    "range_pct": 13.6
+    "range_pct": 13.6,
+    "grd_label": "상품"
   },
   {
     "item_cd": "226",
@@ -29,7 +30,8 @@
     "all_time_high": 3990,
     "all_time_low": 612,
     "vs_avg_rate": -24.1,
-    "range_pct": 22.3
+    "range_pct": 22.3,
+    "grd_label": "상품"
   },
   {
     "item_cd": "111",
@@ -45,7 +47,8 @@
     "all_time_high": 73900,
     "all_time_low": 27900,
     "vs_avg_rate": -23.7,
-    "range_pct": 17.4
+    "range_pct": 17.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "658",
@@ -61,7 +64,8 @@
     "all_time_high": 7480,
     "all_time_low": 1500,
     "vs_avg_rate": -23.2,
-    "range_pct": 29.9
+    "range_pct": 29.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "215",
@@ -77,7 +81,8 @@
     "all_time_high": 7520,
     "all_time_low": 480,
     "vs_avg_rate": -21.5,
-    "range_pct": 30.8
+    "range_pct": 30.8,
+    "grd_label": "상품"
   },
   {
     "item_cd": "233",
@@ -93,7 +98,8 @@
     "all_time_high": 7520,
     "all_time_low": 360,
     "vs_avg_rate": -18,
-    "range_pct": 34.5
+    "range_pct": 34.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "416",
@@ -109,7 +115,8 @@
     "all_time_high": 27700,
     "all_time_low": 6200,
     "vs_avg_rate": -16.7,
-    "range_pct": 28.4
+    "range_pct": 28.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "225",
@@ -125,7 +132,8 @@
     "all_time_high": 12115,
     "all_time_low": 2390,
     "vs_avg_rate": -16.4,
-    "range_pct": 26.7
+    "range_pct": 26.7,
+    "grd_label": "상품"
   },
   {
     "item_cd": "253",
@@ -141,7 +149,8 @@
     "all_time_high": 4513,
     "all_time_low": 1415,
     "vs_avg_rate": -16.2,
-    "range_pct": 34.5
+    "range_pct": 34.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "232",
@@ -157,7 +166,8 @@
     "all_time_high": 7860,
     "all_time_low": 1745,
     "vs_avg_rate": -14.7,
-    "range_pct": 25.8
+    "range_pct": 25.8,
+    "grd_label": "상품"
   },
   {
     "item_cd": "425",
@@ -173,7 +183,8 @@
     "all_time_high": 4990,
     "all_time_low": 898,
     "vs_avg_rate": -12.1,
-    "range_pct": 25.2
+    "range_pct": 25.2,
+    "grd_label": "상품"
   },
   {
     "item_cd": "654",
@@ -189,7 +200,8 @@
     "all_time_high": 8730,
     "all_time_low": 2000,
     "vs_avg_rate": -12.1,
-    "range_pct": 37.1
+    "range_pct": 37.1,
+    "grd_label": "중품"
   },
   {
     "item_cd": "231",
@@ -205,7 +217,8 @@
     "all_time_high": 4330,
     "all_time_low": 990,
     "vs_avg_rate": -12,
-    "range_pct": 34.1
+    "range_pct": 34.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "214",
@@ -221,7 +234,8 @@
     "all_time_high": 2650,
     "all_time_low": 430,
     "vs_avg_rate": -11.2,
-    "range_pct": 28.8
+    "range_pct": 28.8,
+    "grd_label": "상품"
   },
   {
     "item_cd": "223",
@@ -237,7 +251,8 @@
     "all_time_high": 19100,
     "all_time_low": 4490,
     "vs_avg_rate": -11,
-    "range_pct": 37.6
+    "range_pct": 37.6,
+    "grd_label": "상품"
   },
   {
     "item_cd": "660",
@@ -253,7 +268,8 @@
     "all_time_high": 5980,
     "all_time_low": 2000,
     "vs_avg_rate": -10.9,
-    "range_pct": 20.7
+    "range_pct": 20.7,
+    "grd_label": "상품"
   },
   {
     "item_cd": "616",
@@ -269,7 +285,9 @@
     "all_time_high": 19900,
     "all_time_low": 3000,
     "vs_avg_rate": -10.7,
-    "range_pct": 26.3
+    "range_pct": 26.3,
+    "grd_label": "대",
+    "vrty_label": "신선"
   },
   {
     "item_cd": "659",
@@ -285,7 +303,8 @@
     "all_time_high": 10500,
     "all_time_low": 2770,
     "vs_avg_rate": -10.7,
-    "range_pct": 40.5
+    "range_pct": 40.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "817",
@@ -301,7 +320,8 @@
     "all_time_high": 12400,
     "all_time_low": 5450,
     "vs_avg_rate": -10.5,
-    "range_pct": 53.2
+    "range_pct": 53.2,
+    "grd_label": "상품"
   },
   {
     "item_cd": "319",
@@ -317,7 +337,8 @@
     "all_time_high": 2580,
     "all_time_low": 1190,
     "vs_avg_rate": -10.4,
-    "range_pct": 33.8
+    "range_pct": 33.8,
+    "grd_label": "중품"
   },
   {
     "item_cd": "152",
@@ -333,7 +354,8 @@
     "all_time_high": 1030,
     "all_time_low": 193,
     "vs_avg_rate": -10.2,
-    "range_pct": 27.1
+    "range_pct": 27.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "653",
@@ -349,7 +371,8 @@
     "all_time_high": 22700,
     "all_time_low": 5560,
     "vs_avg_rate": -10,
-    "range_pct": 31.7
+    "range_pct": 31.7,
+    "grd_label": "중품"
   },
   {
     "item_cd": "315",
@@ -365,7 +388,8 @@
     "all_time_high": 1140,
     "all_time_low": 310,
     "vs_avg_rate": -9.4,
-    "range_pct": 30.5
+    "range_pct": 30.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "318",
@@ -381,7 +405,8 @@
     "all_time_high": 3045,
     "all_time_low": 1190,
     "vs_avg_rate": -8.8,
-    "range_pct": 36.1
+    "range_pct": 36.1,
+    "grd_label": "중품"
   },
   {
     "item_cd": "420",
@@ -397,7 +422,8 @@
     "all_time_high": 10000,
     "all_time_low": 4810,
     "vs_avg_rate": -8.5,
-    "range_pct": 35.6
+    "range_pct": 35.6,
+    "grd_label": "상품"
   },
   {
     "item_cd": "615",
@@ -413,7 +439,9 @@
     "all_time_high": 6380,
     "all_time_low": 1800,
     "vs_avg_rate": -7.3,
-    "range_pct": 39.7
+    "range_pct": 39.7,
+    "grd_label": "대",
+    "vrty_label": "냉동"
   },
   {
     "item_cd": "314",
@@ -429,7 +457,8 @@
     "all_time_high": 1475,
     "all_time_low": 760,
     "vs_avg_rate": -6.9,
-    "range_pct": 35.7
+    "range_pct": 35.7,
+    "grd_label": "중품"
   },
   {
     "item_cd": "312",
@@ -445,7 +474,8 @@
     "all_time_high": 24700,
     "all_time_low": 13800,
     "vs_avg_rate": -6.8,
-    "range_pct": 22.9
+    "range_pct": 22.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "112",
@@ -461,7 +491,8 @@
     "all_time_high": 7595,
     "all_time_low": 3560,
     "vs_avg_rate": -6.6,
-    "range_pct": 38.9
+    "range_pct": 38.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "644",
@@ -477,7 +508,8 @@
     "all_time_high": 43900,
     "all_time_low": 10000,
     "vs_avg_rate": -6.2,
-    "range_pct": 29.5
+    "range_pct": 29.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "144",
@@ -493,7 +525,8 @@
     "all_time_high": 3970,
     "all_time_low": 2500,
     "vs_avg_rate": -5.5,
-    "range_pct": 35.7
+    "range_pct": 35.7,
+    "grd_label": "중품"
   },
   {
     "item_cd": "650",
@@ -509,7 +542,8 @@
     "all_time_high": 23200,
     "all_time_low": 9395,
     "vs_avg_rate": -5.1,
-    "range_pct": 39.9
+    "range_pct": 39.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "430",
@@ -525,7 +559,8 @@
     "all_time_high": 2990,
     "all_time_low": 990,
     "vs_avg_rate": -4.4,
-    "range_pct": 50
+    "range_pct": 50,
+    "grd_label": "상품"
   },
   {
     "item_cd": "212",
@@ -541,7 +576,8 @@
     "all_time_high": 5995,
     "all_time_low": 1905,
     "vs_avg_rate": -3.2,
-    "range_pct": 38.8
+    "range_pct": 38.8,
+    "grd_label": "중품"
   },
   {
     "item_cd": "241",
@@ -557,7 +593,8 @@
     "all_time_high": 22000,
     "all_time_low": 8800,
     "vs_avg_rate": -3.2,
-    "range_pct": 59.1
+    "range_pct": 59.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "141",
@@ -573,7 +610,8 @@
     "all_time_high": 6990,
     "all_time_low": 3680,
     "vs_avg_rate": -2.7,
-    "range_pct": 39.9
+    "range_pct": 39.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "316",
@@ -589,7 +627,8 @@
     "all_time_high": 975,
     "all_time_low": 252,
     "vs_avg_rate": -2.7,
-    "range_pct": 39.4
+    "range_pct": 39.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "242",
@@ -605,7 +644,8 @@
     "all_time_high": 3170,
     "all_time_low": 653,
     "vs_avg_rate": -2.4,
-    "range_pct": 42.4
+    "range_pct": 42.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "638",
@@ -621,7 +661,8 @@
     "all_time_high": 4320,
     "all_time_low": 1700,
     "vs_avg_rate": -2.3,
-    "range_pct": 43.1
+    "range_pct": 43.1,
+    "grd_label": "중멸"
   },
   {
     "item_cd": "612",
@@ -637,7 +678,8 @@
     "all_time_high": 9080,
     "all_time_low": 3960,
     "vs_avg_rate": -2.2,
-    "range_pct": 48.6
+    "range_pct": 48.6,
+    "grd_label": "중품"
   },
   {
     "item_cd": "652",
@@ -653,7 +695,8 @@
     "all_time_high": 19525,
     "all_time_low": 3500,
     "vs_avg_rate": -1.4,
-    "range_pct": 46.3
+    "range_pct": 46.3,
+    "grd_label": "상품"
   },
   {
     "item_cd": "151",
@@ -669,7 +712,8 @@
     "all_time_high": 8990,
     "all_time_low": 2490,
     "vs_avg_rate": -0.9,
-    "range_pct": 38.6
+    "range_pct": 38.6,
+    "grd_label": "상품"
   },
   {
     "item_cd": "619",
@@ -685,7 +729,9 @@
     "all_time_high": 10950,
     "all_time_low": 1980,
     "vs_avg_rate": -0.4,
-    "range_pct": 34.5
+    "range_pct": 34.5,
+    "grd_label": "중",
+    "vrty_label": "냉동"
   },
   {
     "item_cd": "411",
@@ -701,7 +747,8 @@
     "all_time_high": 40000,
     "all_time_low": 16400,
     "vs_avg_rate": -0.1,
-    "range_pct": 48.7
+    "range_pct": 48.7,
+    "grd_label": "상품"
   },
   {
     "item_cd": "421",
@@ -717,7 +764,8 @@
     "all_time_high": 28700,
     "all_time_low": 5000,
     "vs_avg_rate": -0.1,
-    "range_pct": 40.1
+    "range_pct": 40.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "813",
@@ -733,7 +781,8 @@
     "all_time_high": 31833,
     "all_time_low": 24800,
     "vs_avg_rate": 0.1,
-    "range_pct": 71.1
+    "range_pct": 71.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "611",
@@ -749,7 +798,9 @@
     "all_time_high": 13600,
     "all_time_low": 1990,
     "vs_avg_rate": 0.3,
-    "range_pct": 25.8
+    "range_pct": 25.8,
+    "grd_label": "대",
+    "vrty_label": "신선"
   },
   {
     "item_cd": "812",
@@ -765,7 +816,8 @@
     "all_time_high": 5490,
     "all_time_low": 2740,
     "vs_avg_rate": 0.3,
-    "range_pct": 96.4
+    "range_pct": 96.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "142",
@@ -781,7 +833,8 @@
     "all_time_high": 18400,
     "all_time_low": 8750,
     "vs_avg_rate": 1.4,
-    "range_pct": 55.4
+    "range_pct": 55.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "662",
@@ -797,7 +850,8 @@
     "all_time_high": 25500,
     "all_time_low": 5980,
     "vs_avg_rate": 1.5,
-    "range_pct": 64.7
+    "range_pct": 64.7,
+    "grd_label": "중품"
   },
   {
     "item_cd": "414",
@@ -813,7 +867,8 @@
     "all_time_high": 51900,
     "all_time_low": 5980,
     "vs_avg_rate": 1.7,
-    "range_pct": 23.3
+    "range_pct": 23.3,
+    "grd_label": "L과"
   },
   {
     "item_cd": "642",
@@ -829,7 +884,8 @@
     "all_time_high": 4990,
     "all_time_low": 2025,
     "vs_avg_rate": 1.7,
-    "range_pct": 35.9
+    "range_pct": 35.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "246",
@@ -845,7 +901,8 @@
     "all_time_high": 5460,
     "all_time_low": 880,
     "vs_avg_rate": 2.4,
-    "range_pct": 45.9
+    "range_pct": 45.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "211",
@@ -861,7 +918,8 @@
     "all_time_high": 8490,
     "all_time_low": 1980,
     "vs_avg_rate": 2.5,
-    "range_pct": 46.2
+    "range_pct": 46.2,
+    "grd_label": "상품"
   },
   {
     "item_cd": "639",
@@ -877,7 +935,8 @@
     "all_time_high": 56600,
     "all_time_low": 50000,
     "vs_avg_rate": 2.8,
-    "range_pct": 50
+    "range_pct": 50,
+    "grd_label": "중품"
   },
   {
     "item_cd": "424",
@@ -893,7 +952,8 @@
     "all_time_high": 14900,
     "all_time_low": 4180,
     "vs_avg_rate": 2.9,
-    "range_pct": 53.4
+    "range_pct": 53.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "818",
@@ -909,7 +969,8 @@
     "all_time_high": 2700,
     "all_time_low": 1300,
     "vs_avg_rate": 3.6,
-    "range_pct": 92.1
+    "range_pct": 92.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "811",
@@ -925,7 +986,8 @@
     "all_time_high": 10900,
     "all_time_low": 5980,
     "vs_avg_rate": 3.9,
-    "range_pct": 89.8
+    "range_pct": 89.8,
+    "grd_label": "상품"
   },
   {
     "item_cd": "640",
@@ -941,7 +1003,8 @@
     "all_time_high": 113000,
     "all_time_low": 51600,
     "vs_avg_rate": 5.4,
-    "range_pct": 52.9
+    "range_pct": 52.9,
+    "grd_label": "중품"
   },
   {
     "item_cd": "649",
@@ -957,7 +1020,8 @@
     "all_time_high": 6990,
     "all_time_low": 3080,
     "vs_avg_rate": 5.4,
-    "range_pct": 40.4
+    "range_pct": 40.4,
+    "grd_label": "중품"
   },
   {
     "item_cd": "143",
@@ -973,7 +1037,8 @@
     "all_time_high": 13800,
     "all_time_low": 7850,
     "vs_avg_rate": 5.5,
-    "range_pct": 76.5
+    "range_pct": 76.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "258",
@@ -989,7 +1054,8 @@
     "all_time_high": 16600,
     "all_time_low": 6220,
     "vs_avg_rate": 5.9,
-    "range_pct": 54.7
+    "range_pct": 54.7,
+    "grd_label": "상품"
   },
   {
     "item_cd": "661",
@@ -1005,7 +1071,8 @@
     "all_time_high": 16400,
     "all_time_low": 4500,
     "vs_avg_rate": 6,
-    "range_pct": 57.1
+    "range_pct": 57.1,
+    "grd_label": "중품"
   },
   {
     "item_cd": "656",
@@ -1021,7 +1088,8 @@
     "all_time_high": 49800,
     "all_time_low": 6800,
     "vs_avg_rate": 6.1,
-    "range_pct": 27.7
+    "range_pct": 27.7,
+    "grd_label": "중품"
   },
   {
     "item_cd": "418",
@@ -1037,7 +1105,8 @@
     "all_time_high": 544,
     "all_time_low": 89,
     "vs_avg_rate": 6.3,
-    "range_pct": 53
+    "range_pct": 53,
+    "grd_label": "상품"
   },
   {
     "item_cd": "651",
@@ -1053,7 +1122,8 @@
     "all_time_high": 7470,
     "all_time_low": 4095,
     "vs_avg_rate": 6.8,
-    "range_pct": 64.3
+    "range_pct": 64.3,
+    "grd_label": "상품"
   },
   {
     "item_cd": "313",
@@ -1069,7 +1139,8 @@
     "all_time_high": 397000,
     "all_time_low": 264000,
     "vs_avg_rate": 8.5,
-    "range_pct": 71.4
+    "range_pct": 71.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "247",
@@ -1085,7 +1156,8 @@
     "all_time_high": 19900,
     "all_time_low": 6380,
     "vs_avg_rate": 8.6,
-    "range_pct": 56.4
+    "range_pct": 56.4,
+    "grd_label": "상품"
   },
   {
     "item_cd": "245",
@@ -1101,7 +1173,8 @@
     "all_time_high": 4110,
     "all_time_low": 993,
     "vs_avg_rate": 9.7,
-    "range_pct": 48
+    "range_pct": 48,
+    "grd_label": "상품"
   },
   {
     "item_cd": "224",
@@ -1117,7 +1190,8 @@
     "all_time_high": 2995,
     "all_time_low": 880,
     "vs_avg_rate": 11.2,
-    "range_pct": 52.5
+    "range_pct": 52.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "412",
@@ -1133,7 +1207,8 @@
     "all_time_high": 66750,
     "all_time_low": 13500,
     "vs_avg_rate": 12.8,
-    "range_pct": 44.9
+    "range_pct": 44.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "428",
@@ -1149,7 +1224,8 @@
     "all_time_high": 8990,
     "all_time_low": 1990,
     "vs_avg_rate": 13.7,
-    "range_pct": 57.1
+    "range_pct": 57.1,
+    "grd_label": "상품"
   },
   {
     "item_cd": "641",
@@ -1165,7 +1241,8 @@
     "all_time_high": 2990,
     "all_time_low": 1295,
     "vs_avg_rate": 14.2,
-    "range_pct": 64
+    "range_pct": 64,
+    "grd_label": "중품"
   },
   {
     "item_cd": "317",
@@ -1181,7 +1258,8 @@
     "all_time_high": 830,
     "all_time_low": 300,
     "vs_avg_rate": 14.7,
-    "range_pct": 67.9
+    "range_pct": 67.9,
+    "grd_label": "상품"
   },
   {
     "item_cd": "244",
@@ -1197,7 +1275,8 @@
     "all_time_high": 62300,
     "all_time_low": 35000,
     "vs_avg_rate": 14.9,
-    "range_pct": 88.5
+    "range_pct": 88.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "256",
@@ -1213,7 +1292,8 @@
     "all_time_high": 4240,
     "all_time_low": 750,
     "vs_avg_rate": 16,
-    "range_pct": 41.3
+    "range_pct": 41.3,
+    "grd_label": "상품"
   },
   {
     "item_cd": "221",
@@ -1229,7 +1309,8 @@
     "all_time_high": 35000,
     "all_time_low": 11900,
     "vs_avg_rate": 16.4,
-    "range_pct": 73.6
+    "range_pct": 73.6,
+    "grd_label": "중품"
   },
   {
     "item_cd": "816",
@@ -1245,7 +1326,8 @@
     "all_time_high": 16500,
     "all_time_low": 7500,
     "vs_avg_rate": 16.7,
-    "range_pct": 100
+    "range_pct": 100,
+    "grd_label": "상품"
   },
   {
     "item_cd": "252",
@@ -1261,7 +1343,8 @@
     "all_time_high": 2990,
     "all_time_low": 540,
     "vs_avg_rate": 19.2,
-    "range_pct": 58.2
+    "range_pct": 58.2,
+    "grd_label": "상품"
   },
   {
     "item_cd": "243",
@@ -1277,7 +1360,8 @@
     "all_time_high": 4565,
     "all_time_low": 850,
     "vs_avg_rate": 20.4,
-    "range_pct": 48.5
+    "range_pct": 48.5,
+    "grd_label": "상품"
   },
   {
     "item_cd": "614",
@@ -1293,7 +1377,9 @@
     "all_time_high": 4290,
     "all_time_low": 794,
     "vs_avg_rate": 20.4,
-    "range_pct": 52.8
+    "range_pct": 52.8,
+    "grd_label": "중",
+    "vrty_label": "냉동"
   },
   {
     "item_cd": "257",
@@ -1309,7 +1395,8 @@
     "all_time_high": 20200,
     "all_time_low": 5980,
     "vs_avg_rate": 21.9,
-    "range_pct": 69.8
+    "range_pct": 69.8,
+    "grd_label": "상품"
   },
   {
     "item_cd": "255",
@@ -1325,7 +1412,8 @@
     "all_time_high": 3240,
     "all_time_low": 560,
     "vs_avg_rate": 25,
-    "range_pct": 49.6
+    "range_pct": 49.6,
+    "grd_label": "상품"
   },
   {
     "item_cd": "415",
@@ -1341,7 +1429,8 @@
     "all_time_high": 14500,
     "all_time_low": 2570,
     "vs_avg_rate": 27.5,
-    "range_pct": 56.2
+    "range_pct": 56.2,
+    "grd_label": "M과"
   },
   {
     "item_cd": "814",
@@ -1357,7 +1446,8 @@
     "all_time_high": 22600,
     "all_time_low": 8480,
     "vs_avg_rate": 30,
-    "range_pct": 95
+    "range_pct": 95,
+    "grd_label": "상품"
   },
   {
     "item_cd": "613",
@@ -1373,7 +1463,9 @@
     "all_time_high": 10600,
     "all_time_low": 2320,
     "vs_avg_rate": 37.7,
-    "range_pct": 67.7
+    "range_pct": 67.7,
+    "grd_label": "중",
+    "vrty_label": "신선"
   },
   {
     "item_cd": "815",
@@ -1389,6 +1481,7 @@
     "all_time_high": 10600,
     "all_time_low": 3280,
     "vs_avg_rate": 38.5,
-    "range_pct": 100
+    "range_pct": 100,
+    "grd_label": "상품"
   }
 ]

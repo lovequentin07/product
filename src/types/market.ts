@@ -42,6 +42,28 @@ export interface TrendMeta {
   vsYearAvgRate: number // 현재가 vs 연평균 (음수=평균보다 쌈)
 }
 
+// ----------------------------------------------------------------
+// 등급 토글 (수산물 大/中/小 + 신선/냉동/염장)
+// ----------------------------------------------------------------
+export interface VarietyStats {
+  vrty_cd: string
+  vrty_label: string     // "신선", "냉동", "염장"
+  is_default: boolean
+  coverage: number
+  monthly: { ym: string; high: number; low: number; avg: number }[]
+}
+
+export interface GradeStats {
+  grd_cd: string
+  grd_label: string      // "대", "중", "소"
+  is_default: boolean
+  varieties: VarietyStats[]   // 1개면 신선도 토글 미표시
+}
+
+export interface GradeGroup {
+  grades: GradeStats[]
+}
+
 // 상세 페이지 전체 타입
 export interface ItemDetail {
   id: string
@@ -54,6 +76,9 @@ export interface ItemDetail {
   trendMeta: TrendMeta
   popularRank?: number
   tips: string[]
+  gradeGroup?: GradeGroup  // 크기 토글 대상 품목 (大/中/小)
+  grd_label?: string       // 기본 등급 라벨 (daily is_default 기준)
+  vrty_label?: string      // 기본 신선도 라벨 (daily is_default 기준)
 }
 
 // '상' 등급 우선 선택 helper (없으면 kinds[1] → kinds[0] 순서)
