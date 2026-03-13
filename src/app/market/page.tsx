@@ -38,8 +38,8 @@ export default async function MarketPage({ searchParams }: PageProps) {
     ? getAllItems()
         .filter((i) => i.category === activeCategory)
         .sort((a, b) => a.trendMeta.vsYearAvgRate - b.trendMeta.vsYearAvgRate)
-        .slice(0, 30)
-    : allDropItems.slice(0, 30)
+        .slice(0, 6)
+    : allDropItems.slice(0, 6)
 
   const jsonLd = {
     '@context': 'https://schema.org',
