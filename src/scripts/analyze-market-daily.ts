@@ -91,7 +91,9 @@ interface DailyStats {
   all_time_low: number;
   vs_avg_rate: number;   // (최신가 - avg_avg_price) / avg_avg_price × 100, 음수=평균보다 저렴
   range_pct: number;     // (최신가 - all_time_low) / (all_time_high - all_time_low) × 100, 0%=역대최저, 100%=역대최고
+  grd_cd?: string;       // 등급 코드 (grade group 있는 품목, 최적 조합)
   grd_label?: string;    // 등급 라벨 (大→대, 中→중 등)
+  vrty_cd?: string;      // 신선도 코드 (grade group 있는 품목, 최적 조합)
   vrty_label?: string;   // 신선도 라벨 (신선/냉동/염장)
 }
 
@@ -110,27 +112,84 @@ async function main() {
   const statsArr: ItemStats[] = JSON.parse(fs.readFileSync(STATS_FILE, 'utf-8'));
 
   // market-stats-grades.json 로드 (있으면)
+  interface GradeVariety {
+    vrty_cd: string;
+    vrty_label: string;
+    is_default: boolean;
+    coverage: number;
+    monthly: Array<{ ym: string; high: number; low: number; avg: number }>;
+  }
+  interface GradeEntry {
+    grd_cd: string;
+    grd_label: string;
+    is_default: boolean;
+    varieties: GradeVariety[];
+  }
   interface GradeGroup {
-    grades: Array<{
-      grd_cd: string;
-      grd_label: string;
-      is_default: boolean;
-      varieties: Array<{ vrty_label: string; is_default: boolean }>;
-    }>;
+    grades: GradeEntry[];
   }
   const gradeGroups: Record<string, GradeGroup> = fs.existsSync(GRADES_FILE)
     ? JSON.parse(fs.readFileSync(GRADES_FILE, 'utf-8'))
     : {};
 
-  // item_cd → (grd_label, vrty_label) 기본값 맵 구성
-  const defaultLabelMap = new Map<string, { grd_label?: string; vrty_label?: string }>();
+  // item_cd → 최적 조합(range_pct 최소) 맵 구성
+  interface BestCombo {
+    grd_cd: string;
+    grd_label: string;
+    vrty_cd: string;
+    vrty_label: string;
+    latest_price: number;
+    all_time_high: number;
+    all_time_low: number;
+    avg_avg_price: number;
+    range_pct: number;
+    vs_avg_rate: number;
+  }
+  const bestComboMap = new Map<string, BestCombo>();
+
   for (const [item_cd, gg] of Object.entries(gradeGroups)) {
-    const defaultGrade = gg.grades.find(g => g.is_default) ?? gg.grades[0];
-    const defaultVariety = defaultGrade?.varieties.find(v => v.is_default) ?? defaultGrade?.varieties[0];
-    defaultLabelMap.set(item_cd, {
-      grd_label: defaultGrade?.grd_label,
-      vrty_label: defaultVariety?.vrty_label,
-    });
+    let best: BestCombo | null = null;
+
+    for (const grade of gg.grades) {
+      for (const vrty of grade.varieties) {
+        const monthly = vrty.monthly ?? [];
+        if (monthly.length === 0) continue;
+
+        const latest_price = monthly[monthly.length - 1].avg;
+        const all_time_high = Math.max(...monthly.map(m => m.high));
+        const all_time_low = Math.min(...monthly.map(m => m.low));
+        const avgs = monthly.map(m => m.avg);
+        const avg_avg_price = avgs.reduce((s, v) => s + v, 0) / avgs.length;
+
+        if (all_time_high === all_time_low) continue;
+
+        const range_pct = round1(
+          (latest_price - all_time_low) / (all_time_high - all_time_low) * 100
+        );
+        const vs_avg_rate = round1(
+          (latest_price - avg_avg_price) / avg_avg_price * 100
+        );
+
+        if (best === null || range_pct < best.range_pct) {
+          best = {
+            grd_cd: grade.grd_cd,
+            grd_label: grade.grd_label,
+            vrty_cd: vrty.vrty_cd,
+            vrty_label: vrty.vrty_label,
+            latest_price,
+            all_time_high,
+            all_time_low,
+            avg_avg_price,
+            range_pct,
+            vs_avg_rate,
+          };
+        }
+      }
+    }
+
+    if (best) {
+      bestComboMap.set(item_cd, best);
+    }
   }
 
   // item_nm 기준 stats 맵 (analyze-market-prices.ts가 item_nm 키로 저장)
@@ -145,7 +204,35 @@ async function main() {
   let unmatched = 0;
 
   for (const d of daily) {
-    // item_nm 우선 매칭, 없으면 item_cd
+    // grade group 품목: bestComboMap에서 최적 조합을 직접 사용
+    const bestCombo = bestComboMap.get(d.item_cd);
+    if (bestCombo) {
+      const stat = statsMap.get(d.item_nm) ?? statsMap.get(d.item_cd);
+      results.push({
+        item_cd: d.item_cd,
+        item_nm: d.item_nm,
+        ctgry_cd: d.ctgry_cd,
+        ctgry_nm: stat?.ctgry_nm ?? '',
+        exmn_ymd: d.exmn_ymd,
+        latest_price: bestCombo.latest_price,
+        unit: d.unit || stat?.unit || '',
+        unit_sz: d.unit_sz || stat?.unit_sz || '',
+        days_ago: d.days_ago,
+        avg_avg_price: bestCombo.avg_avg_price,
+        all_time_high: bestCombo.all_time_high,
+        all_time_low: bestCombo.all_time_low,
+        vs_avg_rate: bestCombo.vs_avg_rate,
+        range_pct: bestCombo.range_pct,
+        grd_cd: bestCombo.grd_cd,
+        grd_label: bestCombo.grd_label,
+        vrty_cd: bestCombo.vrty_cd,
+        vrty_label: bestCombo.vrty_label,
+      });
+      matched++;
+      continue;
+    }
+
+    // grade group 없는 품목: 기존 로직
     const stat = statsMap.get(d.item_nm) ?? statsMap.get(d.item_cd);
 
     if (!stat) {
@@ -166,12 +253,11 @@ async function main() {
     const range_pct = round1(
       (d.latest_price - stat.all_time_low) / (stat.all_time_high - stat.all_time_low) * 100
     );
-    // grd_label/vrty_label: grades 파일에 있으면 is_default 기준, 없으면 mapping 기준
-    const gradeLookup = defaultLabelMap.get(d.item_cd);
+    // grd_label: grades 파일에 없는 품목은 mapping 기준
     const mapping = MARKET_MAPPING[d.item_cd];
-    const grd_label = gradeLookup?.grd_label
-      ?? (mapping?.grd_cd ? (GRD_LABEL_MAP[mapping.grd_cd] ?? mapping.grd_nm) : undefined);
-    const vrty_label = gradeLookup?.vrty_label;
+    const grd_label = mapping?.grd_cd
+      ? (GRD_LABEL_MAP[mapping.grd_cd] ?? mapping.grd_nm)
+      : undefined;
 
     results.push({
       item_cd: d.item_cd,
@@ -189,7 +275,6 @@ async function main() {
       vs_avg_rate,
       range_pct,
       ...(grd_label !== undefined && { grd_label }),
-      ...(vrty_label !== undefined && { vrty_label }),
     });
     matched++;
   }

@@ -40,6 +40,12 @@ export default function PopularSection({ items }: { items: ItemDetail[] }) {
               <span className={`text-xs font-semibold ${isDown ? 'text-blue-600' : 'text-orange-500'}`}>
                 {isDown ? '▼' : '▲'} {Math.abs(rate).toFixed(1)}%
               </span>
+              {/* 등급·신선도 pill (grade group 품목만) */}
+              {(item.grd_label || item.vrty_label) && (
+                <span className="text-[10px] text-gray-400 leading-none">
+                  {[item.grd_label, item.vrty_label].filter(Boolean).join('·')}
+                </span>
+              )}
             </Link>
           )
         })}

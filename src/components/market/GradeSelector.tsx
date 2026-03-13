@@ -8,6 +8,8 @@ interface Props {
   gradeGroup: GradeGroup
   defaultPrice: number  // daily latest_price (기본 등급+신선도)
   unit: string
+  featuredGrdCd?: string   // 홈 카드와 일치시킬 등급 코드 (없으면 is_default 폴백)
+  featuredVrtyCd?: string  // 홈 카드와 일치시킬 신선도 코드 (없으면 is_default 폴백)
 }
 
 // monthly[] → PricePoint[] (월당 3포인트: 1일=low, 14일=avg, 28일=high)
@@ -43,14 +45,30 @@ function buildTrendMeta(
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
 }
 
-export default function GradeSelector({ gradeGroup, defaultPrice, unit }: Props) {
-  const defaultGradeIdx = gradeGroup.grades.findIndex((g) => g.is_default)
-  const [selectedGrdIdx, setSelectedGrdIdx] = useState(defaultGradeIdx >= 0 ? defaultGradeIdx : 0)
+export default function GradeSelector({ gradeGroup, defaultPrice, unit, featuredGrdCd, featuredVrtyCd }: Props) {
+  // featuredGrdCd가 있으면 해당 등급으로 초기화, 없으면 is_default 폴백
+  const initialGradeIdx = (() => {
+    if (featuredGrdCd) {
+      const idx = gradeGroup.grades.findIndex((g) => g.grd_cd === featuredGrdCd)
+      if (idx >= 0) return idx
+    }
+    const idx = gradeGroup.grades.findIndex((g) => g.is_default)
+    return idx >= 0 ? idx : 0
+  })()
+  const [selectedGrdIdx, setSelectedGrdIdx] = useState(initialGradeIdx)
 
   const selectedGrade: GradeStats = gradeGroup.grades[selectedGrdIdx] ?? gradeGroup.grades[0]
 
-  const defaultVrtyIdx = selectedGrade.varieties.findIndex((v) => v.is_default)
-  const [selectedVrtyIdx, setSelectedVrtyIdx] = useState(defaultVrtyIdx >= 0 ? defaultVrtyIdx : 0)
+  // featuredVrtyCd가 있으면 해당 신선도로 초기화, 없으면 is_default 폴백
+  const initialVrtyIdx = (() => {
+    if (featuredVrtyCd) {
+      const idx = selectedGrade.varieties.findIndex((v) => v.vrty_cd === featuredVrtyCd)
+      if (idx >= 0) return idx
+    }
+    const idx = selectedGrade.varieties.findIndex((v) => v.is_default)
+    return idx >= 0 ? idx : 0
+  })()
+  const [selectedVrtyIdx, setSelectedVrtyIdx] = useState(initialVrtyIdx)
 
   // 등급 변경 시 variety도 is_default로 리셋
   function handleGrdChange(idx: number) {
@@ -65,12 +83,10 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit }: Props)
   // 선택된 variety의 monthly → trend 변환
   const trend = useMemo(() => monthlyToTrend(selectedVariety?.monthly ?? []), [selectedVariety])
 
-  // 현재 가격: 기본 조합일 때 defaultPrice, 변경 시 최근 monthly.avg
+  // 현재 가격: 초기 조합(featured 또는 is_default)일 때 defaultPrice, 변경 시 최근 monthly.avg
   const isDefault =
-    selectedGrdIdx === (defaultGradeIdx >= 0 ? defaultGradeIdx : 0) &&
-    selectedVrtyIdx === (selectedGrade.varieties.findIndex((v) => v.is_default) >= 0
-      ? selectedGrade.varieties.findIndex((v) => v.is_default)
-      : 0)
+    selectedGrdIdx === initialGradeIdx &&
+    selectedVrtyIdx === initialVrtyIdx
 
   const currentPrice = useMemo(() => {
     if (isDefault) return defaultPrice

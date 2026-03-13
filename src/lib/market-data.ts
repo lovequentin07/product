@@ -21,7 +21,9 @@ interface DailyStat {
   all_time_low: number
   vs_avg_rate: number
   range_pct: number
+  grd_cd?: string
   grd_label?: string
+  vrty_cd?: string
   vrty_label?: string
 }
 
@@ -147,6 +149,8 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
       gradeGroup,
       grd_label: d.grd_label,
       vrty_label: d.vrty_label,
+      featuredGrdCd: d.grd_cd,
+      featuredVrtyCd: d.vrty_cd,
     }
   })
   .filter((item): item is ItemDetail => item !== null)

@@ -115,6 +115,8 @@ export default async function ItemPage({ params }: Props) {
             gradeGroup={item.gradeGroup!}
             defaultPrice={todayPrice}
             unit={item.unit}
+            featuredGrdCd={item.featuredGrdCd}
+            featuredVrtyCd={item.featuredVrtyCd}
           />
         ) : (
           <div className="bg-white border-t border-gray-100">

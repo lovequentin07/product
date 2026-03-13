@@ -77,8 +77,10 @@ export interface ItemDetail {
   popularRank?: number
   tips: string[]
   gradeGroup?: GradeGroup  // 크기 토글 대상 품목 (大/中/小)
-  grd_label?: string       // 기본 등급 라벨 (daily is_default 기준)
-  vrty_label?: string      // 기본 신선도 라벨 (daily is_default 기준)
+  grd_label?: string       // 기본 등급 라벨 (최적 조합 기준)
+  vrty_label?: string      // 기본 신선도 라벨 (최적 조합 기준)
+  featuredGrdCd?: string   // 홈↔상세 일관성: 최적 조합의 grd_cd
+  featuredVrtyCd?: string  // 홈↔상세 일관성: 최적 조합의 vrty_cd
 }
 
 // '상' 등급 우선 선택 helper (없으면 kinds[1] → kinds[0] 순서)

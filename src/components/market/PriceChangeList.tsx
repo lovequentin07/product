@@ -59,6 +59,12 @@ export default function PriceChangeList({ items, title }: Props) {
                 {primary.retailPrice.toLocaleString()}원
                 <span className="text-[11px] font-normal text-gray-400 ml-0.5">/{item.unit}</span>
               </p>
+              {/* 등급·신선도 pill (grade group 품목만) */}
+              {(item.grd_label || item.vrty_label) && (
+                <p className="mt-1 text-[11px] text-gray-400">
+                  {[item.grd_label, item.vrty_label].filter(Boolean).join('·')}
+                </p>
+              )}
             </Link>
           )
         })}
