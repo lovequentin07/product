@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const OUT_FILE = path.join(process.cwd(), 'src/data/market-prices-raw.json');
-const GTE = '202502';
+const GTE = '202403';
 const LTE = '202603';
 const PAGE_SIZE = 1000;
 

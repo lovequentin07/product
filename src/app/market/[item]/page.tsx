@@ -96,6 +96,11 @@ export default async function ItemPage({ params }: Props) {
                   {todayPrice.toLocaleString()}원
                 </span>
                 <span className="text-base text-gray-400">/{item.unit}</span>
+                {item.seCd && (
+                  <span className="text-[10px] text-gray-400 border border-gray-200 px-1 rounded self-center">
+                    {item.seCd === '02' ? '도매가' : '소매가'}
+                  </span>
+                )}
                 <span
                   className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`}
                   style={{ fontSize: '20px' }}
@@ -120,7 +125,7 @@ export default async function ItemPage({ params }: Props) {
           />
         ) : (
           <div className="bg-white border-t border-gray-100">
-            <PriceTrendChart2 trend={item.trend} unit={item.unit} trendMeta={item.trendMeta} />
+            <PriceTrendChart2 monthly={item.monthly} unit={item.unit} trendMeta={item.trendMeta} />
           </div>
         )}
       </div>

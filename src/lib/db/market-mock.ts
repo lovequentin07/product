@@ -1,44 +1,31 @@
-import { ItemDetail, PricePoint, TrendMeta, MartPrice, Mart, getDefaultKind } from '@/types/market'
+import { ItemDetail, MonthlyPoint, TrendMeta, MartPrice, Mart, getDefaultKind } from '@/types/market'
 
-// 1년치 추세 데이터 생성 (targetRetail: 오늘 소매가 — 마지막 포인트에 고정)
-function generateTrend(baseWholesale: number, retailMult: number, targetRetail: number, days = 365): PricePoint[] {
-  const result: PricePoint[] = []
-  const today = new Date(2026, 2, 6)
-  let ws = baseWholesale * 1.05
-  for (let i = days; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    // 계절성 반영: 봄(3~5월) 하락, 가을(9~11월) 상승
-    const month = d.getMonth()
-    const seasonalBias = (month >= 2 && month <= 4) ? -0.53 : (month >= 8 && month <= 10) ? -0.51 : -0.52
-    ws = ws + (Math.random() + seasonalBias) * baseWholesale * 0.025
-    ws = Math.max(baseWholesale * 0.6, Math.min(baseWholesale * 1.5, ws))
-    const w = Math.round(ws / 10) * 10
-    result.push({
-      date: d.toISOString().slice(0, 10),
-      wholesale: w,
-      retail: Math.round((w * retailMult) / 10) * 10,
-    })
+function generateMonthly(basePrice: number, targetPrice: number, months = 24): MonthlyPoint[] {
+  const result: MonthlyPoint[] = []
+  const today = new Date(2026, 2, 14)
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+    const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
+    const seasonal = Math.sin((d.getMonth() / 12) * Math.PI * 2) * 0.15
+    const avg = Math.round(basePrice * (1 + seasonal + (Math.random() - 0.5) * 0.1) / 10) * 10
+    result.push({ ym, high: Math.round(avg * 1.15 / 10) * 10, low: Math.round(avg * 0.85 / 10) * 10, avg })
   }
-  // 마지막 포인트(오늘)를 targetRetail에 맞춤
   const last = result[result.length - 1]
   result[result.length - 1] = {
     ...last,
-    retail: targetRetail,
-    wholesale: Math.round((targetRetail / retailMult) / 10) * 10,
+    avg: targetPrice,
+    high: Math.round(targetPrice * 1.15 / 10) * 10,
+    low: Math.round(targetPrice * 0.85 / 10) * 10,
   }
   return result
 }
 
-function computeTrendMeta(trend: PricePoint[], currentRetail: number): TrendMeta {
-  const retails = trend.map((p) => p.retail)
-  const yearMin = Math.min(...retails)
-  const yearMax = Math.max(...retails)
-  const yearAvg = Math.round(retails.reduce((a, b) => a + b, 0) / retails.length)
-  const yearMinDate = trend[retails.indexOf(yearMin)].date
-  const yearMaxDate = trend[retails.indexOf(yearMax)].date
+function computeTrendMeta(monthly: MonthlyPoint[], currentRetail: number): TrendMeta {
+  const yearMin = Math.min(...monthly.map((m) => m.low))
+  const yearMax = Math.max(...monthly.map((m) => m.high))
+  const yearAvg = Math.round(monthly.map((m) => m.avg).reduce((a, b) => a + b, 0) / monthly.length)
   const vsYearAvgRate = Math.round(((currentRetail - yearAvg) / yearAvg) * 1000) / 10
-  return { yearMin, yearMax, yearAvg, yearMinDate, yearMaxDate, vsYearAvgRate }
+  return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
 }
 
 function makeDayChange(retailPrice: number, rate: number) {
@@ -62,17 +49,16 @@ function computeMartPrices(prices: Partial<Record<Mart, number>>): MartPrice[] {
   }))
 }
 
-// 추세 데이터 (아이템별 미리 생성)
-const carrotTrend = generateTrend(3420, 1.49, 5100)
-const onionTrend = generateTrend(1950, 1.53, 2980)
-const cabbageTrend = generateTrend(4100, 1.44, 5900)
-const potatoTrend = generateTrend(2800, 1.39, 3900)
-const garlicTrend = generateTrend(8500, 1.51, 12800)
-const appleTrend = generateTrend(7200, 1.36, 9800)
-const strawberryTrend = generateTrend(12500, 1.42, 17800)
-const mackerelTrend = generateTrend(3200, 1.38, 4400)
-const squidTrend = generateTrend(4800, 1.44, 6900)
-const porkTrend = generateTrend(2650, 1.31, 3480)
+const carrotMonthly = generateMonthly(5800, 5100)
+const onionMonthly = generateMonthly(3200, 2980)
+const cabbageMonthly = generateMonthly(6500, 5900)
+const potatoMonthly = generateMonthly(3750, 3900)
+const garlicMonthly = generateMonthly(13500, 12800)
+const appleMonthly = generateMonthly(9300, 9800)
+const strawberryMonthly = generateMonthly(19500, 17800)
+const mackerelMonthly = generateMonthly(4300, 4400)
+const squidMonthly = generateMonthly(7300, 6900)
+const porkMonthly = generateMonthly(3420, 3480)
 
 export const MOCK_ITEMS: ItemDetail[] = [
   {
@@ -95,8 +81,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 2400, retailPrice: 3600, dayChange: makeDayChange(3600, -8.0), weekChange: makeWeekChange(3600, -10.5) },
     ],
     martPrices: computeMartPrices({ coupang: 4500, emart: 4980, homeplus: 5100, lotte: 5290 }),
-    trend: carrotTrend,
-    trendMeta: { ...computeTrendMeta(carrotTrend, 5100), vsYearAvgRate: -12.5, yearMin: 3500, yearMax: 18000 },
+    monthly: carrotMonthly,
+    trendMeta: { ...computeTrendMeta(carrotMonthly, 5100), vsYearAvgRate: -12.5, yearMin: 3500, yearMax: 18000 },
   },
   {
     id: 'onion',
@@ -118,8 +104,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 1300, retailPrice: 1950, dayChange: makeDayChange(1950, -4.0), weekChange: makeWeekChange(1950, -6.5) },
     ],
     martPrices: computeMartPrices({ coupang: 2500, emart: 2780, homeplus: 2980, lotte: 3100 }),
-    trend: onionTrend,
-    trendMeta: { ...computeTrendMeta(onionTrend, 2980), vsYearAvgRate: -6.8, yearMin: 2000, yearMax: 11000 },
+    monthly: onionMonthly,
+    trendMeta: { ...computeTrendMeta(onionMonthly, 2980), vsYearAvgRate: -6.8, yearMin: 2000, yearMax: 11000 },
   },
   {
     id: 'cabbage',
@@ -140,8 +126,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '하', wholesalePrice: 2900, retailPrice: 4200, dayChange: makeDayChange(4200, -11.0), weekChange: makeWeekChange(4200, -14.0) },
     ],
     martPrices: computeMartPrices({ emart: 4980, coupang: 5200, homeplus: 5500, lotte: 5890 }),
-    trend: cabbageTrend,
-    trendMeta: { ...computeTrendMeta(cabbageTrend, 5900), vsYearAvgRate: -9.1, yearMin: 4000, yearMax: 22000 },
+    monthly: cabbageMonthly,
+    trendMeta: { ...computeTrendMeta(cabbageMonthly, 5900), vsYearAvgRate: -9.1, yearMin: 4000, yearMax: 22000 },
   },
   {
     id: 'potato',
@@ -162,8 +148,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 1900, retailPrice: 2700, dayChange: makeDayChange(2700, 2.0), weekChange: makeWeekChange(2700, 3.5) },
     ],
     martPrices: computeMartPrices({ coupang: 3500, emart: 3780, homeplus: 3900, lotte: 4100 }),
-    trend: potatoTrend,
-    trendMeta: { ...computeTrendMeta(potatoTrend, 3900), vsYearAvgRate: 3.7, yearMin: 3500, yearMax: 6000 },
+    monthly: potatoMonthly,
+    trendMeta: { ...computeTrendMeta(potatoMonthly, 3900), vsYearAvgRate: 3.7, yearMin: 3500, yearMax: 6000 },
   },
   {
     id: 'garlic',
@@ -183,8 +169,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 5500, retailPrice: 8200, dayChange: makeDayChange(8200, -3.0), weekChange: makeWeekChange(8200, -5.5) },
     ],
     martPrices: computeMartPrices({ emart: 11980, homeplus: 12800, lotte: 13200, coupang: 12500 }),
-    trend: garlicTrend,
-    trendMeta: { ...computeTrendMeta(garlicTrend, 12800), vsYearAvgRate: -5.2, yearMin: 9000, yearMax: 48000 },
+    monthly: garlicMonthly,
+    trendMeta: { ...computeTrendMeta(garlicMonthly, 12800), vsYearAvgRate: -5.2, yearMin: 9000, yearMax: 48000 },
   },
   {
     id: 'apple',
@@ -205,8 +191,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '하', wholesalePrice: 4800, retailPrice: 6500, dayChange: makeDayChange(6500, 6.0), weekChange: makeWeekChange(6500, 9.0) },
     ],
     martPrices: computeMartPrices({ emart: 8900, coupang: 9200, homeplus: 9500, lotte: 9800 }),
-    trend: appleTrend,
-    trendMeta: { ...computeTrendMeta(appleTrend, 9800), vsYearAvgRate: 5.1, yearMin: 7000, yearMax: 13500 },
+    monthly: appleMonthly,
+    trendMeta: { ...computeTrendMeta(appleMonthly, 9800), vsYearAvgRate: 5.1, yearMin: 7000, yearMax: 13500 },
   },
   {
     id: 'strawberry',
@@ -226,8 +212,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '중', wholesalePrice: 10500, retailPrice: 15000, dayChange: makeDayChange(15000, -8.5), weekChange: makeWeekChange(15000, -12.0) },
     ],
     martPrices: computeMartPrices({ emart: 16900, coupang: 17200, homeplus: 17800, lotte: 18500 }),
-    trend: strawberryTrend,
-    trendMeta: { ...computeTrendMeta(strawberryTrend, 17800), vsYearAvgRate: -8.3, yearMin: 12000, yearMax: 55000 },
+    monthly: strawberryMonthly,
+    trendMeta: { ...computeTrendMeta(strawberryMonthly, 17800), vsYearAvgRate: -8.3, yearMin: 12000, yearMax: 55000 },
   },
   {
     id: 'mackerel',
@@ -248,8 +234,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 2200, retailPrice: 3100, dayChange: makeDayChange(3100, 1.8), weekChange: makeWeekChange(3100, 3.2) },
     ],
     martPrices: computeMartPrices({ coupang: 3990, emart: 4200, homeplus: 4400, lotte: 4600 }),
-    trend: mackerelTrend,
-    trendMeta: { ...computeTrendMeta(mackerelTrend, 4400), vsYearAvgRate: 2.3, yearMin: 3500, yearMax: 6500 },
+    monthly: mackerelMonthly,
+    trendMeta: { ...computeTrendMeta(mackerelMonthly, 4400), vsYearAvgRate: 2.3, yearMin: 3500, yearMax: 6500 },
   },
   {
     id: 'squid',
@@ -269,8 +255,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 3500, retailPrice: 5000, dayChange: makeDayChange(5000, -3.0), weekChange: makeWeekChange(5000, -5.5) },
     ],
     martPrices: computeMartPrices({ coupang: 6200, emart: 6500, homeplus: 6900, lotte: 7100 }),
-    trend: squidTrend,
-    trendMeta: { ...computeTrendMeta(squidTrend, 6900), vsYearAvgRate: -5.0, yearMin: 4500, yearMax: 26000 },
+    monthly: squidMonthly,
+    trendMeta: { ...computeTrendMeta(squidMonthly, 6900), vsYearAvgRate: -5.0, yearMin: 4500, yearMax: 26000 },
   },
   {
     id: 'pork-belly',
@@ -292,8 +278,8 @@ export const MOCK_ITEMS: ItemDetail[] = [
       { kind: '수입', wholesalePrice: 1700, retailPrice: 2230, dayChange: makeDayChange(2230, 1.5), weekChange: makeWeekChange(2230, 2.5) },
     ],
     martPrices: computeMartPrices({ coupang: 3100, emart: 3280, homeplus: 3480, lotte: 3590 }),
-    trend: porkTrend,
-    trendMeta: { ...computeTrendMeta(porkTrend, 3480), vsYearAvgRate: 1.9, yearMin: 3000, yearMax: 5000 },
+    monthly: porkMonthly,
+    trendMeta: { ...computeTrendMeta(porkMonthly, 3480), vsYearAvgRate: 1.9, yearMin: 3000, yearMax: 5000 },
   },
 ]
 

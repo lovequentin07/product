@@ -1,7 +1,10 @@
 import dailyStatsRaw from '@/data/market-daily-stats.json'
 import marketStatsRaw from '@/data/market-stats.json'
 import gradeGroupsRaw from '@/data/market-stats-grades.json'
-import { Category, GradeGroup, ItemDetail, PricePoint, TrendMeta } from '@/types/market'
+import { Category, GradeGroup, ItemDetail, MonthlyPoint, TrendMeta } from '@/types/market'
+
+const _now = new Date()
+const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
 
 // ----------------------------------------------------------------
 // 원본 JSON 타입 정의
@@ -21,17 +24,11 @@ interface DailyStat {
   all_time_low: number
   vs_avg_rate: number
   range_pct: number
+  se_cd?: string
   grd_cd?: string
   grd_label?: string
   vrty_cd?: string
   vrty_label?: string
-}
-
-interface MonthlyPoint {
-  ym: string
-  high: number
-  low: number
-  avg: number
 }
 
 interface MarketStat {
@@ -72,21 +69,6 @@ function buildUnitDisplay(unit: string, unit_sz: string): string {
 }
 
 // ----------------------------------------------------------------
-// monthly[] → PricePoint[] (월당 3포인트: 1일=low, 14일=avg, 28일=high)
-// ----------------------------------------------------------------
-function monthlyToTrend(monthly: MonthlyPoint[]): PricePoint[] {
-  const points: PricePoint[] = []
-  for (const m of monthly) {
-    const yyyy = m.ym.slice(0, 4)
-    const mm = m.ym.slice(4, 6)
-    points.push({ date: `${yyyy}-${mm}-01`, wholesale: 0, retail: m.low })
-    points.push({ date: `${yyyy}-${mm}-14`, wholesale: 0, retail: m.avg })
-    points.push({ date: `${yyyy}-${mm}-28`, wholesale: 0, retail: m.high })
-  }
-  return points
-}
-
-// ----------------------------------------------------------------
 // TrendMeta 생성
 // ----------------------------------------------------------------
 function buildTrendMeta(
@@ -124,7 +106,6 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
     if (!stat) return null
 
     const unitDisplay = buildUnitDisplay(d.unit, d.unit_sz)
-    const trend = monthlyToTrend(stat.monthly)
     const trendMeta = buildTrendMeta(d, stat.monthly)
 
     const gradeGroup = gradeGroups[d.item_cd] as GradeGroup | undefined
@@ -142,7 +123,7 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
           // dayChange/weekChange 생략 (optional)
         },
       ],
-      trend,
+      monthly: stat.monthly.filter((m) => m.ym !== CURRENT_YM),
       trendMeta,
       martPrices: [],
       tips: [],
@@ -151,6 +132,7 @@ const ALL_ITEMS: ItemDetail[] = dailyStats
       vrty_label: d.vrty_label,
       featuredGrdCd: d.grd_cd,
       featuredVrtyCd: d.vrty_cd,
+      seCd: d.se_cd as '01' | '02' | undefined,
     }
   })
   .filter((item): item is ItemDetail => item !== null)
@@ -199,7 +181,7 @@ export function getDropItems(threshold = 40): ItemDetail[] {
   return ALL_ITEMS.filter((item) => {
     const d = dailyMap.get(item.id)
     if (!d) return false
-    return d.range_pct < threshold
+    return d.range_pct < threshold && d.vs_avg_rate <= 0
   }).sort((a, b) => {
     const da = dailyMap.get(a.id)
     const db = dailyMap.get(b.id)

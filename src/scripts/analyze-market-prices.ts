@@ -17,41 +17,19 @@ const IN_FILE = path.join(process.cwd(), 'src/data/market-prices-raw.json');
 const OUT_FILE = path.join(process.cwd(), 'src/data/market-stats.json');
 const OUT_GRADES_FILE = path.join(process.cwd(), 'src/data/market-stats-grades.json');
 
-// ----------------------------------------------------------------
-// 수산물 신선도 정규화 매핑
-// vrty_nm → 표준 신선도 라벨
-// ----------------------------------------------------------------
-const FRESHNESS_MAP: Record<string, string> = {
-  '생선': '신선',
-  '냉장': '신선',
-  '신선냉장': '신선',
-  '국산(신선 냉장)': '신선',
-  '국산(냉장)': '신선',
-  '연근해(신선 냉장)': '신선',
-  '참조기(신선 냉장)': '신선',
-  '냉동': '냉동',
-  '국산(냉동)': '냉동',
-  '원양(냉동)': '냉동',
-  '연근해(냉동)': '냉동',
-  '국산(냉동,원양)': '냉동',
-  '냉동(원양수입통합)': '냉동',
-  '냉동가공': '냉동',
-  '수입산(냉동)': '냉동',
-  '참조기(냉동)': '냉동',
-  '염장': '염장',
-  '수입산(염장)': '염장',
-  '국산(염장)': '염장',
-};
-
-// grd_cd → 라벨
+// grd_cd → 표시 라벨 (API 제공 전체 등급)
 const GRD_LABEL_MAP: Record<string, string> = {
-  '20': '대',
-  '21': '중',
-  '22': '소',
+  // 크기 등급 (수산물)
+  '20': '대', '21': '중', '22': '소',
+  // 품질 등급 (채소/과일/특용작물)
+  '04': '상품', '05': '중품',
+  // 감귤 크기
+  '15': 'M과', '16': 'S과',
+  // 포도 크기
+  '24': 'L과', '25': 'M과',
+  // 마른멸치 크기
+  '27': '대멸', '28': '중멸', '29': '세멸',
 };
-
-// 크기 등급 set
-const SIZE_GRD_CODES = new Set(['20', '21', '22']);
 
 interface PriceItem {
   exmn_ym: string;
@@ -104,6 +82,7 @@ interface ItemStats {
   ctgry_nm: string;
   unit: string;
   unit_sz: string;
+  se_cd: string;
   all_time_high: number;
   all_time_low: number;
   avg_avg_price: number;
@@ -138,11 +117,20 @@ async function main() {
   for (const mapping of Object.values(MARKET_MAPPING)) {
     if (mapping.coverage === 0) continue;
 
-    // 해당 품목 + se_cd(소매/도매) 행 전체
-    const rows = raw.filter(r =>
-      r.item_cd === mapping.item_cd &&
-      r.se_cd === mapping.se_cd
+    // 도매 우선: 도매 최신 데이터가 202601 이상이면 도매, 아니면 소매 폴백
+    const wholesaleRows = raw.filter(r =>
+      r.item_cd === mapping.item_cd && r.se_cd === '02'
     );
+    const retailRows = raw.filter(r =>
+      r.item_cd === mapping.item_cd && r.se_cd === '01'
+    );
+
+    const wholesaleLatest = wholesaleRows.length
+      ? Math.max(...wholesaleRows.map(r => parseInt(r.exmn_ym)))
+      : 0;
+
+    const useSe = wholesaleLatest >= 202601 ? '02' : '01';
+    const rows = useSe === '02' ? wholesaleRows : retailRows;
 
     if (rows.length === 0) {
       console.warn(`  [no data] ${mapping.item_nm}(${mapping.item_cd})`);
@@ -205,13 +193,19 @@ async function main() {
     const all_time_low  = Math.min(...lows);
     const avg_avg_price = Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length * 10) / 10;
 
+    // 도매 품목은 raw 데이터의 unit/unit_sz 사용 (mapping과 다를 수 있음)
+    const firstRow = rows[0];
+    const unit = useSe === '02' ? firstRow.unit : mapping.unit;
+    const unit_sz = useSe === '02' ? firstRow.unit_sz : mapping.unit_sz;
+
     stats.push({
       item_cd: mapping.item_cd,
       item_nm: mapping.item_nm,
       ctgry_cd: mapping.ctgry_cd,
       ctgry_nm: mapping.ctgry_nm,
-      unit: mapping.unit,
-      unit_sz: mapping.unit_sz,
+      unit,
+      unit_sz,
+      se_cd: useSe,
       all_time_high,
       all_time_low,
       avg_avg_price,
@@ -233,6 +227,7 @@ async function main() {
     }
     console.log(
       `  ${s.item_nm}(${s.item_cd})  ` +
+      `[${s.se_cd === '02' ? '도매' : '소매'}]  ` +
       `최고 ${s.all_time_high.toLocaleString()}  ` +
       `최저 ${s.all_time_low.toLocaleString()}  ` +
       `평균 ${s.avg_avg_price.toLocaleString()}  ` +
@@ -249,135 +244,120 @@ async function main() {
 }
 
 async function buildGradeStats(raw: PriceItem[]) {
-  // item_cd별로 se_cd=01 소매 데이터 + 크기 등급(20/21/22) 필터
+  // API가 제공하는 (grd_cd × vrty_cd) 조합을 그대로 반영 — 임의 필터 없음
   const itemCds = [...new Set(raw.map(r => r.item_cd))];
   const gradeGroups: Record<string, GradeGroup> = {};
 
   for (const item_cd of itemCds) {
-    const rows = raw.filter(r =>
-      r.item_cd === item_cd &&
-      r.se_cd === '01' &&
-      SIZE_GRD_CODES.has(r.grd_cd)
-    );
+    const rows = raw.filter(r => r.item_cd === item_cd && r.se_cd === '01');
     if (rows.length === 0) continue;
 
-    // (grd_cd, freshness_label) 조합별 coverage + 대표 vrty_cd 수집
-    type ComboKey = string; // `${grd_cd}|${freshness_label}`
+    const item_nm = rows[0].item_nm;
+
+    // (grd_cd, vrty_cd) 조합별 coverage 수집
+    type ComboKey = string; // `${grd_cd}|${vrty_cd}`
     const comboYms = new Map<ComboKey, Set<string>>();
-    const comboVrty = new Map<ComboKey, { vrty_cd: string; vrty_nm: string }>();
+    const comboMeta = new Map<ComboKey, { grd_cd: string; grd_nm: string; vrty_cd: string; vrty_nm: string }>();
 
     for (const r of rows) {
-      const fresh = FRESHNESS_MAP[r.vrty_nm];
-      if (!fresh) continue; // 매핑 없는 신선도는 제외
-      const key: ComboKey = `${r.grd_cd}|${fresh}`;
+      const key: ComboKey = `${r.grd_cd}|${r.vrty_cd}`;
       if (!comboYms.has(key)) {
         comboYms.set(key, new Set());
-        comboVrty.set(key, { vrty_cd: r.vrty_cd, vrty_nm: r.vrty_nm });
+        comboMeta.set(key, { grd_cd: r.grd_cd, grd_nm: r.grd_nm, vrty_cd: r.vrty_cd, vrty_nm: r.vrty_nm });
       }
       comboYms.get(key)!.add(r.exmn_ym);
     }
 
-    // coverage >= 6 조합만
+    // coverage >= 3개월 조합만
     const validCombos = [...comboYms.entries()]
-      .filter(([, yms]) => yms.size >= 6)
+      .filter(([, yms]) => yms.size >= 3)
       .map(([key, yms]) => {
-        const [grd_cd, vrty_label] = key.split('|');
-        const vrtyInfo = comboVrty.get(key)!;
-        return { grd_cd, vrty_label, vrty_cd: vrtyInfo.vrty_cd, vrty_nm: vrtyInfo.vrty_nm, coverage: yms.size };
+        const meta = comboMeta.get(key)!;
+        return { ...meta, coverage: yms.size };
       });
 
-    if (validCombos.length === 0) continue;
+    if (validCombos.length <= 1) continue; // 토글 불필요
 
-    // grd_cd 별로 그룹화
+    // grd_variable: unique grd_cd 수 > 1
+    const uniqueGrdCds = [...new Set(validCombos.map(c => c.grd_cd))];
+    const grdVariable = uniqueGrdCds.length > 1;
+
+    // vrty_variable: unique vrty_nm 수 > 1 AND item_nm과 다른 vrty_nm 존재
+    const uniqueVrtyNms = [...new Set(validCombos.map(c => c.vrty_nm))];
+    const vrtyVariable = uniqueVrtyNms.length > 1 && uniqueVrtyNms.some(v => v !== item_nm);
+
+    // 토글할 차원이 없으면 스킵
+    if (!grdVariable && !vrtyVariable) continue;
+
+    // grd_cd별 그룹화
     const grdMap = new Map<string, typeof validCombos>();
     for (const c of validCombos) {
       if (!grdMap.has(c.grd_cd)) grdMap.set(c.grd_cd, []);
       grdMap.get(c.grd_cd)!.push(c);
     }
 
-    // 크기 등급 2개 이상인 품목만
-    const validGrdCds = [...grdMap.keys()].filter(grd_cd => SIZE_GRD_CODES.has(grd_cd));
-    if (validGrdCds.length < 2) continue;
-
-    // 각 등급별 coverage 최대 조합 (is_default)
-    const defaultGrdCd = validGrdCds.reduce((best, grd_cd) => {
-      const maxCoverage = Math.max(...grdMap.get(grd_cd)!.map(c => c.coverage));
-      const bestMaxCoverage = Math.max(...grdMap.get(best)!.map(c => c.coverage));
-      return maxCoverage > bestMaxCoverage ? grd_cd : best;
-    }, validGrdCds[0]);
+    // default grade: vrty coverage 합계 최대 grd_cd
+    const defaultGrdCd = [...grdMap.entries()]
+      .sort((a, b) => b[1].reduce((s, c) => s + c.coverage, 0) - a[1].reduce((s, c) => s + c.coverage, 0))[0][0];
 
     const grades: GradeStats[] = [];
 
-    for (const grd_cd of validGrdCds.sort()) {
+    for (const grd_cd of [...grdMap.keys()].sort()) {
       const combos = grdMap.get(grd_cd)!;
-      const defaultVrtyLabel = combos.reduce((best, c) => c.coverage > best.coverage ? c : best).vrty_label;
+      const grd_label = grdVariable
+        ? (GRD_LABEL_MAP[grd_cd] ?? combos[0].grd_nm)
+        : '';
 
       const varieties: VarietyStats[] = [];
 
-      for (const combo of combos) {
-        // 해당 (grd_cd, vrty_nm_normalized) 조합 rows
-        const comboRows = rows.filter(r => {
-          const fresh = FRESHNESS_MAP[r.vrty_nm];
-          return r.grd_cd === grd_cd && fresh === combo.vrty_label;
-        });
+      if (vrtyVariable) {
+        // 각 vrty_cd별 개별 집계
+        const defaultVrtyCd = combos.reduce((best, c) => c.coverage > best.coverage ? c : best).vrty_cd;
 
-        // 월별 집계
-        const allYms = [...new Set(comboRows.map(r => r.exmn_ym))].sort();
-        const monthly: MonthlyStats[] = [];
+        for (const combo of combos) {
+          const comboRows = rows.filter(r => r.grd_cd === grd_cd && r.vrty_cd === combo.vrty_cd);
+          const monthly = buildMonthly(comboRows);
+          if (monthly.length === 0) continue;
 
-        for (const ym of allYms) {
-          const byMonth = comboRows.filter(r => r.exmn_ym === ym);
-          const rawHighs: number[] = [];
-          const rawLows: number[] = [];
-          const rawAvgs: number[] = [];
-
-          for (const r of byMonth) {
-            const h = parseNum(r.pmm_hgprc);
-            const l = parseNum(r.pmm_lwprc);
-            const a = parseNum(r.pmm_avgprc);
-            if (h !== null) rawHighs.push(h);
-            if (l !== null) rawLows.push(l);
-            if (a !== null) rawAvgs.push(a);
-          }
-
-          const mHighs = removeOutliers(rawHighs);
-          const mLows  = removeOutliers(rawLows);
-          const mAvgs  = removeOutliers(rawAvgs);
-
-          if (mHighs.length === 0 || mLows.length === 0 || mAvgs.length === 0) continue;
-
-          monthly.push({
-            ym,
-            high: Math.max(...mHighs),
-            low: Math.min(...mLows),
-            avg: Math.round(mAvgs.reduce((s, v) => s + v, 0) / mAvgs.length),
+          varieties.push({
+            vrty_cd: combo.vrty_cd,
+            vrty_label: combo.vrty_nm,
+            is_default: combo.vrty_cd === defaultVrtyCd,
+            coverage: combo.coverage,
+            monthly,
           });
         }
-
-        if (monthly.length === 0) continue;
-
-        varieties.push({
-          vrty_cd: combo.vrty_cd,
-          vrty_label: combo.vrty_label,
-          is_default: combo.vrty_label === defaultVrtyLabel,
-          coverage: combo.coverage,
-          monthly,
-        });
+      } else {
+        // vrty 단일: coverage 최대 vrty_cd 하나만 사용
+        const bestCombo = combos.reduce((best, c) => c.coverage > best.coverage ? c : best);
+        const comboRows = rows.filter(r => r.grd_cd === grd_cd && r.vrty_cd === bestCombo.vrty_cd);
+        const monthly = buildMonthly(comboRows);
+        if (monthly.length > 0) {
+          varieties.push({
+            vrty_cd: bestCombo.vrty_cd,
+            vrty_label: '',
+            is_default: true,
+            coverage: bestCombo.coverage,
+            monthly,
+          });
+        }
       }
 
       if (varieties.length === 0) continue;
 
       grades.push({
         grd_cd,
-        grd_label: GRD_LABEL_MAP[grd_cd] ?? grd_cd,
+        grd_label,
         is_default: grd_cd === defaultGrdCd,
         varieties,
       });
     }
 
-    if (grades.length >= 2) {
-      gradeGroups[item_cd] = { grades };
-    }
+    // 실질적 토글 가능 여부 재확인
+    const totalCombos = grades.reduce((s, g) => s + g.varieties.length, 0);
+    if (totalCombos <= 1) continue;
+
+    gradeGroups[item_cd] = { grades };
   }
 
   fs.writeFileSync(OUT_GRADES_FILE, JSON.stringify(gradeGroups, null, 2), 'utf-8');
@@ -388,10 +368,47 @@ async function buildGradeStats(raw: PriceItem[]) {
     const row = raw.find(r => r.item_cd === item_cd);
     const item_nm = row?.item_nm ?? item_cd;
     const gradeInfo = gg.grades.map(g =>
-      `${g.grd_label}(${g.varieties.map(v => v.vrty_label).join('/')})`
+      `${g.grd_label || '(단일등급)'}(${g.varieties.map(v => v.vrty_label || '-').join('/')})`
     ).join(' | ');
     console.log(`  ${item_nm}(${item_cd}): ${gradeInfo}`);
   }
+}
+
+/** 해당 rows에서 월별 IQR+집계 → MonthlyStats[] */
+function buildMonthly(comboRows: PriceItem[]): MonthlyStats[] {
+  const allYms = [...new Set(comboRows.map(r => r.exmn_ym))].sort();
+  const monthly: MonthlyStats[] = [];
+
+  for (const ym of allYms) {
+    const byMonth = comboRows.filter(r => r.exmn_ym === ym);
+    const rawHighs: number[] = [];
+    const rawLows: number[] = [];
+    const rawAvgs: number[] = [];
+
+    for (const r of byMonth) {
+      const h = parseNum(r.pmm_hgprc);
+      const l = parseNum(r.pmm_lwprc);
+      const a = parseNum(r.pmm_avgprc);
+      if (h !== null) rawHighs.push(h);
+      if (l !== null) rawLows.push(l);
+      if (a !== null) rawAvgs.push(a);
+    }
+
+    const mHighs = removeOutliers(rawHighs);
+    const mLows  = removeOutliers(rawLows);
+    const mAvgs  = removeOutliers(rawAvgs);
+
+    if (mHighs.length === 0 || mLows.length === 0 || mAvgs.length === 0) continue;
+
+    monthly.push({
+      ym,
+      high: Math.max(...mHighs),
+      low: Math.min(...mLows),
+      avg: Math.round(mAvgs.reduce((s, v) => s + v, 0) / mAvgs.length),
+    });
+  }
+
+  return monthly;
 }
 
 main().catch(err => {

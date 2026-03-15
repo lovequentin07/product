@@ -55,9 +55,14 @@ export default function PriceChangeList({ items, title }: Props) {
                 </span>
               </div>
               {/* 가격 */}
-              <p className="text-[13px] font-semibold text-gray-800">
-                {primary.retailPrice.toLocaleString()}원
-                <span className="text-[11px] font-normal text-gray-400 ml-0.5">/{item.unit}</span>
+              <p className="flex items-center gap-1 text-[13px] font-semibold text-gray-800">
+                <span>{primary.retailPrice.toLocaleString()}원</span>
+                <span className="text-[11px] font-normal text-gray-400">/{item.unit}</span>
+                {item.seCd && (
+                  <span className="text-[10px] text-gray-400 border border-gray-200 px-1 rounded">
+                    {item.seCd === '02' ? '도매가' : '소매가'}
+                  </span>
+                )}
               </p>
               {/* 등급·신선도 pill (grade group 품목만) */}
               {(item.grd_label || item.vrty_label) && (

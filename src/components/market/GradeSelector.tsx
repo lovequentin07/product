@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { GradeGroup, GradeStats, PricePoint, TrendMeta } from '@/types/market'
+import { GradeGroup, GradeStats, TrendMeta } from '@/types/market'
 import PriceTrendChart2 from './PriceTrendChart2'
+
+const _now = new Date()
+const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
 
 interface Props {
   gradeGroup: GradeGroup
@@ -10,19 +13,6 @@ interface Props {
   unit: string
   featuredGrdCd?: string   // 홈 카드와 일치시킬 등급 코드 (없으면 is_default 폴백)
   featuredVrtyCd?: string  // 홈 카드와 일치시킬 신선도 코드 (없으면 is_default 폴백)
-}
-
-// monthly[] → PricePoint[] (월당 3포인트: 1일=low, 14일=avg, 28일=high)
-function monthlyToTrend(monthly: { ym: string; high: number; low: number; avg: number }[]): PricePoint[] {
-  const points: PricePoint[] = []
-  for (const m of monthly) {
-    const yyyy = m.ym.slice(0, 4)
-    const mm = m.ym.slice(4, 6)
-    points.push({ date: `${yyyy}-${mm}-01`, wholesale: 0, retail: m.low })
-    points.push({ date: `${yyyy}-${mm}-14`, wholesale: 0, retail: m.avg })
-    points.push({ date: `${yyyy}-${mm}-28`, wholesale: 0, retail: m.high })
-  }
-  return points
 }
 
 // monthly[] → TrendMeta 생성
@@ -80,24 +70,25 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, featured
 
   const selectedVariety = selectedGrade.varieties[selectedVrtyIdx] ?? selectedGrade.varieties[0]
 
-  // 선택된 variety의 monthly → trend 변환
-  const trend = useMemo(() => monthlyToTrend(selectedVariety?.monthly ?? []), [selectedVariety])
-
   // 현재 가격: 초기 조합(featured 또는 is_default)일 때 defaultPrice, 변경 시 최근 monthly.avg
   const isDefault =
     selectedGrdIdx === initialGradeIdx &&
     selectedVrtyIdx === initialVrtyIdx
 
+  const filteredMonthly = useMemo(
+    () => (selectedVariety?.monthly ?? []).filter((m) => m.ym !== CURRENT_YM),
+    [selectedVariety],
+  )
+
   const currentPrice = useMemo(() => {
     if (isDefault) return defaultPrice
-    const monthly = selectedVariety?.monthly ?? []
-    if (monthly.length === 0) return defaultPrice
-    return monthly[monthly.length - 1].avg
-  }, [isDefault, defaultPrice, selectedVariety])
+    if (filteredMonthly.length === 0) return defaultPrice
+    return filteredMonthly[filteredMonthly.length - 1].avg
+  }, [isDefault, defaultPrice, filteredMonthly])
 
   const trendMeta = useMemo(
-    () => buildTrendMeta(selectedVariety?.monthly ?? [], currentPrice),
-    [selectedVariety, currentPrice],
+    () => buildTrendMeta(filteredMonthly, currentPrice),
+    [filteredMonthly, currentPrice],
   )
 
   const showGradePills = gradeGroup.grades.length >= 2
@@ -165,7 +156,7 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, featured
       {/* 1년 가격 차트 */}
       <div className="bg-white border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
-          <PriceTrendChart2 trend={trend} unit={unit} trendMeta={trendMeta} />
+          <PriceTrendChart2 monthly={filteredMonthly} unit={unit} trendMeta={trendMeta} />
         </div>
       </div>
     </div>

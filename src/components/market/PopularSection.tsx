@@ -37,6 +37,11 @@ export default function PopularSection({ items }: { items: ItemDetail[] }) {
                 {primary.retailPrice.toLocaleString()}원
                 <span className="text-xs font-normal text-gray-400 ml-0.5">/{item.unit}</span>
               </span>
+              {item.seCd && (
+                <span className="text-[10px] text-gray-400 border border-gray-200 px-1 rounded self-start">
+                  {item.seCd === '02' ? '도매가' : '소매가'}
+                </span>
+              )}
               <span className={`text-xs font-semibold ${isDown ? 'text-blue-600' : 'text-orange-500'}`}>
                 {isDown ? '▼' : '▲'} {Math.abs(rate).toFixed(1)}%
               </span>

@@ -70,10 +70,12 @@ interface ItemStats {
   ctgry_nm: string;
   unit: string;
   unit_sz: string;
+  se_cd?: string;
   all_time_high: number;
   all_time_low: number;
   avg_avg_price: number;
   data_count: number;
+  monthly: Array<{ ym: string; high: number; low: number; avg: number }>;
 }
 
 interface DailyStats {
@@ -91,6 +93,7 @@ interface DailyStats {
   all_time_low: number;
   vs_avg_rate: number;   // (최신가 - avg_avg_price) / avg_avg_price × 100, 음수=평균보다 저렴
   range_pct: number;     // (최신가 - all_time_low) / (all_time_high - all_time_low) × 100, 0%=역대최저, 100%=역대최고
+  se_cd: string;         // '01'=소매, '02'=도매
   grd_cd?: string;       // 등급 코드 (grade group 있는 품목, 최적 조합)
   grd_label?: string;    // 등급 라벨 (大→대, 中→중 등)
   vrty_cd?: string;      // 신선도 코드 (grade group 있는 품목, 최적 조합)
@@ -223,6 +226,7 @@ async function main() {
         all_time_low: bestCombo.all_time_low,
         vs_avg_rate: bestCombo.vs_avg_rate,
         range_pct: bestCombo.range_pct,
+        se_cd: '01', // grade group 가격은 항상 소매 기준 (market-stats-grades.json)
         grd_cd: bestCombo.grd_cd,
         grd_label: bestCombo.grd_label,
         vrty_cd: bestCombo.vrty_cd,
@@ -247,11 +251,23 @@ async function main() {
       continue;
     }
 
+    // 도매 품목: daily raw는 소매 se_cd로 수집되므로 단위 불일치 발생
+    // → market-stats.json의 마지막 월 평균을 latest_price로 사용
+    const isWholesale = stat.se_cd === '02';
+    const latestMonthly = stat.monthly.length > 0
+      ? stat.monthly[stat.monthly.length - 1]
+      : null;
+    const latest_price = isWholesale && latestMonthly
+      ? latestMonthly.avg
+      : d.latest_price;
+    const unit = isWholesale ? stat.unit : (d.unit || stat.unit);
+    const unit_sz = isWholesale ? stat.unit_sz : (d.unit_sz || stat.unit_sz);
+
     const vs_avg_rate = round1(
-      (d.latest_price - stat.avg_avg_price) / stat.avg_avg_price * 100
+      (latest_price - stat.avg_avg_price) / stat.avg_avg_price * 100
     );
     const range_pct = round1(
-      (d.latest_price - stat.all_time_low) / (stat.all_time_high - stat.all_time_low) * 100
+      (latest_price - stat.all_time_low) / (stat.all_time_high - stat.all_time_low) * 100
     );
     // grd_label: grades 파일에 없는 품목은 mapping 기준
     const mapping = MARKET_MAPPING[d.item_cd];
@@ -265,15 +281,16 @@ async function main() {
       ctgry_cd: d.ctgry_cd,
       ctgry_nm: stat.ctgry_nm,
       exmn_ymd: d.exmn_ymd,
-      latest_price: d.latest_price,
-      unit: d.unit || stat.unit,
-      unit_sz: d.unit_sz || stat.unit_sz,
+      latest_price,
+      unit,
+      unit_sz,
       days_ago: d.days_ago,
       avg_avg_price: stat.avg_avg_price,
       all_time_high: stat.all_time_high,
       all_time_low: stat.all_time_low,
       vs_avg_rate,
       range_pct,
+      se_cd: stat.se_cd ?? '01',
       ...(grd_label !== undefined && { grd_label }),
     });
     matched++;

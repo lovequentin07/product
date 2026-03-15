@@ -10,10 +10,10 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts'
-import { PricePoint, TrendMeta } from '@/types/market'
+import { MonthlyPoint, TrendMeta } from '@/types/market'
 
 interface Props {
-  trend: PricePoint[]
+  monthly: MonthlyPoint[]
   unit: string
   trendMeta: TrendMeta
 }
@@ -62,50 +62,39 @@ function CustomTooltip({
   )
 }
 
-export default function PriceTrendChart2({ trend, unit, trendMeta }: Props) {
-  const sliced = trend.slice(-365)
+export default function PriceTrendChart2({ monthly, unit, trendMeta }: Props) {
+  const monthly12 = monthly.slice(-12)
 
-  // 실제 데이터 min/max/avg (trend의 retail 값 기준)
-  const retailValues = sliced.map((p) => p.retail)
-  const dataMin = Math.min(...retailValues)
-  const dataMax = Math.max(...retailValues)
-  const dataAvg = Math.round(retailValues.reduce((a, b) => a + b, 0) / retailValues.length)
+  const dataMin = Math.min(...monthly12.map((m) => m.low))
+  const dataMax = Math.max(...monthly12.map((m) => m.high))
+  const dataAvg = Math.round(monthly12.map((m) => m.avg).reduce((a, b) => a + b, 0) / monthly12.length)
 
   const pad = (dataMax - dataMin) * 0.25 || dataMax * 0.15
   const domainMin = Math.max(0, dataMin - pad)
   const domainMax = dataMax + pad
 
-  // 월별 집계 (월당 1개 앵커 포인트)
-  const monthGroups: Record<string, number[]> = {}
-  for (const p of sliced) {
-    const ym = p.date.slice(0, 7)
-    if (!monthGroups[ym]) monthGroups[ym] = []
-    monthGroups[ym].push(p.retail)
-  }
-
-  // 실제 데이터가 있는 월 → { ym → { mMax, mMin } }
+  // anchorByYm: monthly12 데이터 인덱싱
   const anchorByYm: Record<string, { mMax: number; mMin: number }> = {}
-  for (const [ym, prices] of Object.entries(monthGroups)) {
-    anchorByYm[ym] = { mMax: Math.max(...prices), mMin: Math.min(...prices) }
+  for (const m of monthly12) {
+    const ym = `${m.ym.slice(0, 4)}-${m.ym.slice(4, 6)}`
+    anchorByYm[ym] = { mMax: m.high, mMin: m.low }
   }
 
-  // 전체 기간(firstYm~lastYm)의 모든 월을 순서대로 생성
-  // 데이터 없는 월은 null → connectNulls={false} 로 라인 끊김
-  const firstYm = sliced[0]?.date.slice(0, 7) ?? ''
-  const lastYm  = sliced[sliced.length - 1]?.date.slice(0, 7) ?? ''
+  // 고정 12개월 구간: monthly12 마지막 달 기준 11개월 전 ~ 마지막 달
+  const lastYmRaw = monthly12.length > 0 ? monthly12[monthly12.length - 1].ym : null
   const data: { date: string; mMax: number | null; mMin: number | null }[] = []
 
-  if (firstYm && lastYm) {
-    let [y, m] = firstYm.split('-').map(Number)
-    const [endY, endM] = lastYm.split('-').map(Number)
+  if (lastYmRaw) {
+    let fy = parseInt(lastYmRaw.slice(0, 4))
+    let fm = parseInt(lastYmRaw.slice(4, 6)) - 11
+    while (fm <= 0) { fm += 12; fy-- }
+    const endY = parseInt(lastYmRaw.slice(0, 4))
+    const endM = parseInt(lastYmRaw.slice(4, 6))
+    let y = fy, m = fm
     while (y < endY || (y === endY && m <= endM)) {
       const ym = `${y}-${String(m).padStart(2, '0')}`
       const anchor = anchorByYm[ym]
-      data.push({
-        date: ym,
-        mMax: anchor?.mMax ?? null,
-        mMin: anchor?.mMin ?? null,
-      })
+      data.push({ date: ym, mMax: anchor?.mMax ?? null, mMin: anchor?.mMin ?? null })
       m++
       if (m > 12) { m = 1; y++ }
     }
@@ -131,9 +120,9 @@ export default function PriceTrendChart2({ trend, unit, trendMeta }: Props) {
             ticks={monthTicks}
             interval={0}
             tickFormatter={(v: string) => {
-              const mm = v.length >= 7 ? v.slice(5, 7) : v.slice(0, 2)
-              const n = parseInt(mm, 10)
-              return isNaN(n) ? '' : `${n}월`
+              const yy = v.slice(2, 4)
+              const mm = v.slice(5, 7)
+              return `${yy}.${mm}`
             }}
             tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }}
             tickMargin={8}
@@ -142,7 +131,6 @@ export default function PriceTrendChart2({ trend, unit, trendMeta }: Props) {
           />
           <Tooltip content={<CustomTooltip />} />
 
-          {/* 역대최고가 점선 — 레이블 선 위 우측 (커스텀 위치) */}
           <ReferenceLine
             y={dataMax}
             stroke="#fca5a5"
@@ -151,7 +139,6 @@ export default function PriceTrendChart2({ trend, unit, trendMeta }: Props) {
             label={<MaxLabel value={dataMax} />}
           />
 
-          {/* 역대최저가 점선 — 레이블 선 아래 우측 (커스텀 위치) */}
           <ReferenceLine
             y={dataMin}
             stroke="#86efac"
@@ -200,7 +187,7 @@ export default function PriceTrendChart2({ trend, unit, trendMeta }: Props) {
         </LineChart>
       </ResponsiveContainer>
 
-      {/* 범례 테이블 (폴센트 스타일) */}
+      {/* 범례 테이블 */}
       <div className="mt-3 mb-2 px-1">
         <div className="flex items-center justify-between py-3">
           <span className="text-[14px] font-semibold text-gray-700 flex items-center gap-1.5">

@@ -25,11 +25,12 @@ export interface MartPrice {
   isLowest: boolean
 }
 
-// 추세 데이터 포인트
-export interface PricePoint {
-  date: string
-  wholesale: number
-  retail: number
+// 월별 가격 포인트 (차트 데이터)
+export interface MonthlyPoint {
+  ym: string   // "YYYYMM"
+  high: number
+  low: number
+  avg: number
 }
 
 // 추세 요약 (지금 싼지/비싼지 판단 근거)
@@ -50,7 +51,7 @@ export interface VarietyStats {
   vrty_label: string     // "신선", "냉동", "염장"
   is_default: boolean
   coverage: number
-  monthly: { ym: string; high: number; low: number; avg: number }[]
+  monthly: MonthlyPoint[]
 }
 
 export interface GradeStats {
@@ -72,7 +73,7 @@ export interface ItemDetail {
   unit: string
   kinds: PriceByKind[]   // kinds[0] = '전체' (기본)
   martPrices: MartPrice[]
-  trend: PricePoint[]    // 최근 1년
+  monthly: MonthlyPoint[]
   trendMeta: TrendMeta
   popularRank?: number
   tips: string[]
@@ -81,6 +82,7 @@ export interface ItemDetail {
   vrty_label?: string      // 기본 신선도 라벨 (최적 조합 기준)
   featuredGrdCd?: string   // 홈↔상세 일관성: 최적 조합의 grd_cd
   featuredVrtyCd?: string  // 홈↔상세 일관성: 최적 조합의 vrty_cd
+  seCd?: '01' | '02'       // '01'=소매가, '02'=도매가
 }
 
 // '상' 등급 우선 선택 helper (없으면 kinds[1] → kinds[0] 순서)
