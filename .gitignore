@@ -56,4 +56,7 @@ next-env.d.ts
 .claude/data_source/*.xlsx
 .claude/img_check/
 .claude/img_result/
+.claude/api/**/*.xlsx
+.claude/api/**/*.docx
+.claude/*.json
 .idx/
