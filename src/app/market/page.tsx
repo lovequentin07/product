@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { getAllItems, getDropItems, getPopularItems } from '@/lib/market-data'
-import { Category } from '@/types/market'
+import { headers } from 'next/headers'
+import { getPopularItems, getCheapItemsByRegion } from '@/lib/market-data'
+import { detectRegion } from '@/lib/region'
 import MarketHero from '@/components/market/MarketHero'
 import PriceChangeList from '@/components/market/PriceChangeList'
 import PopularSection from '@/components/market/PopularSection'
@@ -18,28 +19,11 @@ export const metadata: Metadata = {
   },
 }
 
-const VALID_CATEGORIES = new Set<string>([
-  'vegetable', 'fruit', 'seafood', 'grain', 'food', 'special',
-])
-
-interface PageProps {
-  searchParams: Promise<{ category?: string }>
-}
-
-export default async function MarketPage({ searchParams }: PageProps) {
-  const { category } = await searchParams
-  const activeCategory: Category | null =
-    category && VALID_CATEGORIES.has(category) ? (category as Category) : null
-
-  const allDropItems = getDropItems()
+export default async function MarketPage() {
+  const headersList = await headers()
+  const sgg_cd = detectRegion(headersList)
+  const cheapItems = getCheapItemsByRegion(sgg_cd)
   const popularItems = getPopularItems()
-
-  const dropItems = activeCategory
-    ? getAllItems()
-        .filter((i) => i.category === activeCategory)
-        .sort((a, b) => a.trendMeta.vsYearAvgRate - b.trendMeta.vsYearAvgRate)
-        .slice(0, 6)
-    : allDropItems.slice(0, 6)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -60,8 +44,8 @@ export default async function MarketPage({ searchParams }: PageProps) {
       <MarketHero />
 
       <div className="max-w-2xl mx-auto">
-        {/* 오늘 저렴해진 품목 (CategoryQuickAccess 내장) */}
-        <PriceChangeList items={dropItems} title="오늘 저렴한 품목" />
+        {/* 지역 기반 저렴 품목 (percentile 순위 top 6) */}
+        <PriceChangeList items={cheapItems} title="지금 저렴한 품목" />
 
         {/* 자주 찾는 품목 */}
         <PopularSection items={popularItems} />

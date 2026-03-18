@@ -149,12 +149,19 @@ async function main() {
       const byMonth = rows.filter(r => r.exmn_ym === ym);
 
       // 월별 최다 레코드 (vrty_cd, grd_cd) 조합 선택 — 등급 혼합 방지
+      // 동률 시 market-mapping.ts의 대표 vrty_cd|grd_cd 우선 → 월별 일관성 보장
       const comboCnt = new Map<string, number>();
       for (const r of byMonth) {
         const key = `${r.vrty_cd}|${r.grd_cd}`;
         comboCnt.set(key, (comboCnt.get(key) ?? 0) + 1);
       }
-      const bestCombo = [...comboCnt.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      const preferKey = `${mapping.vrty_cd}|${mapping.grd_cd}`;
+      const bestCombo = [...comboCnt.entries()].sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];          // 1순위: 레코드 수 많은 것
+        if (a[0] === preferKey) return -1;               // 2순위: mapping 대표 조합
+        if (b[0] === preferKey) return 1;
+        return a[0].localeCompare(b[0]);                 // 3순위: 알파벳 순 (안정적)
+      })[0][0];
       const [bestVrty, bestGrd] = bestCombo.split('|');
       const selected = byMonth.filter(r => r.vrty_cd === bestVrty && r.grd_cd === bestGrd);
 
@@ -240,16 +247,21 @@ async function main() {
   // ----------------------------------------------------------------
   // market-stats-grades.json 생성: 크기 등급(大/中/小) 토글 품목
   // ----------------------------------------------------------------
-  await buildGradeStats(raw);
+  await buildGradeStats(raw, stats);
 }
 
-async function buildGradeStats(raw: PriceItem[]) {
+async function buildGradeStats(raw: PriceItem[], statsArr: ItemStats[]) {
   // API가 제공하는 (grd_cd × vrty_cd) 조합을 그대로 반영 — 임의 필터 없음
   const itemCds = [...new Set(raw.map(r => r.item_cd))];
   const gradeGroups: Record<string, GradeGroup> = {};
 
+  // 품목별 se_cd 맵 (도매 우선 결정된 값)
+  const seMap = new Map(statsArr.map(s => [s.item_cd, s.se_cd]));
+
   for (const item_cd of itemCds) {
-    const rows = raw.filter(r => r.item_cd === item_cd && r.se_cd === '01');
+    // 도매 품목이면 도매 데이터로 grade group 생성
+    const useSe = seMap.get(item_cd) ?? '01';
+    const rows = raw.filter(r => r.item_cd === item_cd && r.se_cd === useSe);
     if (rows.length === 0) continue;
 
     const item_nm = rows[0].item_nm;
