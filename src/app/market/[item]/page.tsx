@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { getAllItems, getItemBySlug } from '@/lib/market-data'
+import { getAllItems, getItemBySlug, getItemBySlugForRegion } from '@/lib/market-data'
+import { detectRegion } from '@/lib/region'
 import { Category, getDefaultKind } from '@/types/market'
-import PriceTrendChart2 from '@/components/market/PriceTrendChart2'
+import PriceTrendChart from '@/components/market/PriceTrendChart'
 import GradeSelector from '@/components/market/GradeSelector'
 import MarketFAQ from '@/components/market/MarketFAQ'
 
@@ -20,13 +22,9 @@ const CATEGORY_LABELS: Record<Category, string> = {
   special: '특용',
 }
 
-export async function generateStaticParams() {
-  return getAllItems().map((item) => ({ item: item.id }))
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { item: id } = await params
-  const item = getItemBySlug(id)
+  const item = getItemBySlug(id)  // metadata는 전국 평균 기준 (정적 생성)
   if (!item) return {}
 
   const todayPrice = getDefaultKind(item).retailPrice
@@ -47,7 +45,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ItemPage({ params }: Props) {
   const { item: id } = await params
-  const item = getItemBySlug(id)
+  const headersList = await headers()
+  const sgg_cd = detectRegion(headersList)
+  const item = getItemBySlugForRegion(id, sgg_cd)
   if (!item) notFound()
 
   const priceData = getDefaultKind(item)
@@ -120,12 +120,13 @@ export default async function ItemPage({ params }: Props) {
             gradeGroup={item.gradeGroup!}
             defaultPrice={todayPrice}
             unit={item.unit}
+            seCd={item.seCd}
             featuredGrdCd={item.featuredGrdCd}
             featuredVrtyCd={item.featuredVrtyCd}
           />
         ) : (
           <div className="bg-white border-t border-gray-100">
-            <PriceTrendChart2 monthly={item.monthly} unit={item.unit} trendMeta={item.trendMeta} />
+            <PriceTrendChart monthly={item.monthly} unit={item.unit} trendMeta={item.trendMeta} currentPrice={todayPrice} yoyPrice={item.yoyPrice} />
           </div>
         )}
       </div>

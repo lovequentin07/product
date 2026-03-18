@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { GradeGroup, GradeStats, TrendMeta } from '@/types/market'
-import PriceTrendChart2 from './PriceTrendChart2'
+import PriceTrendChart from './PriceTrendChart'
 
 const _now = new Date()
 const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
@@ -11,6 +11,7 @@ interface Props {
   gradeGroup: GradeGroup
   defaultPrice: number  // daily latest_price (기본 등급+신선도)
   unit: string
+  seCd?: '01' | '02'       // 도매/소매 구분 (레이블 표시용)
   featuredGrdCd?: string   // 홈 카드와 일치시킬 등급 코드 (없으면 is_default 폴백)
   featuredVrtyCd?: string  // 홈 카드와 일치시킬 신선도 코드 (없으면 is_default 폴백)
 }
@@ -35,7 +36,7 @@ function buildTrendMeta(
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
 }
 
-export default function GradeSelector({ gradeGroup, defaultPrice, unit, featuredGrdCd, featuredVrtyCd }: Props) {
+export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, featuredGrdCd, featuredVrtyCd }: Props) {
   // featuredGrdCd가 있으면 해당 등급으로 초기화, 없으면 is_default 폴백
   const initialGradeIdx = (() => {
     if (featuredGrdCd) {
@@ -91,6 +92,17 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, featured
     [filteredMonthly, currentPrice],
   )
 
+  // yoyPrice: filteredMonthly에서 전년 동월 avg 직접 조회
+  const yoyPrice = useMemo(() => {
+    if (filteredMonthly.length === 0) return undefined
+    const lastYm = filteredMonthly[filteredMonthly.length - 1].ym
+    let y = parseInt(lastYm.slice(0, 4))
+    let m = parseInt(lastYm.slice(4, 6)) - 12
+    while (m <= 0) { m += 12; y-- }
+    const yoy_ym = `${y}${String(m).padStart(2, '0')}`
+    return filteredMonthly.find((p) => p.ym === yoy_ym)?.avg
+  }, [filteredMonthly])
+
   const showGradePills = gradeGroup.grades.length >= 2
   const showVarietyPills = selectedGrade.varieties.length >= 2
 
@@ -98,9 +110,9 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, featured
 
   return (
     <div>
-      {/* 오늘 소매가 */}
+      {/* 오늘 가격 */}
       <div className="px-4 py-4 bg-white border-t border-gray-100">
-        <p className="text-xs text-gray-400 mb-1">오늘 소매가</p>
+        <p className="text-xs text-gray-400 mb-1">{seCd === '02' ? '오늘 도매가' : '오늘 소매가'}</p>
         <div className="flex items-baseline gap-1.5">
           <span className="font-bold text-gray-900 leading-none" style={{ fontSize: '28px' }}>
             {currentPrice.toLocaleString()}원
@@ -153,10 +165,10 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, featured
         )}
       </div>
 
-      {/* 1년 가격 차트 */}
+      {/* 가격 차트 */}
       <div className="bg-white border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
-          <PriceTrendChart2 monthly={filteredMonthly} unit={unit} trendMeta={trendMeta} />
+          <PriceTrendChart monthly={filteredMonthly} unit={unit} trendMeta={trendMeta} currentPrice={currentPrice} yoyPrice={yoyPrice} />
         </div>
       </div>
     </div>

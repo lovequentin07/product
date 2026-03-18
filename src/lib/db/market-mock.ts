@@ -1,4 +1,4 @@
-import { ItemDetail, MonthlyPoint, TrendMeta, MartPrice, Mart, getDefaultKind } from '@/types/market'
+import { ItemDetail, MonthlyPoint, TrendMeta, MartPrice, Mart } from '@/types/market'
 
 function generateMonthly(basePrice: number, targetPrice: number, months = 24): MonthlyPoint[] {
   const result: MonthlyPoint[] = []
@@ -287,21 +287,6 @@ export function getMockItem(id: string): ItemDetail | undefined {
   return MOCK_ITEMS.find((item) => item.id === id)
 }
 
-export function getDropItems(): ItemDetail[] {
-  return [...MOCK_ITEMS]
-    .filter((i) => {
-      const { yearMin, yearMax } = i.trendMeta
-      const price = getDefaultKind(i).retailPrice
-      const range = yearMax - yearMin
-      if (range === 0) return false
-      return (price - yearMin) / range < 0.30
-    })
-    .sort((a, b) => {
-      const posA = (getDefaultKind(a).retailPrice - a.trendMeta.yearMin) / (a.trendMeta.yearMax - a.trendMeta.yearMin)
-      const posB = (getDefaultKind(b).retailPrice - b.trendMeta.yearMin) / (b.trendMeta.yearMax - b.trendMeta.yearMin)
-      return posA - posB
-    })
-}
 
 export function getPopularItems(): ItemDetail[] {
   return MOCK_ITEMS.filter((i) => i.popularRank !== undefined).sort(

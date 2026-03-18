@@ -78,11 +78,12 @@ export interface ItemDetail {
   popularRank?: number
   tips: string[]
   gradeGroup?: GradeGroup  // 크기 토글 대상 품목 (大/中/小)
-  grd_label?: string       // 기본 등급 라벨 (최적 조합 기준)
-  vrty_label?: string      // 기본 신선도 라벨 (최적 조합 기준)
-  featuredGrdCd?: string   // 홈↔상세 일관성: 최적 조합의 grd_cd
-  featuredVrtyCd?: string  // 홈↔상세 일관성: 최적 조합의 vrty_cd
+  grd_label?: string       // 기본 등급 라벨
+  vrty_label?: string      // 기본 신선도 라벨
+  featuredGrdCd?: string   // 기본 등급 코드 (GradeSelector 초기값)
+  featuredVrtyCd?: string  // 기본 신선도 코드 (GradeSelector 초기값)
   seCd?: '01' | '02'       // '01'=소매가, '02'=도매가
+  yoyPrice?: number        // 전년 동월 평균가 (없으면 undefined → 미표시)
 }
 
 // '상' 등급 우선 선택 helper (없으면 kinds[1] → kinds[0] 순서)
