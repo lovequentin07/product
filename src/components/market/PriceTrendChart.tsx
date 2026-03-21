@@ -16,6 +16,7 @@ interface Props {
   unit: string
   currentPrice?: number
   trendMeta?: TrendMeta
+  cheapnessExplanation?: string
 }
 
 interface TooltipPayload {
@@ -42,7 +43,7 @@ function CustomTooltip({
   )
 }
 
-export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta }: Props) {
+export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta, cheapnessExplanation }: Props) {
   const monthly24 = monthly.slice(-24)
 
   const allAvgs = monthly24.map((m) => m.avg)
@@ -92,13 +93,6 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   // 마지막 포인트는 항상 포함
   if (chartData.length > 0) tickSet.add(chartData[chartData.length - 1].date)
   const monthTicks = [...tickSet].sort()
-
-  // 백분위 기반 상태 판정 함수
-  function getStatusByRate(ratePercent: number) {
-    if (ratePercent < -5) return { emoji: '💰', label: '저렴', text: '저렴한 상태', bg: 'bg-blue-50', border: 'border-blue-200', textColor: 'text-blue-600' }
-    if (ratePercent <= 5) return { emoji: '⭐', label: '보통', text: '거의 비슷', bg: 'bg-gray-50', border: 'border-gray-200', textColor: 'text-gray-600' }
-    return { emoji: '🔥', label: '비쌈', text: '비싼 상태', bg: 'bg-orange-50', border: 'border-orange-200', textColor: 'text-orange-600' }
-  }
 
   return (
     <div className="mx-4 bg-white overflow-hidden">
@@ -228,123 +222,15 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
         </div>
       </div>
 
-      {/* 📊 가격 분석 정보 카드 - 프리미엄 버전 */}
-      {currentPrice && trendMeta && trendMeta.yearMin > 0 && (
-        <div className="mt-8 mx-4 mb-4">
-          <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
-
-            {/* 헤더 */}
-            <div className="px-5 pt-5 pb-3 border-b border-gray-200/40">
-              <h4 className="flex items-center gap-2 text-base font-bold text-gray-900">
-                <span className="text-lg">📊</span>
-                가격 분석
-              </h4>
-            </div>
-
-            {/* 컨텐츠 */}
-            <div className="px-5 py-5 space-y-6">
-
-              {/* 최저가 대비 섹션 */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  지난 1년 최저가 대비
-                </h5>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {/* 기준가 */}
-                  <div className="bg-white rounded-lg px-3 py-2.5 border border-gray-200/50">
-                    <p className="text-[10px] text-gray-500 font-medium mb-1">기준</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {trendMeta.yearMin.toLocaleString()}원
-                    </p>
-                  </div>
-
-                  {/* 현재가 */}
-                  <div className="bg-white rounded-lg px-3 py-2.5 border border-gray-200/50">
-                    <p className="text-[10px] text-gray-500 font-medium mb-1">현재</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {currentPrice.toLocaleString()}원
-                    </p>
-                  </div>
-
-                  {/* 차액 & 상태 평가 (백분위 기준) */}
-                  {(() => {
-                    const rateVsMin = ((currentPrice - trendMeta.yearMin) / trendMeta.yearMin) * 100
-                    const status = getStatusByRate(rateVsMin)
-                    return (
-                      <div className={`rounded-lg px-3 py-2.5 border flex flex-col justify-center items-center ${status.bg} ${status.border}`}>
-                        <p className="text-[10px] font-medium mb-1 text-gray-600">
-                          {status.label}
-                        </p>
-                        <p className={`text-sm font-bold ${status.textColor}`}>
-                          {rateVsMin >= 0 ? '+' : ''}{rateVsMin.toFixed(1)}%
-                        </p>
-                        <p className="text-xs font-medium mt-1 text-gray-500">
-                          {status.emoji} {status.text}
-                        </p>
-                      </div>
-                    )
-                  })()}
-                </div>
-              </div>
-
-              {/* 구분선 */}
-              <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-
-              {/* 평균가 대비 섹션 */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  1년 평균가 대비
-                </h5>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {/* 기준가 */}
-                  <div className="bg-white rounded-lg px-3 py-2.5 border border-gray-200/50">
-                    <p className="text-[10px] text-gray-500 font-medium mb-1">기준</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {trendMeta.yearAvg.toLocaleString()}원
-                    </p>
-                  </div>
-
-                  {/* 현재가 */}
-                  <div className="bg-white rounded-lg px-3 py-2.5 border border-gray-200/50">
-                    <p className="text-[10px] text-gray-500 font-medium mb-1">현재</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {currentPrice.toLocaleString()}원
-                    </p>
-                  </div>
-
-                  {/* 차액 (강조) */}
-                  <div className={`rounded-lg px-3 py-2.5 border flex flex-col justify-center items-center ${
-                    trendMeta.vsYearAvgRate < 0
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'bg-orange-50 border-orange-200'
-                  }`}>
-                    <p className="text-[10px] font-medium mb-1 text-gray-600">
-                      {trendMeta.vsYearAvgRate < 0 ? '저렴' : '비쌈'}
-                    </p>
-                    <p className={`text-sm font-bold ${
-                      trendMeta.vsYearAvgRate < 0
-                        ? 'text-blue-600'
-                        : 'text-orange-600'
-                    }`}>
-                      {Math.abs(trendMeta.vsYearAvgRate).toFixed(1)}%
-                    </p>
-                    <p className={`text-xs font-semibold mt-0.5 ${
-                      trendMeta.vsYearAvgRate < 0
-                        ? 'text-blue-500'
-                        : 'text-orange-500'
-                    }`}>
-                      {trendMeta.vsYearAvgRate < 0 ? '↓' : '↑'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+      {/* 가격 분석 설명 */}
+      {cheapnessExplanation && (
+        <div className="mt-4 mx-4 mb-4 px-4 py-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-gray-800 leading-relaxed">
+            {cheapnessExplanation}
+          </p>
         </div>
       )}
+
     </div>
   )
 }

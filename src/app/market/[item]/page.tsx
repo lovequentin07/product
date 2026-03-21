@@ -101,12 +101,11 @@ export default async function ItemPage({ params }: Props) {
                     {item.seCd === '02' ? '도매가' : '소매가'}
                   </span>
                 )}
-                <span
-                  className={`ml-auto font-bold ${item.trendMeta.vsYearAvgRate < 0 ? 'text-blue-500' : 'text-red-500'}`}
-                  style={{ fontSize: '20px' }}
-                >
-                  {item.trendMeta.vsYearAvgRate < 0 ? '▼' : '▲'} {Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)}%
-                </span>
+                {item.cheapness_label && (
+                  <span className="ml-auto text-xs font-semibold text-blue-600">
+                    {item.cheapness_label}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -126,7 +125,7 @@ export default async function ItemPage({ params }: Props) {
           />
         ) : (
           <div className="bg-white border-t border-gray-100">
-            <PriceTrendChart monthly={item.monthly} unit={item.unit} trendMeta={item.trendMeta} currentPrice={todayPrice} yoyPrice={item.yoyPrice} />
+            <PriceTrendChart monthly={item.monthly} unit={item.unit} currentPrice={todayPrice} trendMeta={item.trendMeta} cheapnessExplanation={item.cheapness_explanation} />
           </div>
         )}
       </div>

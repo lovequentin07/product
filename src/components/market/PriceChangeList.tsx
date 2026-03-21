@@ -39,7 +39,6 @@ export default function PriceChangeList({ items, title }: Props) {
       <div className="grid grid-cols-2 gap-2 mt-3">
         {items.map((item) => {
           const primary = getDefaultKind(item)
-          const rate = Math.abs(item.trendMeta.vsYearAvgRate).toFixed(1)
 
           return (
             <Link
@@ -47,12 +46,14 @@ export default function PriceChangeList({ items, title }: Props) {
               href={`/market/${item.id}`}
               className="bg-white border border-gray-100 rounded-xl p-3 active:scale-[0.97] transition-transform"
             >
-              {/* 품목명 + 배지 */}
+              {/* 품목명 + 라벨 */}
               <div className="flex items-start justify-between mb-1">
                 <span className="text-sm font-bold text-gray-900">{item.name}</span>
-                <span className="bg-blue-50 text-blue-600 text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-1">
-                  ▼ {rate}%
-                </span>
+                {item.cheapness_label && (
+                  <span className="bg-blue-50 text-blue-600 text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                    {item.cheapness_label}
+                  </span>
+                )}
               </div>
               {/* 가격 */}
               <p className="flex items-center gap-1 text-[13px] font-semibold text-gray-800">

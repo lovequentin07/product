@@ -76,6 +76,75 @@ function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta
 }
 
 // ----------------------------------------------------------------
+// 저렴함/비쌈 정보 결정 (percentile + 역대 극값 기반)
+// ----------------------------------------------------------------
+function getCheapnessInfo(percentile: number, latestPrice: number, yearMin: number, yearMax: number): { label: string, explanation: string } {
+  // 역대 극값 체크 (±1% 이내)
+  const isAllTimeLowest = yearMin > 0 && Math.abs(latestPrice - yearMin) / yearMin <= 0.01
+  const isAllTimeHighest = yearMax > 0 && Math.abs(latestPrice - yearMax) / yearMax <= 0.01
+
+  if (isAllTimeLowest) {
+    return {
+      label: '역대최저가',
+      explanation: '역대 가장 저렴한 가격입니다.'
+    }
+  }
+
+  if (isAllTimeHighest) {
+    return {
+      label: '역대최고가',
+      explanation: '역대 가장 비싼 가격입니다.'
+    }
+  }
+
+  // percentile 기반 (0 ~ 1 범위)
+  const percentilePct = Math.round(percentile * 100)
+
+  if (percentile < 0.1) {
+    return {
+      label: '역대최저가 근접',
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 역대최저가에 근접한 상태입니다.`
+    }
+  }
+
+  if (percentile < 0.25) {
+    return {
+      label: '최저가 구간',
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 최저가 구간에 속합니다.`
+    }
+  }
+
+  if (percentile < 0.5) {
+    return {
+      label: '저가 상태',
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 저가 상태입니다.`
+    }
+  }
+
+  if (percentile < 0.75) {
+    return {
+      label: '보통',
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 평균적인 가격입니다.`
+    }
+  }
+
+  if (percentile < 0.9) {
+    const topPct = Math.round((1 - percentile) * 100)
+    return {
+      label: '높은 가격',
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 높은 가격 상태입니다.`
+    }
+  }
+
+  // percentile >= 0.9
+  const topPct = Math.round((1 - percentile) * 100)
+  return {
+    label: '비쌈',
+    explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 매우 비싼 상태입니다.`
+  }
+}
+
+// ----------------------------------------------------------------
 // 전년 동월 평균가 조회
 // ----------------------------------------------------------------
 function getYoyPrice(latestYm: string, monthly: MonthlyPoint[]): number | undefined {
@@ -134,19 +203,24 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
           is_default: combo.vrty_cd === defaultVrtyCd,
           coverage: combo.monthly.length,
           monthly,
+          percentile: combo.percentile,
+          latest_price: combo.latest_price,
         })
       }
     } else {
-      // vrty 단일: coverage 최대 combo 하나만 사용
+      // vrty 단일: is_default combo 우선, 없으면 coverage 최대 combo 사용
+      const defaultCombo = grdCombos.find((c) => c.is_default) ?? grdCombos[0]
       const bestCombo = grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best)
       const monthly = bestCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
       if (monthly.length > 0) {
         varieties.push({
-          vrty_cd: bestCombo.vrty_cd,
+          vrty_cd: defaultCombo.vrty_cd,
           vrty_label: '',
           is_default: true,
           coverage: bestCombo.monthly.length,
           monthly,
+          percentile: defaultCombo.percentile,
+          latest_price: defaultCombo.latest_price,
         })
       }
     }
@@ -209,6 +283,8 @@ function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDeta
     featuredVrtyCd: defaultVariety?.vrty_cd,
     seCd: record.se_cd as '01' | '02' | undefined,
     yoyPrice: getYoyPrice(latestYm, monthly),
+    cheapness_label: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).label,
+    cheapness_explanation: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).explanation,
   }
 }
 

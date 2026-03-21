@@ -52,6 +52,8 @@ export interface VarietyStats {
   is_default: boolean
   coverage: number
   monthly: MonthlyPoint[]
+  percentile?: number    // 저렴함 지표
+  latest_price: number   // 최신 가격 (필수)
 }
 
 export interface GradeStats {
@@ -84,6 +86,8 @@ export interface ItemDetail {
   featuredVrtyCd?: string  // 기본 신선도 코드 (GradeSelector 초기값)
   seCd?: '01' | '02'       // '01'=소매가, '02'=도매가
   yoyPrice?: number        // 전년 동월 평균가 (없으면 undefined → 미표시)
+  cheapness_label: string  // 가격 상태 라벨
+  cheapness_explanation: string  // 가격 상태 설명
 }
 
 // '상' 등급 우선 선택 helper (없으면 kinds[1] → kinds[0] 순서)
