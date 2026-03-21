@@ -4,46 +4,19 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { getTransactions } from '@/lib/db/transactions';
-import { TransactionRow, TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
+import { TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
 import { getRegionNameByCode } from '@/data/regions';
 import { NormalizedTransaction } from '@/types/real-estate';
+import { ensureString, toNormalized, formatPeriodLabel } from '@/lib/apt-utils';
 
 import SearchForm from '@/components/apartment/SearchForm';
 import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent';
+import LoadingSkeleton from '@/components/apartment/LoadingSkeleton';
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 interface RealEstatePageProps {
   searchParams: SearchParams;
-}
-
-function ensureString(param: string | string[] | undefined): string | undefined {
-  if (Array.isArray(param)) return param[0];
-  return param;
-}
-
-/** TransactionRow(DB) → NormalizedTransaction(UI 컴포넌트) 변환 */
-function toNormalized(row: TransactionRow): NormalizedTransaction {
-  return {
-    id: String(row.id),
-    aptName: row.apt_nm,
-    price: row.deal_amount,
-    area: row.exclu_use_ar,
-    date: row.deal_date,
-    address: row.umd_nm,
-    floor: row.floor,
-    buildYear: row.build_year,
-    isCancelled: !!row.cdeal_type,
-    sggNm: row.sgg_nm ?? undefined,
-  };
-}
-
-/** dealYmd(YYYYMM | YYYY | 없음)를 사람이 읽기 좋은 문자열로 변환 */
-function formatPeriodLabel(dealYmd?: string): string {
-  if (!dealYmd) return '전체 기간';
-  if (dealYmd.length === 6) return `${dealYmd.substring(0, 4)}년 ${dealYmd.substring(4, 6)}월`;
-  if (dealYmd.length === 4) return `${dealYmd}년`;
-  return '';
 }
 
 export async function generateMetadata({ searchParams }: RealEstatePageProps): Promise<Metadata> {
@@ -55,7 +28,7 @@ export async function generateMetadata({ searchParams }: RealEstatePageProps): P
     !lawdCdString || lawdCdString === '11000'
       ? '서울'
       : (getRegionNameByCode(lawdCdString) || '선택 지역');
-  const period = formatPeriodLabel(dealYmdString);
+  const period = formatPeriodLabel(dealYmdString, '전체 기간');
   const title = period ? `${regionName} ${period} 아파트 실거래가 조회` : `${regionName} 아파트 실거래가 조회`;
   const description = `${title} - 국토교통부 데이터를 기반으로 한 최신 아파트 매매 정보를 확인하세요.`;
   return {
@@ -135,15 +108,6 @@ async function TransactionsLoader({
       priceMin={priceMin}
       priceMax={priceMax}
     />
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="flex justify-center items-center h-40 text-gray-500">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-      <p className="ml-3 text-lg">데이터 로딩 중...</p>
-    </div>
   );
 }
 

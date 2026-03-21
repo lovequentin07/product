@@ -24,6 +24,7 @@ ALWAYS follow strict execution WORKFLOW.md workflow for Claude Code.
 
 | 서비스 | URL | 상태 | 상세 문서 |
 |--------|-----|------|-----------|
+| 농수축산물 시세 | `/market` | 프로덕션 | `.claude/services/market.md` |
 | 아파트 실거래가 | `/apt` | 프로덕션 | `.claude/services/apt.md` |
 | 관리비 지킴이 | `/apt-mgmt` | 개발 중 (feat/apt-mgmt) | `.claude/services/apt-mgmt.md` |
 
@@ -84,38 +85,53 @@ src/
 │   ├── robots.ts / sitemap.ts    # SEO
 │   ├── api/
 │   │   ├── transactions/         # GET /api/transactions (실거래가)
+│   │   ├── apt/[sgg_cd]/[apt_nm]/history/  # GET /api/apt/history (단지 거래 이력)
 │   │   └── apt-mgmt/apts/        # GET /api/apt-mgmt/apts (관리비)
+│   ├── market/                   # 농수축산물 시세 서비스
+│   │   ├── page.tsx              # 메인 검색/추천 페이지
+│   │   └── [item]/page.tsx       # 품목 상세 페이지
 │   ├── apt/                      # 실거래가 서비스
-│   │   ├── page.tsx              # 검색 페이지
-│   │   └── [sgg_nm]/[apt_nm]/    # 단지 상세 페이지
+│   │   ├── page.tsx              # 검색 페이지 (서울 전체)
+│   │   ├── [sgg_nm]/page.tsx     # 구별 조회 페이지
+│   │   └── [sgg_nm]/[apt_nm]/page.tsx    # 단지 상세 페이지
 │   ├── apt-mgmt/                 # 관리비 지킴이 서비스
 │   │   ├── page.tsx              # 검색 페이지
-│   │   └── [sgg_nm]/[apt_nm]/    # 단지 상세 페이지
+│   │   └── [sgg_nm]/[apt_nm]/page.tsx    # 분석 결과 페이지
+│   ├── guide/                    # SEO 가이드 페이지 모음
+│   │   ├── apt-price-guide/page.tsx      # 아파트 시세 가이드
+│   │   └── mgmt-fee-guide/page.tsx       # 관리비 가이드
 │   └── privacy-policy/           # 개인정보처리방침
 ├── components/
-│   ├── apartment/                # 실거래가 UI 컴포넌트
-│   ├── apt-detail/               # 단지 상세 UI (차트 포함)
+│   ├── apartment/                # 실거래가 목록 UI 컴포넌트 (목록 페이지용)
+│   ├── apt-detail/               # 실거래가 단지 상세 UI (차트 포함)
 │   ├── apt-mgmt/                 # 관리비 UI 컴포넌트
+│   ├── market/                   # 농수축산물 시세 UI 컴포넌트
 │   └── Footer.tsx
 ├── lib/
 │   ├── api/
 │   │   ├── client.ts             # 외부 API fetch 공통 클라이언트 (직접 fetch 대신 이것 사용)
 │   │   └── apartment.ts          # 실거래가 API 헬퍼
+│   ├── db/
+│   │   ├── apt.ts                # 실거래가 D1 쿼리
+│   │   ├── transactions.ts       # 거래 내역 D1 쿼리
+│   │   ├── management-fee.ts     # 관리비 D1 쿼리
+│   │   ├── apt-meta.ts           # 단지 메타 D1 쿼리
+│   │   ├── mock-data.ts          # 로컬 개발용 mock fallback
+│   │   └── types.ts              # DB 레이어 내부 타입
+│   ├── market-data.ts            # 농수축산물 시세 JSON 데이터 가공 (DB 비기반)
+│   ├── apt-utils.ts              # 실거래가 서비스 공용 유틸 함수
+│   ├── region.ts                 # CF-IPCity 헤더 기반 지역 감지 유틸
 │   └── db/
-│       ├── apt.ts                # 실거래가 D1 쿼리
-│       ├── transactions.ts       # 거래 내역 D1 쿼리
-│       ├── management-fee.ts     # 관리비 D1 쿼리
-│       ├── apt-meta.ts           # 단지 메타 D1 쿼리
-│       ├── mock-data.ts          # 로컬 개발용 mock fallback
-│       └── types.ts              # DB 레이어 내부 타입
 ├── types/
 │   ├── real-estate.ts            # 실거래가 타입
 │   ├── management-fee.ts         # 관리비 타입
-│   └── apt-meta.ts               # 단지 메타 타입
+│   ├── apt-meta.ts               # 단지 메타 타입
+│   └── market.ts                 # 농수축산물 시세 타입
 ├── data/
 │   ├── schema.sql                # D1 테이블 정의
 │   ├── migrate-v4.sql            # 마이그레이션 스크립트
 │   ├── migrate-mgmt-summary.sql  # 관리비 summary 마이그레이션
+│   ├── market-stats-by-region.json  # 지역×품목×등급 시세 데이터
 │   └── regions.ts                # 지역 코드 목록
 └── scripts/                      # 일회성 데이터 수집·마이그레이션 스크립트
     ├── fetch-kapt-mgmt.ts        # K-APT 관리비 API fetch

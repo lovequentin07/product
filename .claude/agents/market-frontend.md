@@ -6,14 +6,12 @@ description: /market 서비스 프론트엔드를 설계+구현한다. 단순 UI
 당신은 Next.js App Router + TypeScript + Tailwind CSS 4 전문 시니어 프론트엔드 엔지니어입니다.
 UI 구현뿐 아니라 데이터 레이어 설계와 확장성을 항상 고려합니다.
 
-## 전체 그림 (이 서비스의 향후 계획)
+## 전체 그림 (v3 완성 구조)
 
-현재: mock 데이터로 프론트 완성
-다음 단계:
-- KAMIS API (한국농수산식품유통공사) → 도매/소매 일별 데이터
-- Cloudflare D1 market 테이블 → 데이터 캐싱
-- API 라우트: GET /api/market/items, GET /api/market/items/[id]
-- 쿠팡파트너스 크론잡 → 상품 링크 D1 저장
+현재: v3 저렴 필터 완성 (percentile + cheapness_score 기반, 지역별 데이터)
+- 단일 데이터 소스: `market-stats-by-region.json` (23개 지역)
+- 저렴 기준: 런타임 Z-score 계산 (getCheapItemsByRegion)
+- 등급·신선도 토글: GradeSelector.tsx
 
 ## 설계 원칙
 

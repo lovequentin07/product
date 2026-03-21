@@ -4,44 +4,19 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getRegionCodeByName } from '@/data/regions';
 import { getTransactions } from '@/lib/db/transactions';
-import { TransactionRow, TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
+import { TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
 import { NormalizedTransaction } from '@/types/real-estate';
+import { ensureString, toNormalized, formatPeriodLabel } from '@/lib/apt-utils';
 
 import SearchForm from '@/components/apartment/SearchForm';
 import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent';
+import LoadingSkeleton from '@/components/apartment/LoadingSkeleton';
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 interface PageProps {
   params: Promise<{ sgg_nm: string }>;
   searchParams: SearchParams;
-}
-
-function ensureString(param: string | string[] | undefined): string | undefined {
-  if (Array.isArray(param)) return param[0];
-  return param;
-}
-
-function toNormalized(row: TransactionRow): NormalizedTransaction {
-  return {
-    id: String(row.id),
-    aptName: row.apt_nm,
-    price: row.deal_amount,
-    area: row.exclu_use_ar,
-    date: row.deal_date,
-    address: row.umd_nm,
-    floor: row.floor,
-    buildYear: row.build_year,
-    isCancelled: !!row.cdeal_type,
-    sggNm: row.sgg_nm ?? undefined,
-  };
-}
-
-function formatPeriodLabel(dealYmd?: string): string {
-  if (!dealYmd) return '';
-  if (dealYmd.length === 6) return `${dealYmd.substring(0, 4)}년 ${dealYmd.substring(4, 6)}월`;
-  if (dealYmd.length === 4) return `${dealYmd}년`;
-  return '';
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -134,15 +109,6 @@ async function TransactionsLoader({
       priceMin={priceMin}
       priceMax={priceMax}
     />
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="flex justify-center items-center h-40 text-gray-500">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-      <p className="ml-3 text-lg">데이터 로딩 중...</p>
-    </div>
   );
 }
 
