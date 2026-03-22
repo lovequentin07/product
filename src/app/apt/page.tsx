@@ -3,15 +3,15 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { getTransactions } from '@/lib/db/transactions';
-import { TransactionQueryParams, TransactionSummary } from '@/lib/db/types';
-import { getRegionNameByCode } from '@/data/regions';
-import { NormalizedTransaction } from '@/types/real-estate';
-import { ensureString, toNormalized, formatPeriodLabel } from '@/lib/apt-utils';
+import { getTransactions } from '@apt/lib/db/transactions';
+import { TransactionQueryParams, TransactionSummary } from '@shared/lib/db/types';
+import { getRegionNameByCode } from '@shared/data/regions';
+import { NormalizedTransaction } from '@apt/types/real-estate';
+import { ensureString, toNormalized, formatPeriodLabel } from '@apt/lib/apt-utils';
 
-import SearchForm from '@/components/apartment/SearchForm';
-import TransactionsClientComponent from '@/components/apartment/TransactionsClientComponent';
-import LoadingSkeleton from '@/components/apartment/LoadingSkeleton';
+import SearchForm from '@apt/components/apartment/SearchForm';
+import TransactionsClientComponent from '@apt/components/apartment/TransactionsClientComponent';
+import LoadingSkeleton from '@apt/components/apartment/LoadingSkeleton';
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 

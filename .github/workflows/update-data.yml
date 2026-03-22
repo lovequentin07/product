@@ -21,7 +21,7 @@ jobs:
         run: npm ci
 
       - name: Update recent apartment data
-        run: npx tsx src/scripts/update-recent.ts
+        run: npx tsx src/apt/scripts/update-recent.ts
         env:
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

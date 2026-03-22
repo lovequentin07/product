@@ -2,7 +2,7 @@
 // 구별 아파트 목록 조회 (AptMgmtSearchForm 드롭다운용)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMgmtFeeApts } from '@/lib/db/management-fee';
+import { getMgmtFeeApts } from '@apt-mgmt/lib/db/management-fee';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

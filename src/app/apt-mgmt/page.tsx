@@ -2,7 +2,7 @@
 // 관리비 지킴이 랜딩 페이지
 
 import type { Metadata } from 'next';
-import AptMgmtSearchForm from '@/components/apt-mgmt/AptMgmtSearchForm';
+import AptMgmtSearchForm from '@apt-mgmt/components/AptMgmtSearchForm';
 
 export const metadata: Metadata = {
   title: '관리비 지킴이 - 우리 아파트 관리비 비교 분석',

@@ -2,12 +2,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { getAllItems, getItemBySlug, getItemBySlugForRegion } from '@/lib/market-data'
-import { detectRegion } from '@/lib/region'
-import { Category, getDefaultKind } from '@/types/market'
-import PriceTrendChart from '@/components/market/PriceTrendChart'
-import GradeSelector from '@/components/market/GradeSelector'
-import MarketFAQ from '@/components/market/MarketFAQ'
+import { getAllItems, getItemBySlug, getItemBySlugForRegion } from '@market/lib/market-data'
+import { detectRegion } from '@market/lib/region'
+import { Category, getDefaultKind } from '@market/types/market'
+import PriceTrendChart from '@market/components/PriceTrendChart'
+import GradeSelector from '@market/components/GradeSelector'
+import MarketFAQ from '@market/components/MarketFAQ'
 
 interface Props {
   params: Promise<{ item: string }>

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getPopularItems, getCheapItemsByRegion } from '@/lib/market-data'
-import { detectRegion } from '@/lib/region'
-import MarketHero from '@/components/market/MarketHero'
-import PriceChangeList from '@/components/market/PriceChangeList'
-import PopularSection from '@/components/market/PopularSection'
-import MarketFAQ from '@/components/market/MarketFAQ'
+import { getPopularItems, getCheapItemsByRegion } from '@market/lib/market-data'
+import { detectRegion } from '@market/lib/region'
+import MarketHero from '@market/components/MarketHero'
+import PriceChangeList from '@market/components/PriceChangeList'
+import PopularSection from '@market/components/PopularSection'
+import MarketFAQ from '@market/components/MarketFAQ'
 
 export const metadata: Metadata = {
   title: '오늘의 장바구니 — 지금 뭐가 싼지 바로 확인',

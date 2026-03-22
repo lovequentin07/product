@@ -10,5 +10,7 @@
     "**/.open-next": true,
     "**/.wrangler": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "python.defaultInterpreterPath": "C:\\Users\\admin\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }

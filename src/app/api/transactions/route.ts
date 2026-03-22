@@ -2,8 +2,8 @@
 // GET /api/transactions?sgg_cd=11710&deal_ymd=202501&page=1&limit=15&...
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getTransactions } from '@/lib/db/transactions';
-import { TransactionQueryParams } from '@/lib/db/types';
+import { getTransactions } from '@apt/lib/db/transactions';
+import { TransactionQueryParams } from '@shared/lib/db/types';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

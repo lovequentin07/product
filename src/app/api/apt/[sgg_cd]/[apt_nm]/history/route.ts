@@ -2,7 +2,7 @@
 // GET /api/apt/11710/포레나송파/history?months=24
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAptHistory } from '@/lib/db/apt';
+import { getAptHistory } from '@apt/lib/db/apt';
 
 interface RouteParams {
   params: Promise<{ sgg_cd: string; apt_nm: string }>;

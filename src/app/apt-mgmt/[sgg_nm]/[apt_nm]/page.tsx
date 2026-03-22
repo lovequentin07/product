@@ -4,9 +4,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getMgmtFeeResult, getMgmtFeeTopApts } from '@/lib/db/management-fee';
-import type { MgmtFeeTopApt } from '@/types/management-fee';
-import AptMgmtResultClient from '@/components/apt-mgmt/AptMgmtResultClient';
+import { getMgmtFeeResult, getMgmtFeeTopApts } from '@apt-mgmt/lib/db/management-fee';
+import type { MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
+import AptMgmtResultClient from '@apt-mgmt/components/AptMgmtResultClient';
 
 interface PageProps {
   params: Promise<{ sgg_nm: string; apt_nm: string }>;

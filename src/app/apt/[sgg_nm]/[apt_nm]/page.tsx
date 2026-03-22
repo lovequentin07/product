@@ -3,13 +3,13 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import { getAptHistory } from '@/lib/db/apt';
-import { getRegionCodeByName } from '@/data/regions';
-import AptDetailHeader from '@/components/apt-detail/AptDetailHeader';
-import AptDetailTransactionsClient from '@/components/apt-detail/AptDetailTransactionsClient';
+import { getAptHistory } from '@apt/lib/db/apt';
+import { getRegionCodeByName } from '@shared/data/regions';
+import AptDetailHeader from '@apt/components/apt-detail/AptDetailHeader';
+import AptDetailTransactionsClient from '@apt/components/apt-detail/AptDetailTransactionsClient';
 
 const PriceTrendChart = dynamic(
-  () => import('@/components/apt-detail/PriceTrendChart'),
+  () => import('@apt/components/apt-detail/PriceTrendChart'),
   {
     loading: () => (
       <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
@@ -21,7 +21,7 @@ const PriceTrendChart = dynamic(
 );
 
 const AreaBarChart = dynamic(
-  () => import('@/components/apt-detail/AreaBarChart'),
+  () => import('@apt/components/apt-detail/AreaBarChart'),
   {
     loading: () => (
       <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
@@ -31,7 +31,7 @@ const AreaBarChart = dynamic(
     ),
   }
 );
-import { NormalizedTransaction } from '@/types/real-estate';
+import { NormalizedTransaction } from '@apt/types/real-estate';
 
 interface PageProps {
   params: Promise<{ sgg_nm: string; apt_nm: string }>;
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function toNormalized(row: import('@/lib/db/types').TransactionRow): NormalizedTransaction {
+function toNormalized(row: import('@shared/lib/db/types').TransactionRow): NormalizedTransaction {
   return {
     id: String(row.id),
     aptName: row.apt_nm,

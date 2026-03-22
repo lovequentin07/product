@@ -20,7 +20,11 @@
     ],
     "types": ["@cloudflare/workers-types"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@market/*": ["./src/market/*"],
+      "@apt/*": ["./src/apt/*"],
+      "@apt-mgmt/*": ["./src/apt-mgmt/*"]
     }
   },
   "include": [

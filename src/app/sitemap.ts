@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { getLatestDealDate } from "@/lib/db/apt";
-import { getMgmtFeeAptUrlList } from "@/lib/db/management-fee";
-import { regions } from "@/data/regions";
+import { getLatestDealDate } from "@apt/lib/db/apt";
+import { getMgmtFeeAptUrlList } from "@apt-mgmt/lib/db/management-fee";
+import { regions } from "@shared/data/regions";
 
 const BASE_URL = "https://datazip.net";
 
