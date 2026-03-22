@@ -86,6 +86,7 @@ export interface ItemDetail {
   featuredVrtyCd?: string  // 기본 신선도 코드 (GradeSelector 초기값)
   seCd?: '01' | '02'       // '01'=소매가, '02'=도매가
   yoyPrice?: number        // 전년 동월 평균가 (없으면 undefined → 미표시)
+  percentile: number       // 역대 가격 중 현재가 이하인 비율 (0~1)
   cheapness_label: string  // 가격 상태 라벨
   cheapness_explanation: string  // 가격 상태 설명
 }

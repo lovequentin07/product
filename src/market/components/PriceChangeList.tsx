@@ -8,6 +8,12 @@ interface Props {
   title: string
 }
 
+function getGaugeColor(percentile: number): string {
+  if (percentile <= 0.1) return 'bg-emerald-500'
+  if (percentile <= 0.25) return 'bg-green-400'
+  return 'bg-lime-400'
+}
+
 export default function PriceChangeList({ items, title }: Props) {
   if (items.length === 0) return null
 
@@ -46,17 +52,10 @@ export default function PriceChangeList({ items, title }: Props) {
               href={`/market/${item.id}`}
               className="bg-white border border-gray-100 rounded-xl p-3 active:scale-[0.97] transition-transform"
             >
-              {/* 품목명 + 라벨 */}
-              <div className="flex items-start justify-between mb-1">
-                <span className="text-sm font-bold text-gray-900">{item.name}</span>
-                {item.cheapness_label && (
-                  <span className="bg-blue-50 text-blue-600 text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ml-1">
-                    {item.cheapness_label}
-                  </span>
-                )}
-              </div>
+              {/* 품목명 */}
+              <span className="text-sm font-bold text-gray-900">{item.name}</span>
               {/* 가격 */}
-              <p className="flex items-center gap-1 text-[13px] font-semibold text-gray-800">
+              <p className="flex items-center gap-1 text-[13px] font-semibold text-gray-800 mt-1">
                 <span>{primary.retailPrice.toLocaleString()}원</span>
                 <span className="text-[11px] font-normal text-gray-400">/{item.unit}</span>
                 {item.seCd && (
@@ -65,6 +64,18 @@ export default function PriceChangeList({ items, title }: Props) {
                   </span>
                 )}
               </p>
+              {/* 게이지 바 + 하위 N% */}
+              <div className="mt-1.5 flex items-center gap-2">
+                <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full ${getGaugeColor(item.percentile)}`}
+                    style={{ width: `${Math.round(item.percentile * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-green-600 font-medium shrink-0 whitespace-nowrap">
+                  하위 {Math.round(item.percentile * 100)}%
+                </span>
+              </div>
               {/* 등급·신선도 pill (grade group 품목만) */}
               {(item.grd_label || item.vrty_label) && (
                 <p className="mt-1 text-[11px] text-gray-400">

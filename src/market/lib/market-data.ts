@@ -283,6 +283,7 @@ function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDeta
     featuredVrtyCd: defaultVariety?.vrty_cd,
     seCd: record.se_cd as '01' | '02' | undefined,
     yoyPrice: getYoyPrice(latestYm, monthly),
+    percentile: defaultCombo.percentile,
     cheapness_label: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).label,
     cheapness_explanation: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).explanation,
   }
