@@ -1,9 +1,13 @@
 ## Execution Workflow
 
-모든 작업은 WORKFLOW.md에 적힌 규칙을 준수하여 진행합니다. 
+모든 작업은 WORKFLOW.md에 적힌 규칙을 준수하여 진행합니다.
 ALWAYS follow strict execution WORKFLOW.md workflow for Claude Code.
 
-- For any non-trivial task, enter plan mode first.
+**⚠️ CRITICAL: 모든 코딩 요청은 반드시 EnterPlanMode로 시작 필수**
+- 기능 구현, 버그 수정, 리팩토링 등 코드 변경 작업 → 반드시 플랜 모드
+- Explore agent로 코드 탐색 → Plan agent로 구현 설계 → 사용자 승인 → 실행
+- 이렇게 해야 원인 파악 후 정확한 해결책을 찾을 수 있음
+
 - Detailed execution rules are defined in `.claude/WORKFLOW.md`.
 - Task planning and progress tracking must be done in `tasks/todo.md`.
 - Repeated mistakes must be recorded in `tasks/lessons.md`.
