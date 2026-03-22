@@ -6,6 +6,7 @@ import { getAllItems, getItemBySlug, getItemBySlugForRegion } from '@market/lib/
 import { detectRegion } from '@market/lib/region'
 import { Category, getDefaultKind } from '@market/types/market'
 import PriceTrendChart from '@market/components/PriceTrendChart'
+import BuySignalBanner from '@market/components/BuySignalBanner'
 import GradeSelector from '@market/components/GradeSelector'
 import MarketFAQ from '@market/components/MarketFAQ'
 
@@ -101,11 +102,6 @@ export default async function ItemPage({ params }: Props) {
                     {item.seCd === '02' ? '도매가' : '소매가'}
                   </span>
                 )}
-                {item.cheapness_label && (
-                  <span className="ml-auto text-xs font-semibold text-blue-600">
-                    {item.cheapness_label}
-                  </span>
-                )}
               </div>
             )}
           </div>
@@ -124,9 +120,15 @@ export default async function ItemPage({ params }: Props) {
             featuredVrtyCd={item.featuredVrtyCd}
           />
         ) : (
-          <div className="bg-white border-t border-gray-100">
-            <PriceTrendChart monthly={item.monthly} unit={item.unit} currentPrice={todayPrice} trendMeta={item.trendMeta} cheapnessExplanation={item.cheapness_explanation} />
-          </div>
+          <>
+            <BuySignalBanner
+              cheapness_label={item.cheapness_label ?? ''}
+              cheapnessExplanation={item.cheapness_explanation ?? ''}
+            />
+            <div className="bg-white border-t border-gray-100">
+              <PriceTrendChart monthly={item.monthly} unit={item.unit} currentPrice={todayPrice} trendMeta={item.trendMeta} />
+            </div>
+          </>
         )}
       </div>
 

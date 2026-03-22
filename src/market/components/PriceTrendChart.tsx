@@ -51,8 +51,6 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   const allLows = monthly24.map((m) => m.low)
   const dataMax = Math.max(...allHighs)   // 차트 최고가(빨간) 라인의 최대
   const dataMin = Math.min(...allLows)    // 차트 최저가(초록) 라인의 최소
-  // 이번달(또는 지난달) 평균가
-  const dataAvg = monthly24.length > 0 ? monthly24[monthly24.length - 1].avg : 0
 
   const pad = (dataMax - dataMin) * 0.25 || dataMax * 0.15
   const domainMin = Math.max(0, dataMin - pad)
@@ -198,38 +196,31 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
         </LineChart>
       </ResponsiveContainer>
 
-      {/* 범례 테이블 */}
-      <div className="mt-3 mb-2 px-1">
-        <div className="grid grid-cols-[1.5rem_1fr_auto] gap-2 items-center py-1">
-          <span style={{ color: '#f87171' }} className="text-center">▲</span>
-          <span className="text-sm font-medium text-gray-700">월별최고가</span>
-          <span className="text-sm font-medium text-gray-900 text-right">{dataMax.toLocaleString()}원</span>
+      {/* 범례 테이블 - 폴센트 스타일 */}
+      <div className="mt-5 mb-3 px-4 space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5">
+            <span style={{ color: '#DC2626' }}>▲</span>
+            <span className="text-gray-700">역대최고가</span>
+          </div>
+          <span style={{ color: '#DC2626' }} className="font-medium">{trendMeta?.yearMax.toLocaleString()}원</span>
         </div>
-        <div className="grid grid-cols-[1.5rem_1fr_auto] gap-2 items-center py-1">
-          <span style={{ color: '#2563eb' }} className="text-center">●</span>
-          <span className="text-sm font-medium text-gray-700">오늘 가격</span>
-          <span className="text-sm font-medium text-gray-900 text-right">{currentPrice?.toLocaleString()}원</span>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5">
+            <span style={{ color: '#1E40AF' }}>—</span>
+            <span className="text-gray-900 font-medium">현재가</span>
+          </div>
+          <span style={{ color: '#1E40AF' }} className="font-bold">{currentPrice?.toLocaleString()}원</span>
         </div>
-        <div className="grid grid-cols-[1.5rem_1fr_auto] gap-2 items-center py-1">
-          <span style={{ color: '#6366f1' }} className="text-center">—</span>
-          <span className="text-sm font-medium text-gray-700">월별평균가</span>
-          <span className="text-sm font-medium text-gray-900 text-right">{dataAvg.toLocaleString()}원</span>
-        </div>
-        <div className="grid grid-cols-[1.5rem_1fr_auto] gap-2 items-center py-1">
-          <span style={{ color: '#4ade80' }} className="text-center">▼</span>
-          <span className="text-sm font-medium text-gray-700">월별최저가</span>
-          <span className="text-sm font-medium text-gray-900 text-right">{dataMin.toLocaleString()}원</span>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5">
+            <span style={{ color: '#059669' }}>▼</span>
+            <span className="text-gray-700">역대최저가</span>
+          </div>
+          <span style={{ color: '#059669' }} className="font-medium">{trendMeta?.yearMin.toLocaleString()}원</span>
         </div>
       </div>
 
-      {/* 가격 분석 설명 */}
-      {cheapnessExplanation && (
-        <div className="mt-4 mx-4 mb-4 px-4 py-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-gray-800 leading-relaxed">
-            {cheapnessExplanation}
-          </p>
-        </div>
-      )}
 
     </div>
   )

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { GradeGroup, GradeStats, TrendMeta } from '@market/types/market'
 import PriceTrendChart from './PriceTrendChart'
+import BuySignalBanner from './BuySignalBanner'
 
 const _now = new Date()
 const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
@@ -34,6 +35,17 @@ function buildTrendMeta(
     ? Math.round((currentPrice - yearAvg) / yearAvg * 1000) / 10
     : 0
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
+}
+
+// percentile → 가격 상태 레이블
+function getCheapnessLabel(percentile: number | undefined): string {
+  if (!percentile && percentile !== 0) return ''
+  if (percentile < 0.1) return '역대최저가 근접'
+  if (percentile < 0.25) return '최저가 구간'
+  if (percentile < 0.5) return '저가 상태'
+  if (percentile < 0.75) return '보통'
+  if (percentile < 0.9) return '높은 가격'
+  return '비쌈'
 }
 
 // percentile + trendMeta → 가격 상태 설명
@@ -189,7 +201,13 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
         )}
       </div>
 
-      {/* 가격 차트 - 범례 아래 분석 정보 포함 */}
+      {/* 판단 배너 */}
+      <BuySignalBanner
+        cheapness_label={getCheapnessLabel(selectedVariety?.percentile)}
+        cheapnessExplanation={getCheapnessExplanation(selectedVariety?.percentile, trendMeta)}
+      />
+
+      {/* 가격 차트 */}
       <div className="bg-white border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
           <PriceTrendChart
@@ -197,7 +215,6 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
             unit={unit}
             currentPrice={currentPrice}
             trendMeta={trendMeta}
-            cheapnessExplanation={getCheapnessExplanation(selectedVariety?.percentile, trendMeta)}
           />
         </div>
       </div>
