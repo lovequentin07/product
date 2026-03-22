@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Price status colors */
+  --color-price-high: #DC2626;    /* 최고가 (빨강) */
+  --color-price-current: #1E40AF;  /* 현재가 (진한 파랑) */
+  --color-price-low: #059669;      /* 최저가 (진한 초록) */
 }
 
 @theme inline {

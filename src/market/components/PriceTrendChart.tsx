@@ -200,24 +200,24 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
       <div className="mt-5 mb-3 px-4 space-y-3">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1.5">
-            <span style={{ color: '#DC2626' }}>▲</span>
+            <span style={{ color: 'var(--color-price-high)' }}>▲</span>
             <span className="text-gray-700">역대최고가</span>
           </div>
-          <span style={{ color: '#DC2626' }} className="font-medium">{trendMeta?.yearMax.toLocaleString()}원</span>
+          <span style={{ color: 'var(--color-price-high)' }} className="font-medium">{trendMeta?.yearMax.toLocaleString()}원</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1.5">
-            <span style={{ color: '#1E40AF' }}>—</span>
+            <span style={{ color: 'var(--color-price-current)' }}>—</span>
             <span className="text-gray-900 font-medium">현재가</span>
           </div>
-          <span style={{ color: '#1E40AF' }} className="font-bold">{currentPrice?.toLocaleString()}원</span>
+          <span style={{ color: 'var(--color-price-current)' }} className="font-bold">{currentPrice?.toLocaleString()}원</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1.5">
-            <span style={{ color: '#059669' }}>▼</span>
+            <span style={{ color: 'var(--color-price-low)' }}>▼</span>
             <span className="text-gray-700">역대최저가</span>
           </div>
-          <span style={{ color: '#059669' }} className="font-medium">{trendMeta?.yearMin.toLocaleString()}원</span>
+          <span style={{ color: 'var(--color-price-low)' }} className="font-medium">{trendMeta?.yearMin.toLocaleString()}원</span>
         </div>
       </div>
 
