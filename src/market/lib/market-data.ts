@@ -382,6 +382,7 @@ export function getCheapItemsByRegion(sgg_cd: string, limit = 6): ItemDetail[] {
       a.defaultCombo.percentile - b.defaultCombo.percentile ||
       b.defaultCombo.cheapness_score - a.defaultCombo.cheapness_score
     )
+    .filter(x => x.defaultCombo.percentile < 0.5)
     .slice(0, limit)
 
   return regionRecords

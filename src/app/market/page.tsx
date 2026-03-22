@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getPopularItems, getCheapItemsByRegion } from '@market/lib/market-data'
+import { getCheapItemsByRegion } from '@market/lib/market-data'
 import { detectRegion } from '@market/lib/region'
 import MarketHero from '@market/components/MarketHero'
 import PriceChangeList from '@market/components/PriceChangeList'
-import PopularSection from '@market/components/PopularSection'
 import MarketFAQ from '@market/components/MarketFAQ'
 
 export const metadata: Metadata = {
@@ -22,8 +21,7 @@ export const metadata: Metadata = {
 export default async function MarketPage() {
   const headersList = await headers()
   const sgg_cd = detectRegion(headersList)
-  const cheapItems = getCheapItemsByRegion(sgg_cd)
-  const popularItems = getPopularItems()
+  const cheapItems = getCheapItemsByRegion(sgg_cd, 60)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -46,9 +44,6 @@ export default async function MarketPage() {
       <div className="max-w-2xl mx-auto">
         {/* 지역 기반 저렴 품목 (percentile 순위 top 6) */}
         <PriceChangeList items={cheapItems} title="지금 저렴한 품목" />
-
-        {/* 자주 찾는 품목 */}
-        <PopularSection items={popularItems} />
 
         {/* FAQ */}
         <MarketFAQ />
