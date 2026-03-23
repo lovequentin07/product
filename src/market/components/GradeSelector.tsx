@@ -5,9 +5,6 @@ import { GradeGroup, GradeStats, TrendMeta } from '@market/types/market'
 import PriceTrendChart from './PriceTrendChart'
 import BuySignalBanner from './BuySignalBanner'
 
-const _now = new Date()
-const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
-
 interface Props {
   gradeGroup: GradeGroup
   defaultPrice: number  // daily latest_price (기본 등급+신선도)
@@ -125,7 +122,7 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
   const selectedVariety = selectedGrade.varieties[selectedVrtyIdx] ?? selectedGrade.varieties[0]
 
   const filteredMonthly = useMemo(
-    () => (selectedVariety?.monthly ?? []).filter((m) => m.ym !== CURRENT_YM),
+    () => selectedVariety?.monthly ?? [],
     [selectedVariety],
   )
 
