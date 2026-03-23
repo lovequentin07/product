@@ -51,8 +51,9 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   const allLows = monthly24.map((m) => m.low)
   const validHighs = allHighs.filter((v): v is number => v != null)
   const validLows = allLows.filter((v): v is number => v != null)
-  const dataMax = validHighs.length > 0 ? Math.max(...validHighs) : Math.max(...allAvgs)
-  const dataMin = validLows.length > 0 ? Math.min(...validLows) : Math.min(...allAvgs)
+  const validAvgs = allAvgs.filter((v): v is number => v != null)
+  const dataMax = validHighs.length > 0 ? Math.max(...validHighs) : (validAvgs.length > 0 ? Math.max(...validAvgs) : 0)
+  const dataMin = validLows.length > 0 ? Math.min(...validLows) : (validAvgs.length > 0 ? Math.min(...validAvgs) : 0)
 
   const pad = (dataMax - dataMin) * 0.25 || dataMax * 0.15
   const domainMin = Math.max(0, dataMin - pad)
@@ -61,8 +62,8 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   // lastYmRaw: monthly24의 마지막 달
   const lastYmRaw = monthly24.length > 0 ? monthly24[monthly24.length - 1].ym : null
 
-  // 데이터에 high/low 추가
-  const chartData: { date: string; mAvg: number | null; high: number | null; low: number | null }[] = []
+  // 데이터에 high/low/currentDot 추가
+  const chartData: { date: string; mAvg: number | null; high: number | null; low: number | null; currentDot: number | null }[] = []
   if (lastYmRaw) {
     let fy = parseInt(lastYmRaw.slice(0, 4))
     let fm = parseInt(lastYmRaw.slice(4, 6)) - 23
@@ -73,11 +74,13 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
     while (y < endY || (y === endY && m <= endM)) {
       const ym = `${y}-${String(m).padStart(2, '0')}`
       const monthData = monthly24.find((md) => md.ym === `${y}${String(m).padStart(2, '0')}`)
+      const isLastSlot = y === endY && m === endM
       chartData.push({
         date: ym,
         mAvg: monthData?.avg ?? null,
         high: monthData?.high ?? null,
         low: monthData?.low ?? null,
+        currentDot: isLastSlot ? (currentPrice ?? null) : null,
       })
       m++
       if (m > 12) { m = 1; y++ }
@@ -130,46 +133,54 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
             dot={(props: { cx?: number; cy?: number; index?: number; value?: number | null }) => {
               const { cx = 0, cy = 0, index = 0, value } = props
               if (value == null) return <g key={index} />
-              const isLast = index === chartData.length - 1
               const prev = chartData[index - 1]?.mAvg
               const next = chartData[index + 1]?.mAvg
               const isolated = (prev == null || prev === undefined) && (next == null || next === undefined)
-
-              // 마지막 포인트: 크게 + 라벨 (2줄)
-              if (isLast && currentPrice != null) {
-                const labelY = cy > 50 ? cy - 20 : cy + 20
-                return (
-                  <g key={index}>
-                    <circle cx={cx} cy={cy} r={6} fill="#2563eb" />
-                    <text
-                      x={cx + 8}
-                      y={labelY}
-                      textAnchor="start"
-                      fill="#2563eb"
-                      fontSize={9}
-                      fontWeight={600}
-                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
-                    >
-                      오늘
-                    </text>
-                    <text
-                      x={cx + 8}
-                      y={labelY + 10}
-                      textAnchor="start"
-                      fill="#2563eb"
-                      fontSize={9}
-                      fontWeight={600}
-                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
-                    >
-                      {currentPrice.toLocaleString()}원
-                    </text>
-                  </g>
-                )
-              }
-
               return <circle key={index} cx={cx} cy={cy} r={isolated ? 4 : 2} fill="#6366f1" />
             }}
             activeDot={{ r: 6 }}
+            connectNulls={false}
+            legendType="none"
+          />
+
+          {/* 오늘 마커 (currentDot만, 라인 없음) */}
+          <Line
+            type="linear"
+            dataKey="currentDot"
+            stroke="none"
+            dot={(props: { cx?: number; cy?: number; index?: number; value?: number | null }) => {
+              const { cx = 0, cy = 0, index = 0, value } = props
+              if (value == null) return <g key={index} />
+              const labelY = cy > 50 ? cy - 20 : cy + 20
+              return (
+                <g key={index}>
+                  <circle cx={cx} cy={cy} r={6} fill="#2563eb" />
+                  <text
+                    x={cx + 8}
+                    y={labelY}
+                    textAnchor="start"
+                    fill="#2563eb"
+                    fontSize={9}
+                    fontWeight={600}
+                    fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                  >
+                    오늘
+                  </text>
+                  <text
+                    x={cx + 8}
+                    y={labelY + 10}
+                    textAnchor="start"
+                    fill="#2563eb"
+                    fontSize={9}
+                    fontWeight={600}
+                    fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                  >
+                    {value.toLocaleString()}원
+                  </text>
+                </g>
+              )
+            }}
+            activeDot={false}
             connectNulls={false}
             legendType="none"
           />

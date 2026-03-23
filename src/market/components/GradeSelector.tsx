@@ -19,7 +19,7 @@ interface Props {
 
 // monthly[] → TrendMeta 생성
 function buildTrendMeta(
-  monthly: { ym: string; high: number | null; low: number | null; avg: number }[],
+  monthly: { ym: string; high: number | null; low: number | null; avg: number | null }[],
   currentPrice: number,
 ): TrendMeta {
   if (monthly.length === 0) {
@@ -30,9 +30,10 @@ function buildTrendMeta(
   const avgs = monthly.map((m) => m.avg)
   const validHighs = highs.filter((v): v is number => v != null)
   const validLows = lows.filter((v): v is number => v != null)
-  const yearMax = validHighs.length > 0 ? Math.max(...validHighs) : Math.max(...avgs)
-  const yearMin = validLows.length > 0 ? Math.min(...validLows) : Math.min(...avgs)
-  const yearAvg = Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length)
+  const validAvgs = avgs.filter((v): v is number => v != null)
+  const yearMax = validHighs.length > 0 ? Math.max(...validHighs) : (validAvgs.length > 0 ? Math.max(...validAvgs) : 0)
+  const yearMin = validLows.length > 0 ? Math.min(...validLows) : (validAvgs.length > 0 ? Math.min(...validAvgs) : 0)
+  const yearAvg = validAvgs.length > 0 ? Math.round(validAvgs.reduce((s, v) => s + v, 0) / validAvgs.length) : 0
   const vsYearAvgRate = yearAvg > 0
     ? Math.round((currentPrice - yearAvg) / yearAvg * 1000) / 10
     : 0

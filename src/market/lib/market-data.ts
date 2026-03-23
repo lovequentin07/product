@@ -65,8 +65,8 @@ function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta
   if (monthly.length === 0) {
     return { yearMin: 0, yearMax: 0, yearAvg: 0, yearMinDate: '', yearMaxDate: '', vsYearAvgRate: 0 }
   }
-  const avgs = monthly.map((m) => m.avg)
-  const yearAvg = Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length)
+  const validAvgs = monthly.filter((m) => m.avg != null).map((m) => m.avg!)
+  const yearAvg = validAvgs.length > 0 ? Math.round(validAvgs.reduce((s, v) => s + v, 0) / validAvgs.length) : 0
   const yearMin = Math.min(...monthly.filter((m) => m.low != null).map((m) => m.low!))
   const yearMax = Math.max(...monthly.filter((m) => m.high != null).map((m) => m.high!))
   const vsYearAvgRate = yearAvg > 0
@@ -76,16 +76,15 @@ function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta
 }
 
 // ----------------------------------------------------------------
-// latest_ym 포인트 추가 (dot만, high/low 없음)
+// latest_ym 포인트 추가 (dot만, high/low/avg 모두 없음)
 // ----------------------------------------------------------------
 function appendLatestYmPoint(
   monthly: MonthlyPoint[],
-  latestYm: string,
-  latestPrice: number
+  latestYm: string
 ): MonthlyPoint[] {
   const lastYm = monthly[monthly.length - 1]?.ym ?? ''
   if (latestYm <= lastYm) return monthly  // 이미 반영됨
-  return [...monthly, { ym: latestYm, high: null, low: null, avg: latestPrice }]
+  return [...monthly, { ym: latestYm, high: null, low: null, avg: null }]
 }
 
 // ----------------------------------------------------------------
@@ -165,7 +164,7 @@ function getYoyPrice(latestYm: string, monthly: MonthlyPoint[]): number | undefi
   let m = parseInt(latestYm.slice(4, 6)) - 12
   while (m <= 0) { m += 12; y-- }
   const yoy_ym = `${y}${String(m).padStart(2, '0')}`
-  return monthly.find((p) => p.ym === yoy_ym)?.avg
+  return monthly.find((p) => p.ym === yoy_ym)?.avg ?? undefined
 }
 
 // ----------------------------------------------------------------
@@ -210,7 +209,7 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
       for (const combo of grdCombos) {
         let monthly = combo.monthly.filter((m) => m.ym !== CURRENT_YM)
         if (monthly.length === 0) continue
-        monthly = appendLatestYmPoint(monthly, combo.latest_ym, combo.latest_price)
+        monthly = appendLatestYmPoint(monthly, combo.latest_ym)
         varieties.push({
           vrty_cd: combo.vrty_cd,
           vrty_label: combo.vrty_label,
@@ -227,7 +226,7 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
       const bestCombo = grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best)
       let monthly = bestCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
       if (monthly.length > 0) {
-        monthly = appendLatestYmPoint(monthly, defaultCombo.latest_ym, defaultCombo.latest_price)
+        monthly = appendLatestYmPoint(monthly, defaultCombo.latest_ym)
         varieties.push({
           vrty_cd: defaultCombo.vrty_cd,
           vrty_label: '',
@@ -266,7 +265,7 @@ function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDeta
   const latestPrice = defaultCombo.latest_price
   const latestYm = defaultCombo.latest_ym
 
-  monthly = appendLatestYmPoint(monthly, latestYm, latestPrice)
+  monthly = appendLatestYmPoint(monthly, latestYm)
 
   const unitDisplay = buildUnitDisplay(record.unit, record.unit_sz)
   const trendMeta = buildTrendMeta(monthly, latestPrice)

@@ -30,7 +30,7 @@ export interface MonthlyPoint {
   ym: string   // "YYYYMM"
   high: number | null   // 월별 집계 없는 달은 null
   low: number | null
-  avg: number
+  avg: number | null    // latest_ym 달에는 null (라인 끊김)
 }
 
 // 추세 요약 (지금 싼지/비싼지 판단 근거)
