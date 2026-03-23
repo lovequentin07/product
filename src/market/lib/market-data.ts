@@ -67,12 +67,25 @@ function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta
   }
   const avgs = monthly.map((m) => m.avg)
   const yearAvg = Math.round(avgs.reduce((s, v) => s + v, 0) / avgs.length)
-  const yearMin = Math.min(...monthly.map((m) => m.low))
-  const yearMax = Math.max(...monthly.map((m) => m.high))
+  const yearMin = Math.min(...monthly.filter((m) => m.low != null).map((m) => m.low!))
+  const yearMax = Math.max(...monthly.filter((m) => m.high != null).map((m) => m.high!))
   const vsYearAvgRate = yearAvg > 0
     ? Math.round(((latestPrice - yearAvg) / yearAvg) * 1000) / 10
     : 0
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
+}
+
+// ----------------------------------------------------------------
+// latest_ym 포인트 추가 (dot만, high/low 없음)
+// ----------------------------------------------------------------
+function appendLatestYmPoint(
+  monthly: MonthlyPoint[],
+  latestYm: string,
+  latestPrice: number
+): MonthlyPoint[] {
+  const lastYm = monthly[monthly.length - 1]?.ym ?? ''
+  if (latestYm <= lastYm) return monthly  // 이미 반영됨
+  return [...monthly, { ym: latestYm, high: null, low: null, avg: latestPrice }]
 }
 
 // ----------------------------------------------------------------
@@ -195,8 +208,9 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
         ?? grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best).vrty_cd
 
       for (const combo of grdCombos) {
-        const monthly = combo.monthly.filter((m) => m.ym !== CURRENT_YM)
+        let monthly = combo.monthly.filter((m) => m.ym !== CURRENT_YM)
         if (monthly.length === 0) continue
+        monthly = appendLatestYmPoint(monthly, combo.latest_ym, combo.latest_price)
         varieties.push({
           vrty_cd: combo.vrty_cd,
           vrty_label: combo.vrty_label,
@@ -211,8 +225,9 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
       // vrty 단일: is_default combo 우선, 없으면 coverage 최대 combo 사용
       const defaultCombo = grdCombos.find((c) => c.is_default) ?? grdCombos[0]
       const bestCombo = grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best)
-      const monthly = bestCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
+      let monthly = bestCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
       if (monthly.length > 0) {
+        monthly = appendLatestYmPoint(monthly, defaultCombo.latest_ym, defaultCombo.latest_price)
         varieties.push({
           vrty_cd: defaultCombo.vrty_cd,
           vrty_label: '',
@@ -245,12 +260,13 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
 // RegionStat + defaultCombo → ItemDetail 빌드
 // ----------------------------------------------------------------
 function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDetail {
-  const monthly = defaultCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
+  let monthly = defaultCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
   if (monthly.length === 0) return null as unknown as ItemDetail  // caller가 null 체크
 
-  const latestMonthly = monthly[monthly.length - 1]
   const latestPrice = defaultCombo.latest_price
   const latestYm = defaultCombo.latest_ym
+
+  monthly = appendLatestYmPoint(monthly, latestYm, latestPrice)
 
   const unitDisplay = buildUnitDisplay(record.unit, record.unit_sz)
   const trendMeta = buildTrendMeta(monthly, latestPrice)

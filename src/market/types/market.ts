@@ -28,8 +28,8 @@ export interface MartPrice {
 // 월별 가격 포인트 (차트 데이터)
 export interface MonthlyPoint {
   ym: string   // "YYYYMM"
-  high: number
-  low: number
+  high: number | null   // 월별 집계 없는 달은 null
+  low: number | null
   avg: number
 }
 

@@ -49,8 +49,10 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   const allAvgs = monthly24.map((m) => m.avg)
   const allHighs = monthly24.map((m) => m.high)
   const allLows = monthly24.map((m) => m.low)
-  const dataMax = Math.max(...allHighs)   // 차트 최고가(빨간) 라인의 최대
-  const dataMin = Math.min(...allLows)    // 차트 최저가(초록) 라인의 최소
+  const validHighs = allHighs.filter((v): v is number => v != null)
+  const validLows = allLows.filter((v): v is number => v != null)
+  const dataMax = validHighs.length > 0 ? Math.max(...validHighs) : Math.max(...allAvgs)
+  const dataMin = validLows.length > 0 ? Math.min(...validLows) : Math.min(...allAvgs)
 
   const pad = (dataMax - dataMin) * 0.25 || dataMax * 0.15
   const domainMin = Math.max(0, dataMin - pad)
