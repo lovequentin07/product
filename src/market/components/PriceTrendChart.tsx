@@ -34,11 +34,15 @@ function CustomTooltip({
   label?: string
 }) {
   if (!active || !payload?.length) return null
+  const high = payload.find((p) => p.dataKey === 'high')
   const avg = payload.find((p) => p.dataKey === 'mAvg')
+  const low = payload.find((p) => p.dataKey === 'low')
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-2.5 shadow-lg text-xs space-y-0.5">
       <p className="text-gray-400 mb-1">{label ? `${label.slice(2, 4)}.${label.slice(5, 7)}` : ''}</p>
-      {avg && <p style={{ color: '#6366f1' }}>평균 {avg.value.toLocaleString()}원</p>}
+      {high?.value != null && <p style={{ color: '#DC2626' }}>최고 {high.value.toLocaleString()}원</p>}
+      {avg && <p style={{ color: '#1E40AF' }}>평균 {avg.value.toLocaleString()}원</p>}
+      {low?.value != null && <p style={{ color: '#059669' }}>최저 {low.value.toLocaleString()}원</p>}
     </div>
   )
 }
@@ -97,6 +101,12 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
   if (chartData.length > 0) tickSet.add(chartData[chartData.length - 1].date)
   const monthTicks = [...tickSet].sort()
 
+  // 역대최고/최저 포인트 인덱스 계산
+  const maxHighVal = Math.max(...chartData.map(d => d.high ?? -Infinity))
+  const maxHighIdx = chartData.findIndex(d => d.high === maxHighVal)
+  const minLowVal = Math.min(...chartData.map(d => d.low ?? Infinity))
+  const minLowIdx = chartData.findIndex(d => d.low === minLowVal)
+
   return (
     <div className="mx-4 bg-white overflow-hidden">
       <h3 className="text-base font-bold text-gray-800 pt-4 pb-3">
@@ -128,7 +138,7 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
           <Line
             type="linear"
             dataKey="mAvg"
-            stroke="#6366f1"
+            stroke="#1E40AF"
             strokeWidth={2}
             dot={(props: { cx?: number; cy?: number; index?: number; value?: number | null }) => {
               const { cx = 0, cy = 0, index = 0, value } = props
@@ -136,7 +146,7 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
               const prev = chartData[index - 1]?.mAvg
               const next = chartData[index + 1]?.mAvg
               const isolated = (prev == null || prev === undefined) && (next == null || next === undefined)
-              return <circle key={index} cx={cx} cy={cy} r={isolated ? 4 : 2} fill="#6366f1" />
+              return <circle key={index} cx={cx} cy={cy} r={isolated ? 4 : 2} fill="#1E40AF" />
             }}
             activeDot={{ r: 6 }}
             connectNulls={false}
@@ -189,9 +199,42 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
           <Line
             type="linear"
             dataKey="high"
-            stroke="#fca5a5"
+            stroke="#DC2626"
             strokeWidth={1.5}
-            dot={false}
+            dot={(props: { cx?: number; cy?: number; index?: number; value?: number | null }) => {
+              const { cx = 0, cy = 0, index = 0, value } = props
+              if (value == null) return <g key={index} />
+              if (index === maxHighIdx) {
+                return (
+                  <g key={index}>
+                    <circle cx={cx} cy={cy} r={4} fill="#DC2626" />
+                    <text
+                      x={cx}
+                      y={cy - 25}
+                      textAnchor="middle"
+                      fill="#DC2626"
+                      fontSize={11}
+                      fontWeight={700}
+                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                    >
+                      ▲역대최고
+                    </text>
+                    <text
+                      x={cx}
+                      y={cy - 13}
+                      textAnchor="middle"
+                      fill="#DC2626"
+                      fontSize={10}
+                      fontWeight={700}
+                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                    >
+                      {value.toLocaleString()}원
+                    </text>
+                  </g>
+                )
+              }
+              return <g key={index} />
+            }}
             connectNulls
             legendType="none"
           />
@@ -200,9 +243,42 @@ export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta
           <Line
             type="linear"
             dataKey="low"
-            stroke="#86efac"
+            stroke="#059669"
             strokeWidth={1.5}
-            dot={false}
+            dot={(props: { cx?: number; cy?: number; index?: number; value?: number | null }) => {
+              const { cx = 0, cy = 0, index = 0, value } = props
+              if (value == null) return <g key={index} />
+              if (index === minLowIdx) {
+                return (
+                  <g key={index}>
+                    <circle cx={cx} cy={cy} r={4} fill="#059669" />
+                    <text
+                      x={cx}
+                      y={cy + 15}
+                      textAnchor="middle"
+                      fill="#059669"
+                      fontSize={11}
+                      fontWeight={700}
+                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                    >
+                      ▼역대최저
+                    </text>
+                    <text
+                      x={cx}
+                      y={cy + 27}
+                      textAnchor="middle"
+                      fill="#059669"
+                      fontSize={10}
+                      fontWeight={700}
+                      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif"
+                    >
+                      {value.toLocaleString()}원
+                    </text>
+                  </g>
+                )
+              }
+              return <g key={index} />
+            }}
             connectNulls
             legendType="none"
           />
