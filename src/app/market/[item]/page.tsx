@@ -8,7 +8,6 @@ import { Category, getDefaultKind } from '@market/types/market'
 import PriceTrendChart from '@market/components/PriceTrendChart'
 import BuySignalBanner from '@market/components/BuySignalBanner'
 import GradeSelector from '@market/components/GradeSelector'
-import MarketFAQ from '@market/components/MarketFAQ'
 
 interface Props {
   params: Promise<{ item: string }>
@@ -149,16 +148,6 @@ export default async function ItemPage({ params }: Props) {
           </div>
         </div>
       )}
-
-      {/* FAQ */}
-      <div className="bg-gray-50 py-6">
-        <div className="max-w-2xl mx-auto">
-          <MarketFAQ />
-          <div className="px-4 pb-2 text-xs text-gray-400 text-center">
-            가격 정보 출처: 한국농수산식품유통공사(aT) · 공공데이터포털
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
