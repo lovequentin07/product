@@ -21,6 +21,16 @@ git push (main) → Cloudflare가 자동 감지 → 빌드 · 배포
 
 ## npm run dev
 
+### Windows 사용자: start-dev.bat 사용 (권장)
+
+```bash
+start-dev.bat
+```
+
+포트 충돌 문제를 자동으로 정리한 후 개발 서버 시작.
+
+### 또는 직접 실행
+
 ```bash
 npm run dev
 ```
@@ -29,9 +39,14 @@ npm run dev
 
 - 즉시 시작, 코드 변경 시 자동 새로고침 (핫리로드)
 - Cloudflare 환경이 아니므로 D1 연결 안 됨 → mock 데이터 17건만 표시
+- `.env.local`의 `PORT=3000` 고정
 
 **언제 쓰나요?**
 UI 디자인, 레이아웃, 데이터와 무관한 로직 개발
+
+**포트 충돌 문제가 생기면?**
+1. Windows: `start-dev.bat` 실행 (자동 정리 후 시작)
+2. macOS/Linux: 터미널에서 `lsof -i :3000` 후 `kill -9 <PID>` 실행
 
 ---
 
