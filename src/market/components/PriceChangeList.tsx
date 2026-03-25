@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ItemDetail, getDefaultKind, Category } from '@market/types/market'
@@ -19,10 +20,19 @@ function getGaugeColor(percentile: number): string {
 export default function PriceChangeList({ items, title }: Props) {
   const searchParams = useSearchParams()
   const category = searchParams.get('category')
+  const [limit, setLimit] = useState(6)
 
-  const filtered = (!category || category === 'all')
-    ? items.slice(0, 60)
-    : items.filter(item => item.category === category as Category).slice(0, 60)
+  // 카테고리 변경 시 limit 리셋
+  useEffect(() => {
+    setLimit(6)
+  }, [category])
+
+  const allFiltered = (!category || category === 'all')
+    ? items
+    : items.filter(item => item.category === category as Category)
+
+  const filtered = allFiltered.slice(0, limit)
+  const hasMore = allFiltered.length > limit
 
   if (filtered.length === 0) return null
 
@@ -93,6 +103,16 @@ export default function PriceChangeList({ items, title }: Props) {
           )
         })}
       </div>
+
+      {/* 더보기 버튼 */}
+      {hasMore && (
+        <button
+          onClick={() => setLimit((prev) => prev + 6)}
+          className="w-full mt-3 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+        >
+          더보기 ({allFiltered.length - limit}개 남음)
+        </button>
+      )}
     </section>
   )
 }
