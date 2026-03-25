@@ -39,7 +39,7 @@ export default function PriceChangeList({ items, title }: Props) {
   return (
     <section
       id="price-drop-section"
-      className="bg-white px-4 pt-5 pb-4 border-t-2 border-gray-100"
+      className="bg-white px-4 pt-4 pb-4 border-t border-gray-100"
     >
       {/* 섹션 헤더 */}
       <div className="border-l-4 border-blue-600 pl-3 mb-1">
