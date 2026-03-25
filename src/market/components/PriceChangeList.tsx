@@ -104,15 +104,27 @@ export default function PriceChangeList({ items, title }: Props) {
         })}
       </div>
 
-      {/* 더보기 버튼 */}
-      {hasMore && (
-        <button
-          onClick={() => setLimit((prev) => prev + 6)}
-          className="w-full mt-3 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-        >
-          더보기 ({allFiltered.length - limit}개 남음)
-        </button>
-      )}
+      {/* 더보기/접기 버튼 */}
+      <div className="flex gap-2 mt-3">
+        {/* 더보기 버튼 */}
+        {hasMore && (
+          <button
+            onClick={() => setLimit((prev) => prev + 6)}
+            className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            더보기 ({allFiltered.length - limit}개 남음)
+          </button>
+        )}
+        {/* 접기 버튼 */}
+        {limit > 6 && (
+          <button
+            onClick={() => setLimit(6)}
+            className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            접기
+          </button>
+        )}
+      </div>
     </section>
   )
 }
