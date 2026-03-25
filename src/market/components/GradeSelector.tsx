@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { GradeGroup, GradeStats, TrendMeta } from '@market/types/market'
+import { getCheapnessInfo } from '@market/lib/market-data'
 import PriceTrendChart from './PriceTrendChart'
 import BuySignalBanner from './BuySignalBanner'
 
@@ -35,55 +36,6 @@ function buildTrendMeta(
     ? Math.round((currentPrice - yearAvg) / yearAvg * 1000) / 10
     : 0
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
-}
-
-// percentile → 가격 상태 레이블
-function getCheapnessLabel(percentile: number | undefined): string {
-  if (!percentile && percentile !== 0) return ''
-  if (percentile < 0.1) return '역대최저가 근접'
-  if (percentile < 0.25) return '최저가 구간'
-  if (percentile < 0.5) return '저가 상태'
-  if (percentile < 0.75) return '보통'
-  if (percentile < 0.9) return '높은 가격'
-  return '비쌈'
-}
-
-// percentile + trendMeta → 가격 상태 설명
-function getCheapnessExplanation(percentile: number | undefined, trendMeta: TrendMeta): string {
-  if (!percentile && percentile !== 0) return ''
-
-  const yearMin = trendMeta.yearMin
-  const yearMax = trendMeta.yearMax
-  const currentPrice = 0 // 이 함수에서는 직접 사용하지 않음
-
-  // 역대 극값 체크 (하지만 현재가를 모르므로 percentile만 사용)
-  // percentile 기반으로만 판단
-
-  const percentilePct = Math.round(percentile * 100)
-
-  if (percentile < 0.1) {
-    return `과거 하위 ${percentilePct}% 수준으로, 역대최저가에 근접한 상태입니다.`
-  }
-
-  if (percentile < 0.25) {
-    return `과거 하위 ${percentilePct}% 수준으로, 최저가 구간에 속합니다.`
-  }
-
-  if (percentile < 0.5) {
-    return `과거 하위 ${percentilePct}% 수준으로, 저가 상태입니다.`
-  }
-
-  if (percentile < 0.75) {
-    return `과거 하위 ${percentilePct}% 수준으로, 평균적인 가격입니다.`
-  }
-
-  if (percentile < 0.9) {
-    const topPct = Math.round((1 - percentile) * 100)
-    return `과거 상위 ${topPct}% 수준으로, 높은 가격 상태입니다.`
-  }
-
-  const topPct = Math.round((1 - percentile) * 100)
-  return `과거 상위 ${topPct}% 수준으로, 매우 비싼 상태입니다.`
 }
 
 export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, featuredGrdCd, featuredVrtyCd }: Props) {
@@ -135,17 +87,6 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
     () => buildTrendMeta(filteredMonthly, currentPrice),
     [filteredMonthly, currentPrice],
   )
-
-  // yoyPrice: filteredMonthly에서 전년 동월 avg 직접 조회
-  const yoyPrice = useMemo(() => {
-    if (filteredMonthly.length === 0) return undefined
-    const lastYm = filteredMonthly[filteredMonthly.length - 1].ym
-    let y = parseInt(lastYm.slice(0, 4))
-    let m = parseInt(lastYm.slice(4, 6)) - 12
-    while (m <= 0) { m += 12; y-- }
-    const yoy_ym = `${y}${String(m).padStart(2, '0')}`
-    return filteredMonthly.find((p) => p.ym === yoy_ym)?.avg
-  }, [filteredMonthly])
 
   const showGradePills = gradeGroup.grades.length >= 2
   const showVarietyPills = selectedGrade.varieties.length >= 2
@@ -202,10 +143,15 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
       </div>
 
       {/* 판단 배너 */}
-      <BuySignalBanner
-        cheapness_label={getCheapnessLabel(selectedVariety?.percentile)}
-        cheapnessExplanation={getCheapnessExplanation(selectedVariety?.percentile, trendMeta)}
-      />
+      {selectedVariety && selectedVariety.percentile !== undefined && (() => {
+        const cheapnessInfo = getCheapnessInfo(selectedVariety.percentile, currentPrice, trendMeta.yearMin, trendMeta.yearMax)
+        return (
+          <BuySignalBanner
+            cheapness_label={cheapnessInfo.label}
+            cheapnessExplanation={cheapnessInfo.explanation}
+          />
+        )
+      })()}
 
       {/* 가격 차트 */}
       <div className="bg-white border-t border-gray-100">

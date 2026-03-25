@@ -60,9 +60,8 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 
 **섹션**:
 1. **Hero** — 제목 + 간단한 설명
-2. **저렴 카드** — `getCheapItemsByRegion()` → 상위 6개 (사용자 지역 기반)
-3. **인기 품목** — 고정 8개 (가로 스크롤)
-4. **FAQ** — 마크다운 기반 아코디언
+2. **저렴 카드** — `getCheapItemsByRegion()` → 상위 6개 (사용자 지역 기반, 카테고리 토글 지원)
+3. **FAQ** — 마크다운 기반 아코디언
 
 **데이터**: JSON 정적 로드 (API 없음)
 

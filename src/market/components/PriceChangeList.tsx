@@ -1,9 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { ItemDetail, getDefaultKind, Category } from '@market/types/market'
-import CategoryQuickAccess from './CategoryQuickAccess'
+import { ItemDetail, getDefaultKind } from '@market/types/market'
 
 interface Props {
   items: ItemDetail[]
@@ -17,12 +15,7 @@ function getGaugeColor(percentile: number): string {
 }
 
 export default function PriceChangeList({ items, title }: Props) {
-  const searchParams = useSearchParams()
-  const category = searchParams.get('category')
-
-  const filtered = (!category || category === 'all')
-    ? items.slice(0, 6)
-    : items.filter(item => item.category === category as Category)
+  const filtered = items.slice(0, 6)
 
   if (filtered.length === 0) return null
 
@@ -44,9 +37,6 @@ export default function PriceChangeList({ items, title }: Props) {
           1년 중 가장 저렴한 시기
         </p>
       </div>
-
-      {/* 카테고리 필터 */}
-      <CategoryQuickAccess />
 
       {/* 카드 그리드 */}
       <div className="grid grid-cols-2 gap-2 mt-3">

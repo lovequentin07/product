@@ -90,7 +90,7 @@ function appendLatestYmPoint(
 // ----------------------------------------------------------------
 // 저렴함/비쌈 정보 결정 (percentile + 역대 극값 기반)
 // ----------------------------------------------------------------
-function getCheapnessInfo(percentile: number, latestPrice: number, yearMin: number, yearMax: number): { label: string, explanation: string } {
+export function getCheapnessInfo(percentile: number, latestPrice: number, yearMin: number, yearMax: number): { label: string, explanation: string } {
   // 역대 극값 체크 (±1% 이내)
   const isAllTimeLowest = yearMin > 0 && Math.abs(latestPrice - yearMin) / yearMin <= 0.01
   const isAllTimeHighest = yearMax > 0 && Math.abs(latestPrice - yearMax) / yearMax <= 0.01
@@ -154,17 +154,6 @@ function getCheapnessInfo(percentile: number, latestPrice: number, yearMin: numb
     label: '비쌈',
     explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 매우 비싼 상태입니다.`
   }
-}
-
-// ----------------------------------------------------------------
-// 전년 동월 평균가 조회
-// ----------------------------------------------------------------
-function getYoyPrice(latestYm: string, monthly: MonthlyPoint[]): number | undefined {
-  let y = parseInt(latestYm.slice(0, 4))
-  let m = parseInt(latestYm.slice(4, 6)) - 12
-  while (m <= 0) { m += 12; y-- }
-  const yoy_ym = `${y}${String(m).padStart(2, '0')}`
-  return monthly.find((p) => p.ym === yoy_ym)?.avg ?? undefined
 }
 
 // ----------------------------------------------------------------
@@ -297,7 +286,6 @@ function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDeta
     featuredGrdCd: defaultGrade?.grd_cd,
     featuredVrtyCd: defaultVariety?.vrty_cd,
     seCd: record.se_cd as '01' | '02' | undefined,
-    yoyPrice: getYoyPrice(latestYm, monthly),
     percentile: defaultCombo.percentile,
     cheapness_label: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).label,
     cheapness_explanation: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).explanation,
@@ -373,16 +361,6 @@ export function getItemBySlugForRegion(slug: string, sgg_cd: string): ItemDetail
   return ALL_ITEMS.find((i) => i.id === slug)
 }
 
-// 자주 찾는 품목 (고정 순서)
-const POPULAR_IDS = ['111', '211', '231', '245', '411', '415', '226', '225', '214', '223', '232', '151']
-
-/** 자주 찾는 품목 (최대 8개) */
-export function getPopularItems(limit = 8): ItemDetail[] {
-  return POPULAR_IDS
-    .map((id) => ALL_ITEMS.find((i) => i.id === id))
-    .filter((i): i is ItemDetail => i !== undefined)
-    .slice(0, limit)
-}
 
 /** 지역 기반 저렴 품목 (default combo의 percentile 오름차순, cheapness_score 내림차순) */
 export function getCheapItemsByRegion(sgg_cd: string, limit = 6): ItemDetail[] {
