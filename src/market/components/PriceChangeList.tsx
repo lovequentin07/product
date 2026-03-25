@@ -50,9 +50,6 @@ export default function PriceChangeList({ items, title }: Props) {
           <span className="text-blue-600">▼</span>
           {title}
         </h2>
-        <p className="mt-0.5" style={{ fontSize: '13px', color: '#9ca3af' }}>
-          1년 중 가장 저렴한 시기
-        </p>
       </div>
 
       {/* 카테고리 필터 */}

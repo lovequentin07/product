@@ -11,12 +11,6 @@ export default function MarketHero() {
           오늘 장바구니 시세<br />3초 만에 파악하세요
         </h1>
         <MarketSearchInput items={searchItems} />
-        <a
-          href="#price-drop-section"
-          className="text-gray-400 text-xs text-center w-full block mt-3"
-        >
-          ↓ 지금 저렴한 품목 바로 보기
-        </a>
       </div>
     </div>
   )
