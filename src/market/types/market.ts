@@ -11,7 +11,7 @@ export interface PriceChange {
 
 // 등급별 가격
 export interface PriceByKind {
-  kind: ItemKind
+  kind: string  // DB의 grd_label 직접 사용 (상품, 중품, 大, 中, 小 등)
   wholesalePrice: number
   retailPrice: number
   dayChange?: PriceChange   // 전일 대비 (optional)
