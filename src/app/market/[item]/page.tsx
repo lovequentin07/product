@@ -12,6 +12,7 @@ import GradeSelector from '@market/components/GradeSelector'
 
 interface Props {
   params: Promise<{ item: string }>
+  searchParams: Promise<{ grd?: string; vrty?: string }>
 }
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -45,8 +46,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ItemPage({ params }: Props) {
+export default async function ItemPage({ params, searchParams }: Props) {
   const { item: id } = await params
+  const { grd, vrty } = await searchParams
   const headersList = await headers()
   const sgg_cd = detectRegion(headersList)
   const item = await getItemBySlugForRegion(id, sgg_cd)
@@ -199,8 +201,8 @@ export default async function ItemPage({ params }: Props) {
             defaultPrice={todayPrice}
             unit={item.unit}
             seCd={item.seCd}
-            featuredGrdCd={item.featuredGrdCd}
-            featuredVrtyCd={item.featuredVrtyCd}
+            featuredGrdCd={grd ?? item.featuredGrdCd}
+            featuredVrtyCd={vrty ?? item.featuredVrtyCd}
           />
         ) : (
           <>

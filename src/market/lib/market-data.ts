@@ -143,7 +143,7 @@ export function getCheapnessInfo(
 }
 
 /** combos → GradeGroup 변환 */
-function buildGradeGroup(combos: MarketItemStats[]): GradeGroup | undefined {
+function buildGradeGroup(combos: MarketItemStats[], monthlyMap?: Map<string, MonthlyPoint[]>): GradeGroup | undefined {
   if (combos.length <= 1) return undefined
 
   // grd_cd별로 그룹화
@@ -175,8 +175,8 @@ function buildGradeGroup(combos: MarketItemStats[]): GradeGroup | undefined {
           vrty_cd: combo.vrty_cd,
           vrty_label: combo.vrty_label || '',
           is_default: combo.vrty_cd === defaultVrtyCd,
-          coverage: 1, // 단순화 (DB에서 관리할 때 원본 보유)
-          monthly: [], // 차트는 별도 로딩 (최적화)
+          coverage: 1,
+          monthly: monthlyMap?.get(`${grd_cd}-${combo.vrty_cd}`) ?? [],
           percentile: combo.percentile || 0,
           latest_price: combo.latest_price || 0,
         })
@@ -188,7 +188,7 @@ function buildGradeGroup(combos: MarketItemStats[]): GradeGroup | undefined {
         vrty_label: '',
         is_default: true,
         coverage: 1,
-        monthly: [],
+        monthly: monthlyMap?.get(`${grd_cd}-${defaultC.vrty_cd}`) ?? [],
         percentile: defaultC.percentile || 0,
         latest_price: defaultC.latest_price || 0,
       })
@@ -239,8 +239,21 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
   const unitDisplay = buildUnitDisplay(stat.unit, stat.unit_sz)
 
   // gradeGroup: 같은 item_cd + sgg_cd의 combos 모음
-  const combos = allStats || await getItemStats(stat.item_cd, stat.sgg_cd)
-  const gradeGroup = buildGradeGroup(combos)
+  const combos = allStats?.filter((s) => s.item_cd === stat.item_cd) ?? await getItemStats(stat.item_cd, stat.sgg_cd)
+
+  // 각 combo의 monthly 로드 (현재 stat은 이미 로드됨, 나머지만 추가)
+  const monthlyMap = new Map<string, MonthlyPoint[]>()
+  monthlyMap.set(`${stat.grd_cd}-${stat.vrty_cd}`, pointedMonthly)
+  for (const s of combos) {
+    const key = `${s.grd_cd}-${s.vrty_cd}`
+    if (!monthlyMap.has(key)) {
+      const m = await getMonthlyPrices(s.item_cd, s.sgg_cd, s.grd_cd, s.vrty_cd)
+      const filtered = m.filter((p) => p.ym !== CURRENT_YM)
+      monthlyMap.set(key, appendLatestYmPoint(filtered, s.latest_ym?.slice(0, 6) || CURRENT_YM))
+    }
+  }
+
+  const gradeGroup = buildGradeGroup(combos, monthlyMap)
 
   const defaultGrade = gradeGroup?.grades.find((g) => g.is_default) ?? gradeGroup?.grades[0]
   const defaultVariety = defaultGrade?.varieties.find((v) => v.is_default) ?? defaultGrade?.varieties[0]
@@ -262,10 +275,10 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
     martPrices: [],
     tips: [],
     gradeGroup,
-    grd_label: defaultGrade?.grd_label,
-    vrty_label: defaultVariety?.vrty_label,
-    featuredGrdCd: defaultGrade?.grd_cd,
-    featuredVrtyCd: defaultVariety?.vrty_cd,
+    grd_label: stat.grd_label ?? defaultGrade?.grd_label,
+    vrty_label: stat.vrty_label ?? defaultVariety?.vrty_label,
+    featuredGrdCd: stat.grd_cd,
+    featuredVrtyCd: stat.vrty_cd,
     seCd: stat.se_cd as '01' | '02' | undefined,
     percentile: stat.percentile || 0,
     cheapness_label: getCheapnessInfo(
@@ -287,8 +300,21 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
 export async function getCheapItemsByRegion(sgg_cd: string, limit = 6): Promise<ItemDetail[]> {
   const cheapStats = await getCheapItems(sgg_cd, limit)
 
-  const result: ItemDetail[] = []
+  // item_cd별로 가장 저렴한 combo 하나만 선택
+  const itemMap = new Map<string, MarketItemStats>()
   for (const stat of cheapStats) {
+    if (!itemMap.has(stat.item_cd)) {
+      itemMap.set(stat.item_cd, stat)
+    }
+  }
+
+  // percentile 순서대로 정렬 후 limit개 선택
+  const selectedStats = Array.from(itemMap.values())
+    .sort((a, b) => (a.percentile || 0) - (b.percentile || 0))
+    .slice(0, limit)
+
+  const result: ItemDetail[] = []
+  for (const stat of selectedStats) {
     const item = await statsToItemDetail(stat, cheapStats)
     if (item) result.push(item)
   }
