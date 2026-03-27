@@ -23,19 +23,99 @@ export default async function MarketPage() {
   const sgg_cd = detectRegion(headersList)
   const cheapItems = await getCheapItemsByRegion(sgg_cd, 60)
 
-  const jsonLd = {
+  // BreadcrumbList
+  const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: '농수축산물 시세',
-    description: '오늘 소매가를 비교하고 싸게 장보세요.',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: '홈',
+        item: 'https://datazip.net',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: '농수축산물 시세',
+        item: 'https://datazip.net/market',
+      },
+    ],
+  }
+
+  // CollectionPage + ItemList (상위 6개 저렴 품목)
+  const collectionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: '오늘의 장바구니 — 지금 뭐가 싼지 바로 확인',
+    description: '오늘 저렴해진 채소·과일·수산·곡물·식품을 한눈에 확인하세요.',
     url: 'https://datazip.net/market',
+    mainEntity: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: cheapItems.slice(0, 6).map((item, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        url: `https://datazip.net/market/${item.id}`,
+        name: item.name,
+        description: `${item.name} - ${item.kinds[0]?.retailPrice.toLocaleString()}원/${item.unit}`,
+      })),
+    },
+  }
+
+  // FAQPage
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: '가격 데이터는 얼마나 자주 업데이트되나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '평일 매일 오전 10시(KST)에 공공데이터포털 최신 데이터를 자동으로 수집하여 업데이트합니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '하위 N%는 무엇을 의미하나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '과거 1년간의 가격 이력 중 현재 가격이 상대적으로 어느 정도 수준인지를 나타냅니다. 하위 10%면 역대 저가, 상위 10%면 고가입니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '도매가와 소매가의 차이는?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '소매가는 마트나 시장에서 일반 소비자가 구입할 때의 가격입니다. 도매가는 도매상이 대량 구입할 때의 가격으로, 일반 소비자에게는 소매가가 적용됩니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '등급(상/중/하)은 어떻게 정해지나요?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '농산물은 크기, 외형, 신선도 등을 기준으로 상(최고급), 중(보통), 하(저가) 등급으로 분류됩니다. 등급마다 가격이 다르므로 필요에 따라 선택할 수 있습니다.',
+        },
+      },
+    ],
   }
 
   return (
     <div className="min-h-screen bg-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* Hero */}

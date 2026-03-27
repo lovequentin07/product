@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://datazip.net"),
   title: {
-    default: "DataZip — 아파트 관리비·실거래가 비교",
+    default: "DataZip — 오늘의 장바구니. 지금 뭐가 싼지",
     template: "%s | DataZip",
   },
-  description: "우리 아파트 관리비가 동네·구·서울 전체 대비 어느 수준인지 확인하고, 실거래가까지 한눈에 조회하세요. K-apt·국토부 공공데이터 기반.",
-  keywords: ['아파트 관리비', '관리비 비교', '아파트 실거래가', '서울 아파트', 'K-apt'],
+  description: "오늘 저렴해진 채소·과일·수산·곡물·식품을 한눈에 확인하세요. 공공데이터 기반 소매가 비교와 1년 평균 대비 가격 변동을 제공합니다.",
+  keywords: ['농산물 가격', '채소 가격', '과일 가격', '수산물 가격', '장바구니 물가', '저렴한 식재료'],
   openGraph: {
     siteName: "DataZip",
     locale: "ko_KR",
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "DataZip — 아파트 관리비·실거래가 비교",
-    description: "우리 아파트 관리비가 동네·구·서울 전체 대비 어느 수준인지 확인하고, 실거래가까지 한눈에 조회하세요.",
+    title: "DataZip — 오늘의 장바구니. 지금 뭐가 싼지",
+    description: "오늘 소매가를 먼저 확인하고 알뜰 장을 보세요. 공공데이터 기반 농산물 시세.",
   },
   other: {
     'naver-site-verification': '5098c8f688adf3e28c89a3f09e53a8a65ffbf83c',
@@ -42,7 +42,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "DataZip",
   url: "https://datazip.net",
-  description: "아파트 관리비·실거래가 비교 서비스",
+  description: "공공데이터 기반 농수축산물 시세 정보 서비스",
 };
 
 const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
