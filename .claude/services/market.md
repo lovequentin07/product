@@ -200,7 +200,7 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 
 ## 진행 상황 (AdSense 재승인 준비)
 
-### 완료 (2026-03-27)
+### 완료 (2026-03-27, 100%)
 
 **SEO 구조화 (Steps 1-4)**: ✅
 - `layout.tsx`: 농산물 중심 메타데이터 + 검색 키워드 재구성
@@ -213,12 +213,17 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 - D1 자동 갱신 (평일 매일 10시 KST)
 - 로컬 JSON fallback (오프라인 개발 지원)
 
-### 진행 중 (Steps 5-7)
-
-**원본 콘텐츠 추가**:
-- Step 5: `/guide/market-price-guide` 신규 작성
-- Step 6: `/guide/market-shopping-guide` 신규 작성
-- Step 7: sitemap.ts 업데이트 (market URL 우선순위 상향)
+**원본 콘텐츠 (Steps 5-7)**: ✅
+- Step 5: `/guide/market-price-guide` 신규 생성 (241줄, Article + BreadcrumbList)
+  - 섹션: 소매가, 등급(상/중/하), percentile, 데이터 출처, 제철 식재료 팁
+- Step 6: `/guide/market-shopping-guide` 신규 생성 (309줄, Article + BreadcrumbList + FAQPage)
+  - 섹션: 장바구니 물가, 저렴 품목 찾기, 채소·과일·수산물 선택법, 보관법
+  - FAQ: 4개 항목 (장바구니 물가, 저렴 품목 찾기, 선택 기준, 보관법)
+- Step 7: sitemap.ts 업데이트
+  - /market: priority 1.0 (daily)
+  - /guide/market-*: priority 0.7
+  - /apt: 0.8 → 0.5 (하향)
+  - regionUrls: 0.7 → 0.5 (하향)
 
 ### 선택사항 (향후)
 
