@@ -170,30 +170,69 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 
 ## 성능 및 SEO
 
+### 구조화 데이터 (JSON-LD / Schema.org)
+
+**홈 페이지** (`/market/page.tsx`):
+- **BreadcrumbList**: 홈 > 농수축산물 시세
+- **CollectionPage**: 저렴 품목 6개 ItemList (동적 생성)
+- **FAQPage**: 4개 FAQ (데이터 업데이트, percentile 설명, 소매가·도매가, 등급 정의)
+
+**상세 페이지** (`/market/[item]/page.tsx`):
+- **BreadcrumbList**: 홈 > 농수축산물 시세 > {품목명}
+- **Product + AggregateOffer**: 1년 최저/최고가 + 오늘 가격 범위
+- **FAQPage**: 4개 동적 FAQ (데이터출처, 현재가격수준, percentile, 소매가정의)
+
+**메인 홈 페이지** (`/page.tsx`):
+- **WebSite**: 검색 기능 스키마
+- 저렴 품목 Top 6 실시간 표시 (D1 쿼리)
+
+**메타데이터**:
+- `generateMetadata()` 각 품목별 동적 title/description
+- OpenGraph: og:title, og:description, og:url
+- Canonical: 중복 콘텐츠 방지
+
+**기타**:
 - **정적 생성**: 동적 라우트 `[item]`도 빌드 시점에 미리 생성
-- **메타 자동 생성**: `generateMetadata()` 각 품목별 og:title, og:description 동적 생성
-- **sitemap**: 품목별 URL 포함
+- **sitemap**: `/market` (priority 1.0) + 품목별 URL (priority 0.8)
+- **AdSense 준비**: 원본 콘텐츠 추가 (신규 가이드 페이지 진행 중)
 
 ---
 
-## 향후 개선
+## 진행 상황 (AdSense 재승인 준비)
 
-**현재 구현** (2026-03-27):
-✅ 공공데이터포털 API 연동
-✅ D1 테이블로 데이터 저장
-✅ GitHub Actions 일일 배치 갱신 (평일 10시)
-✅ 로컬 JSON fallback 지원
+### 완료 (2026-03-27)
 
-**선택사항**:
-1. **Percentile/Cheapness Score 계산**: 현재 NULL → 향후 D1 쿼리에서 실시간 계산
-2. **일별 데이터**: 공공데이터는 월별만 제공 (일별 필요 시 별도 API)
-3. **지역 정보**: 공공데이터는 "전국(1100)" 기준만 제공
-4. **KAMIS API**: 일별 가격이 필요한 경우 추가 연동 가능
+**SEO 구조화 (Steps 1-4)**: ✅
+- `layout.tsx`: 농산물 중심 메타데이터 + 검색 키워드 재구성
+- `page.tsx`: 홈페이지 재설계 (저렴 품목 Top 6 실시간 노출, 아파트 서비스 하단 이동)
+- `market/page.tsx`: BreadcrumbList + CollectionPage + FAQPage JSON-LD
+- `market/[item]/page.tsx`: BreadcrumbList + AggregateOffer + FAQPage JSON-LD
+
+**데이터 시스템**: ✅
+- 공공데이터포털 API 연동 (2,059건 수집)
+- D1 자동 갱신 (평일 매일 10시 KST)
+- 로컬 JSON fallback (오프라인 개발 지원)
+
+### 진행 중 (Steps 5-7)
+
+**원본 콘텐츠 추가**:
+- Step 5: `/guide/market-price-guide` 신규 작성
+- Step 6: `/guide/market-shopping-guide` 신규 작성
+- Step 7: sitemap.ts 업데이트 (market URL 우선순위 상향)
+
+### 선택사항 (향후)
+
+1. **Percentile/Cheapness Score 실시간 계산**: 현재 NULL → D1에서 동적 계산
+2. **일별 가격 데이터**: 공공데이터는 월별만 제공 (KAMIS API 필요 시 추가)
+3. **지역별 데이터**: 공공데이터는 "전국(1100)" 기준 (세부 지역 필요 시 별도 수집)
 
 ---
 
 ## 참고
 
-- 브랜치: `feat/market`
-- 메모리: `C:\Users\admin\.claude\projects\d--product\memory\market_v3_status.md`
-- 작업 추적: `tasks/todo.md` (v3 섹션)
+- 메모리 (SEO):
+  - `market_seo_restructuring_steps123.md` — Steps 1-4 진행 상황 (2026-03-27)
+  - `market_d1_realtime_2026_03_27.md` — D1 실시간 연동 완성
+- 메모리 (아키텍처): `market_v3_status.md`
+- 작업 추적: `tasks/todo.md`
+- 계획: `ancient-brewing-tide.md` (SEO 재구성 계획)
