@@ -56,23 +56,105 @@ export default async function ItemPage({ params }: Props) {
   const todayPrice = priceData.retailPrice
   const hasGradeToggle = !!item.gradeGroup
 
-  const jsonLd = {
+  // BreadcrumbList
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: '홈',
+        item: 'https://datazip.net',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: '농수축산물 시세',
+        item: 'https://datazip.net/market',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: item.name,
+        item: `https://datazip.net/market/${id}`,
+      },
+    ],
+  }
+
+  // Product + AggregateOffer
+  const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: item.name,
-    description: `${item.name} 오늘 소매가 ${todayPrice.toLocaleString()}원/${item.unit}`,
+    description: `${item.name} 오늘 소매가 ${todayPrice.toLocaleString()}원/${item.unit}. 공공데이터 기반 가격 정보.`,
     offers: {
-      '@type': 'Offer',
-      price: todayPrice,
+      '@type': 'AggregateOffer',
       priceCurrency: 'KRW',
+      lowPrice: item.trendMeta.yearMin,
+      highPrice: item.trendMeta.yearMax,
+      offerCount: 1,
+      offers: {
+        '@type': 'Offer',
+        price: todayPrice,
+        priceCurrency: 'KRW',
+      },
     },
+  }
+
+  // FAQPage
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `${item.name} 가격 정보는 어디서 가져오나요?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '한국농수산식품유통공사(aT)의 공공데이터포털 소매가 기준 데이터를 활용합니다. 평일 매일 오전 10시에 자동으로 최신 데이터가 업데이트됩니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `오늘 ${item.name} 가격이 싼 편인가요?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `오늘 ${item.name} 가격은 ${todayPrice.toLocaleString()}원/${item.unit}입니다. 지난 1년 평균(${item.trendMeta.yearAvg.toLocaleString()}원)과 비교할 수 있으며, 과거 1년 최저 ${item.trendMeta.yearMin.toLocaleString()}원, 최고 ${item.trendMeta.yearMax.toLocaleString()}원 수준입니다.`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `${item.name} 하위 N%(percentile)란 무엇인가요?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '과거 1년간의 가격 이력 중 현재 가격이 상대적으로 어느 정도 수준인지를 나타냅니다. 하위 10%면 역대 저가 구간, 상위 10%면 역대 고가 구간입니다.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `${item.name} 소매가란 무엇인가요?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: '소매가는 마트나 전통시장에서 일반 소비자가 실제로 지불하는 가격입니다. 도매가보다 높으며 일반 소비자에게 적용되는 실용적인 기준 가격입니다.',
+        },
+      },
+    ],
   }
 
   return (
     <div className="min-h-screen bg-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* 헤더 */}
