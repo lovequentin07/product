@@ -38,8 +38,13 @@ function getDateRange(): { startYm: string; endYm: string } {
   const endYear = now.getFullYear()
   const endMonth = now.getMonth() + 1
 
-  const startYear = endMonth > 1 ? endYear : endYear - 1
-  const startMonth = endMonth > 1 ? endMonth - 12 : endMonth + 12 - 1
+  let startYear = endYear
+  let startMonth = endMonth - 12
+
+  if (startMonth <= 0) {
+    startYear -= 1
+    startMonth += 12
+  }
 
   const startYm = `${startYear}${String(startMonth).padStart(2, '0')}`
   const endYm = `${endYear}${String(endMonth).padStart(2, '0')}`
@@ -217,12 +222,12 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
   console.log('\n📝 D1에 데이터 적재 중...')
 
   if (monthlyInserts.length > 0) {
-    const sql = ['BEGIN TRANSACTION;', ...monthlyInserts, 'COMMIT;'].join('\n')
+    const sql = monthlyInserts.join('\n')
     await runSQL(sql, `월별 데이터 UPSERT (${monthlyInserts.length}개)`)
   }
 
   if (statsUpserts.length > 0) {
-    const sql = ['BEGIN TRANSACTION;', ...statsUpserts, 'COMMIT;'].join('\n')
+    const sql = statsUpserts.join('\n')
     await runSQL(sql, `통계 데이터 UPSERT (${statsUpserts.length}개)`)
   }
 

@@ -6,8 +6,6 @@
  * 인증: DATA_GO_KR_API_KEY (환경변수)
  */
 
-import { callPublicDataApi } from '@shared/lib/api/client'
-
 // =====================================================================
 // 타입 정의
 // =====================================================================
@@ -50,7 +48,7 @@ interface PublicDataResponse {
 // 공공데이터 API 호출
 // =====================================================================
 
-const API_PATH = '/B552845/perYearMonth/price'
+const BASE_URL = 'https://apis.data.go.kr/B552845/perYearMonth/price'
 const PAGE_SIZE = 1000
 
 /**
@@ -66,17 +64,31 @@ export async function fetchPublicDataPrices(
   pageNo: number = 1
 ): Promise<{ items: PriceItem[]; totalCount: number }> {
   try {
-    const params: Record<string, string | number> = {
-      numOfRows: PAGE_SIZE,
-      pageNo,
-      'cond[exmn_ym::GTE]': startYm,
-      'cond[exmn_ym::LTE]': endYm,
+    const serviceKey = process.env.DATA_GO_KR_API_KEY
+
+    if (!serviceKey) {
+      throw new Error('DATA_GO_KR_API_KEY is not defined in .env.local')
     }
 
-    const response = await callPublicDataApi<PublicDataResponse>(API_PATH, params)
+    const params = new URLSearchParams({
+      serviceKey,
+      numOfRows: String(PAGE_SIZE),
+      pageNo: String(pageNo),
+      'cond[exmn_ym::GTE]': startYm,
+      'cond[exmn_ym::LTE]': endYm,
+    })
 
-    const totalCount = response?.response?.body?.totalCount || 0
-    const raw = response?.response?.body?.items?.item
+    const url = `${BASE_URL}?${params.toString()}`
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json() as PublicDataResponse
+
+    const totalCount = data?.response?.body?.totalCount || 0
+    const raw = data?.response?.body?.items?.item
 
     if (!raw) {
       return { items: [], totalCount }
