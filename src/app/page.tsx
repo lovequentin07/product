@@ -29,30 +29,72 @@ const websiteJsonLd = {
   },
 };
 
+const services = [
+  {
+    emoji: "🥦",
+    title: "농수축산물 시세",
+    desc: "오늘 저렴한 식재료 한눈에",
+    href: "/market",
+  },
+  {
+    emoji: "🏢",
+    title: "아파트 실거래가",
+    desc: "서울 아파트 실거래가 조회",
+    href: "/apt",
+  },
+];
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
+    <div className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
 
-      <div className="text-center">
-        <h1
-          className="font-bold text-gray-900 leading-tight mb-8"
-          style={{ fontSize: "32px" }}
-        >
-          오늘 장바구니 시세<br />
-          3초 만에 파악하세요
-        </h1>
+      <div className="max-w-xl mx-auto px-4">
+        {/* Hero */}
+        <section className="text-center pt-24 pb-16">
+          <h1
+            className="font-bold text-gray-900 leading-tight mb-3"
+            style={{ fontSize: "36px" }}
+          >
+            오늘 장바구니 시세<br />
+            3초 만에 파악하세요
+          </h1>
+          <p className="text-gray-400 text-sm mb-10">
+            공공데이터 기반 농수축산물 소매가 · 매일 업데이트
+          </p>
+          <Link
+            href="/market"
+            className="inline-block bg-gray-900 text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-gray-700 transition-colors"
+          >
+            시세 확인하기 →
+          </Link>
+        </section>
 
-        <Link
-          href="/market"
-          className="inline-block bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 px-8 py-4 text-white font-semibold rounded-lg transition-colors"
-        >
-          시세 확인하기 →
-        </Link>
+        {/* 서비스 소개 */}
+        <section className="pb-20">
+          <p className="text-xs text-gray-400 mb-3">서비스</p>
+          <div className="grid grid-cols-2 gap-3">
+            {services.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className="block border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow"
+              >
+                <div className="text-2xl mb-3">{s.emoji}</div>
+                <div className="font-semibold text-gray-900 text-sm">
+                  {s.title}
+                </div>
+                <div className="text-xs text-gray-400 mt-1 leading-relaxed">
+                  {s.desc}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
