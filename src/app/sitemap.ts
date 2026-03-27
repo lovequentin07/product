@@ -19,10 +19,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
+      url: `${BASE_URL}/market`,
+      lastModified: latestDate,
+      changeFrequency: "daily",
+      priority: 1.0,
+    },
+    {
       url: `${BASE_URL}/apt`,
       lastModified: latestDate,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/guide/market-price-guide`,
+      lastModified: new Date("2026-03-27"),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/guide/market-shopping-guide`,
+      lastModified: new Date("2026-03-27"),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/privacy-policy`,
@@ -40,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE_URL}/apt/${encodeURIComponent(r.name)}`,
       lastModified: latestDate,
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.5,
     }));
 
   // 관리비 지킴이 — 랜딩 + 개별 아파트 (apt_meta 상위 500개)
