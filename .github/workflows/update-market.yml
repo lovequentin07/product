@@ -28,13 +28,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. KAMIS API 데이터 수집 + D1 갱신
-      - name: Fetch KAMIS data and update D1
-        run: npx tsx src/market/scripts/update-kamis.ts
+      # 4. 공공데이터포털 농산물 가격 수집 + D1 갱신
+      - name: Fetch market prices and update D1
+        run: npx tsx src/market/scripts/update-market.ts
         env:
-          # KAMIS 인증
-          KAMIS_CERT_ID: ${{ secrets.KAMIS_CERT_ID }}
-          KAMIS_CERT_KEY: ${{ secrets.KAMIS_CERT_KEY }}
+          # 공공데이터포털
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
           # Cloudflare D1
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
