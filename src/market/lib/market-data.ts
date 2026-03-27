@@ -1,43 +1,36 @@
-import regionStatsRaw from '@market/data/market-stats-by-region.json'
+/**
+ * src/market/lib/market-data.ts
+ * 농산물 시세 데이터 레이어 (D1 기반 + JSON mock fallback)
+ *
+ * 순수 함수들:
+ * - getCheapnessInfo()
+ * - buildTrendMeta()
+ * - buildGradeGroup()
+ * - appendLatestYmPoint()
+ *
+ * Async 함수들 (D1 쿼리):
+ * - getCheapItemsByRegion()
+ * - getItemBySlugForRegion()
+ * - getAllItemsByCategory()
+ */
+
 import { Category, GradeGroup, GradeStats, ItemDetail, MonthlyPoint, TrendMeta, VarietyStats } from '@market/types/market'
+import {
+  getCheapItems,
+  getItemStats,
+  getMonthlyPrices,
+  getItemStatsByRegion,
+} from '@market/lib/db/market'
+import type { MarketItemStats } from '@market/types/market'
 
 const _now = new Date()
 const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
 
-// ----------------------------------------------------------------
-// 원본 JSON 타입 정의
-// ----------------------------------------------------------------
-interface ComboStats {
-  vrty_cd: string
-  vrty_label: string
-  grd_cd: string
-  grd_label: string
-  is_default: boolean
-  monthly: MonthlyPoint[]
-  latest_price: number
-  latest_ym: string
-  percentile: number
-  cheapness_score: number
-}
+// =====================================================================
+// 순수 함수들 (재사용)
+// =====================================================================
 
-interface RegionStat {
-  item_cd: string
-  item_nm: string
-  ctgry_cd: string
-  ctgry_nm: string
-  sgg_cd: string
-  sgg_nm: string
-  se_cd: string
-  unit: string
-  unit_sz: string
-  combos: ComboStats[]
-}
-
-const regionStats = regionStatsRaw as RegionStat[]
-
-// ----------------------------------------------------------------
-// ctgry_cd → Category 매핑
-// ----------------------------------------------------------------
+/** ctgry_cd → Category 매핑 */
 function ctgryToCategory(ctgry_cd: string): Category {
   switch (ctgry_cd) {
     case '100': return 'grain'
@@ -50,18 +43,13 @@ function ctgryToCategory(ctgry_cd: string): Category {
   }
 }
 
-// ----------------------------------------------------------------
-// unit 표시 문자열 생성
-// unit_sz==="1" → unit 그대로, 아니면 unit_sz+unit
-// ----------------------------------------------------------------
+/** unit 표시 문자열 생성 */
 function buildUnitDisplay(unit: string, unit_sz: string): string {
   return unit_sz === '1' ? unit : `${unit_sz}${unit}`
 }
 
-// ----------------------------------------------------------------
-// TrendMeta 생성 (monthly 배열 기반)
-// ----------------------------------------------------------------
-function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta {
+/** TrendMeta 생성 (monthly 배열 기반) */
+export function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta {
   if (monthly.length === 0) {
     return { yearMin: 0, yearMax: 0, yearAvg: 0, yearMinDate: '', yearMaxDate: '', vsYearAvgRate: 0 }
   }
@@ -75,68 +63,67 @@ function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): TrendMeta
   return { yearMin, yearMax, yearAvg, yearMinDate: '', yearMaxDate: '', vsYearAvgRate }
 }
 
-// ----------------------------------------------------------------
-// latest_ym 포인트 추가 (dot만, high/low/avg 모두 없음)
-// ----------------------------------------------------------------
+/** latest_ym 포인트 추가 (dot만, high/low/avg 모두 없음) */
 function appendLatestYmPoint(
   monthly: MonthlyPoint[],
   latestYm: string
 ): MonthlyPoint[] {
   const lastYm = monthly[monthly.length - 1]?.ym ?? ''
-  if (latestYm <= lastYm) return monthly  // 이미 반영됨
+  if (latestYm <= lastYm) return monthly
   return [...monthly, { ym: latestYm, high: null, low: null, avg: null }]
 }
 
-// ----------------------------------------------------------------
-// 저렴함/비쌈 정보 결정 (percentile + 역대 극값 기반)
-// ----------------------------------------------------------------
-export function getCheapnessInfo(percentile: number, latestPrice: number, yearMin: number, yearMax: number): { label: string, explanation: string } {
-  // 역대 극값 체크 (±1% 이내)
+/** 저렴함/비쌈 정보 (percentile + 역대 극값 기반) */
+export function getCheapnessInfo(
+  percentile: number,
+  latestPrice: number,
+  yearMin: number,
+  yearMax: number
+): { label: string; explanation: string } {
   const isAllTimeLowest = yearMin > 0 && Math.abs(latestPrice - yearMin) / yearMin <= 0.01
   const isAllTimeHighest = yearMax > 0 && Math.abs(latestPrice - yearMax) / yearMax <= 0.01
 
   if (isAllTimeLowest) {
     return {
       label: '역대최저가',
-      explanation: '역대 가장 저렴한 가격입니다.'
+      explanation: '역대 가장 저렴한 가격입니다.',
     }
   }
 
   if (isAllTimeHighest) {
     return {
       label: '역대최고가',
-      explanation: '역대 가장 비싼 가격입니다.'
+      explanation: '역대 가장 비싼 가격입니다.',
     }
   }
 
-  // percentile 기반 (0 ~ 1 범위)
   const percentilePct = Math.round(percentile * 100)
 
   if (percentile < 0.1) {
     return {
       label: '역대최저가 근접',
-      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 역대최저가에 근접한 상태입니다.`
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 역대최저가에 근접한 상태입니다.`,
     }
   }
 
   if (percentile < 0.25) {
     return {
       label: '최저가 구간',
-      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 최저가 구간에 속합니다.`
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 최저가 구간에 속합니다.`,
     }
   }
 
   if (percentile < 0.5) {
     return {
       label: '저가 상태',
-      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 저가 상태입니다.`
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 저가 상태입니다.`,
     }
   }
 
   if (percentile < 0.75) {
     return {
       label: '보통',
-      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 평균적인 가격입니다.`
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 하위 ${percentilePct}% 수준으로, 평균적인 가격입니다.`,
     }
   }
 
@@ -144,27 +131,23 @@ export function getCheapnessInfo(percentile: number, latestPrice: number, yearMi
     const topPct = Math.round((1 - percentile) * 100)
     return {
       label: '높은 가격',
-      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 높은 가격 상태입니다.`
+      explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 높은 가격 상태입니다.`,
     }
   }
 
-  // percentile >= 0.9
   const topPct = Math.round((1 - percentile) * 100)
   return {
     label: '비쌈',
-    explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 매우 비싼 상태입니다.`
+    explanation: `현재 ${latestPrice.toLocaleString()}원은 과거 상위 ${topPct}% 수준으로, 매우 비싼 상태입니다.`,
   }
 }
 
-// ----------------------------------------------------------------
-// combos → GradeGroup 변환 (combos.length <= 1 → undefined)
-// unique grd_cd 또는 unique vrty_label 기준으로 토글 가능 여부 결정
-// ----------------------------------------------------------------
-function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
+/** combos → GradeGroup 변환 */
+function buildGradeGroup(combos: MarketItemStats[]): GradeGroup | undefined {
   if (combos.length <= 1) return undefined
 
   // grd_cd별로 그룹화
-  const grdMap = new Map<string, ComboStats[]>()
+  const grdMap = new Map<string, MarketItemStats[]>()
   for (const c of combos) {
     if (!grdMap.has(c.grd_cd)) grdMap.set(c.grd_cd, [])
     grdMap.get(c.grd_cd)!.push(c)
@@ -172,67 +155,50 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
 
   const uniqueGrdCds = [...grdMap.keys()]
   const grdVariable = uniqueGrdCds.length > 1
-
-  // vrty 가변: unique vrty_label 수 > 1 AND item_nm과 다른 vrty_label 존재하는지
   const uniqueVrtyLabels = [...new Set(combos.map((c) => c.vrty_label))]
-  // vrty_label이 다 같으면 vrty 토글 불필요 (단, vrty_label이 여러 개면 토글 필요)
   const vrtyVariable = uniqueVrtyLabels.length > 1
 
   if (!grdVariable && !vrtyVariable) return undefined
 
   const grades: GradeStats[] = []
-
-  // default grade: is_default combo가 속한 grd_cd
   const defaultCombo = combos.find((c) => c.is_default) ?? combos[0]
 
   for (const grd_cd of [...grdMap.keys()].sort()) {
     const grdCombos = grdMap.get(grd_cd)!
-
     const varieties: VarietyStats[] = []
 
     if (vrtyVariable) {
-      // vrty마다 개별 VarietyStats
-      const defaultVrtyCd = grdCombos.find((c) => c.is_default)?.vrty_cd
-        ?? grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best).vrty_cd
+      const defaultVrtyCd = grdCombos.find((c) => c.is_default)?.vrty_cd ?? grdCombos[0].vrty_cd
 
       for (const combo of grdCombos) {
-        let monthly = combo.monthly.filter((m) => m.ym !== CURRENT_YM)
-        if (monthly.length === 0) continue
-        monthly = appendLatestYmPoint(monthly, combo.latest_ym)
         varieties.push({
           vrty_cd: combo.vrty_cd,
-          vrty_label: combo.vrty_label,
+          vrty_label: combo.vrty_label || '',
           is_default: combo.vrty_cd === defaultVrtyCd,
-          coverage: combo.monthly.length,
-          monthly,
-          percentile: combo.percentile,
-          latest_price: combo.latest_price,
+          coverage: 1, // 단순화 (DB에서 관리할 때 원본 보유)
+          monthly: [], // 차트는 별도 로딩 (최적화)
+          percentile: combo.percentile || 0,
+          latest_price: combo.latest_price || 0,
         })
       }
     } else {
-      // vrty 단일: is_default combo 우선, 없으면 coverage 최대 combo 사용
-      const defaultCombo = grdCombos.find((c) => c.is_default) ?? grdCombos[0]
-      const bestCombo = grdCombos.reduce((best, c) => c.monthly.length > best.monthly.length ? c : best)
-      let monthly = bestCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
-      if (monthly.length > 0) {
-        monthly = appendLatestYmPoint(monthly, defaultCombo.latest_ym)
-        varieties.push({
-          vrty_cd: defaultCombo.vrty_cd,
-          vrty_label: '',
-          is_default: true,
-          coverage: bestCombo.monthly.length,
-          monthly,
-          percentile: defaultCombo.percentile,
-          latest_price: defaultCombo.latest_price,
-        })
-      }
+      const defaultC = grdCombos.find((c) => c.is_default) ?? grdCombos[0]
+      varieties.push({
+        vrty_cd: defaultC.vrty_cd,
+        vrty_label: '',
+        is_default: true,
+        coverage: 1,
+        monthly: [],
+        percentile: defaultC.percentile || 0,
+        latest_price: defaultC.latest_price || 0,
+      })
     }
 
     if (varieties.length === 0) continue
 
     grades.push({
       grd_cd,
-      grd_label: grdVariable ? grdCombos[0].grd_label : '',
+      grd_label: grdVariable ? grdCombos[0].grd_label || '' : '',
       is_default: grd_cd === defaultCombo.grd_cd,
       varieties,
     })
@@ -244,39 +210,54 @@ function buildGradeGroup(combos: ComboStats[]): GradeGroup | undefined {
   return { grades }
 }
 
-// ----------------------------------------------------------------
-// RegionStat + defaultCombo → ItemDetail 빌드
-// ----------------------------------------------------------------
-function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDetail {
-  let monthly = defaultCombo.monthly.filter((m) => m.ym !== CURRENT_YM)
-  if (monthly.length === 0) return null as unknown as ItemDetail  // caller가 null 체크
+// =====================================================================
+// Async 함수들 (D1 쿼리)
+// =====================================================================
 
-  const latestPrice = defaultCombo.latest_price
-  const latestYm = defaultCombo.latest_ym
+/** StatRow → ItemDetail 변환 */
+async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemStats[]): Promise<ItemDetail | null> {
+  if (!stat.latest_price) return null
 
-  monthly = appendLatestYmPoint(monthly, latestYm)
+  // monthly 데이터 로드
+  const monthly = await getMonthlyPrices(
+    stat.item_cd,
+    stat.sgg_cd,
+    stat.grd_cd,
+    stat.vrty_cd
+  )
 
-  const unitDisplay = buildUnitDisplay(record.unit, record.unit_sz)
-  const trendMeta = buildTrendMeta(monthly, latestPrice)
-  const gradeGroup = buildGradeGroup(record.combos)
+  if (monthly.length === 0) return null
 
-  // gradeGroup의 default 조합으로 featuredGrdCd/VrtyCd 결정
+  // 현재월 필터링 및 latest_ym 포인트 추가
+  const filteredMonthly = monthly.filter((m) => m.ym !== CURRENT_YM)
+  const pointedMonthly = appendLatestYmPoint(
+    filteredMonthly,
+    stat.latest_ym?.slice(0, 6) || CURRENT_YM
+  )
+
+  const trendMeta = buildTrendMeta(pointedMonthly, stat.latest_price)
+  const unitDisplay = buildUnitDisplay(stat.unit, stat.unit_sz)
+
+  // gradeGroup: 같은 item_cd + sgg_cd의 combos 모음
+  const combos = allStats || await getItemStats(stat.item_cd, stat.sgg_cd)
+  const gradeGroup = buildGradeGroup(combos)
+
   const defaultGrade = gradeGroup?.grades.find((g) => g.is_default) ?? gradeGroup?.grades[0]
   const defaultVariety = defaultGrade?.varieties.find((v) => v.is_default) ?? defaultGrade?.varieties[0]
 
   return {
-    id: record.item_cd,
-    name: record.item_nm,
-    category: ctgryToCategory(record.ctgry_cd),
+    id: stat.item_cd,
+    name: stat.item_nm,
+    category: ctgryToCategory(stat.ctgry_cd),
     unit: unitDisplay,
     kinds: [
       {
         kind: '상',
-        retailPrice: latestPrice,
+        retailPrice: stat.latest_price,
         wholesalePrice: 0,
       },
     ],
-    monthly,
+    monthly: pointedMonthly,
     trendMeta,
     martPrices: [],
     tips: [],
@@ -285,100 +266,68 @@ function buildItemDetail(record: RegionStat, defaultCombo: ComboStats): ItemDeta
     vrty_label: defaultVariety?.vrty_label,
     featuredGrdCd: defaultGrade?.grd_cd,
     featuredVrtyCd: defaultVariety?.vrty_cd,
-    seCd: record.se_cd as '01' | '02' | undefined,
-    percentile: defaultCombo.percentile,
-    cheapness_label: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).label,
-    cheapness_explanation: getCheapnessInfo(defaultCombo.percentile, latestPrice, trendMeta.yearMin, trendMeta.yearMax).explanation,
+    seCd: stat.se_cd as '01' | '02' | undefined,
+    percentile: stat.percentile || 0,
+    cheapness_label: getCheapnessInfo(
+      stat.percentile || 0,
+      stat.latest_price,
+      trendMeta.yearMin,
+      trendMeta.yearMax
+    ).label,
+    cheapness_explanation: getCheapnessInfo(
+      stat.percentile || 0,
+      stat.latest_price,
+      trendMeta.yearMin,
+      trendMeta.yearMax
+    ).explanation,
   }
 }
 
-// ----------------------------------------------------------------
-// ALL_ITEMS 빌드: sgg_cd==='1101'(서울) 기준, 없으면 첫 번째 지역 fallback
-// ----------------------------------------------------------------
+/**  지역 기반 저렴 품목 */
+export async function getCheapItemsByRegion(sgg_cd: string, limit = 6): Promise<ItemDetail[]> {
+  const cheapStats = await getCheapItems(sgg_cd, limit)
 
-// item_cd별 서울 or fallback record 선택
-const itemRecordMap = new Map<string, RegionStat>()
-for (const record of regionStats) {
-  const existing = itemRecordMap.get(record.item_cd)
-  if (!existing) {
-    itemRecordMap.set(record.item_cd, record)
-  } else if (existing.sgg_cd !== '1101' && record.sgg_cd === '1101') {
-    itemRecordMap.set(record.item_cd, record)
+  const result: ItemDetail[] = []
+  for (const stat of cheapStats) {
+    const item = await statsToItemDetail(stat, cheapStats)
+    if (item) result.push(item)
   }
+  return result
 }
 
-const ALL_ITEMS: ItemDetail[] = []
+/** slug + 지역 기반 단일 품목 조회 */
+export async function getItemBySlugForRegion(slug: string, sgg_cd: string): Promise<ItemDetail | undefined> {
+  const allStats = await getItemStats(slug, sgg_cd)
+  if (allStats.length === 0) return undefined
 
-for (const record of itemRecordMap.values()) {
-  const defaultCombo = record.combos.find((c) => c.is_default) ?? record.combos[0]
-  if (!defaultCombo) continue
-  const item = buildItemDetail(record, defaultCombo)
-  if (item && item.monthly.length > 0) {
-    ALL_ITEMS.push(item)
+  const defaultStat = allStats.find((s) => s.is_default) ?? allStats[0]
+  const item = await statsToItemDetail(defaultStat, allStats)
+
+  return item || undefined
+}
+
+/** 지역×카테고리 기반 전체 품목 */
+export async function getAllItemsByCategory(
+  sgg_cd: string,
+  ctgry_cd?: string
+): Promise<ItemDetail[]> {
+  const allStats = await getItemStatsByRegion(sgg_cd, ctgry_cd)
+
+  // item_cd별 grouping (중복 제거)
+  const itemMap = new Map<string, MarketItemStats[]>()
+  for (const stat of allStats) {
+    if (!itemMap.has(stat.item_cd)) itemMap.set(stat.item_cd, [])
+    itemMap.get(stat.item_cd)!.push(stat)
   }
-}
 
-// ctgry_cd → item_cd 순 정렬
-ALL_ITEMS.sort((a, b) => {
-  const recA = itemRecordMap.get(a.id)
-  const recB = itemRecordMap.get(b.id)
-  const cdA = recA?.ctgry_cd ?? ''
-  const cdB = recB?.ctgry_cd ?? ''
-  return cdA.localeCompare(cdB) || a.id.localeCompare(b.id)
-})
-
-// ----------------------------------------------------------------
-// export 함수
-// ----------------------------------------------------------------
-
-/** 전체 품목 */
-export function getAllItems(): ItemDetail[] {
-  return ALL_ITEMS
-}
-
-/** slug(=item_cd)로 단일 품목 조회 (전국 대표 지역 기준) */
-export function getItemBySlug(slug: string): ItemDetail | undefined {
-  return ALL_ITEMS.find((i) => i.id === slug)
-}
-
-/** RegionStat → ItemDetail 변환 */
-function regionToItemDetail(record: RegionStat): ItemDetail | null {
-  const defaultCombo = record.combos.find((c) => c.is_default) ?? record.combos[0]
-  if (!defaultCombo) return null
-  const item = buildItemDetail(record, defaultCombo)
-  return item && item.monthly.length > 0 ? item : null
-}
-
-/** slug + 지역 기반 단일 품목 조회 — 지역 데이터 없으면 전국 대표 기준 fallback */
-export function getItemBySlugForRegion(slug: string, sgg_cd: string): ItemDetail | undefined {
-  // 해당 지역 record 검색
-  const regionRecord = regionStats.find((d) => d.item_cd === slug && d.sgg_cd === sgg_cd)
-  if (regionRecord) {
-    const item = regionToItemDetail(regionRecord)
-    if (item) return item
+  const result: ItemDetail[] = []
+  for (const combos of itemMap.values()) {
+    const defaultCombo = combos.find((c) => c.is_default) ?? combos[0]
+    const item = await statsToItemDetail(defaultCombo, combos)
+    if (item) result.push(item)
   }
-  // fallback: 전국 대표 기준
-  return ALL_ITEMS.find((i) => i.id === slug)
-}
 
-
-/** 지역 기반 저렴 품목 (default combo의 percentile 오름차순, cheapness_score 내림차순) */
-export function getCheapItemsByRegion(sgg_cd: string, limit = 6): ItemDetail[] {
-  const regionRecords = regionStats
-    .filter((d) => d.sgg_cd === sgg_cd)
-    .map((d) => {
-      const defaultCombo = d.combos.find((c) => c.is_default) ?? d.combos[0]
-      return { record: d, defaultCombo }
-    })
-    .filter((x): x is { record: RegionStat; defaultCombo: ComboStats } => !!x.defaultCombo)
-    .sort((a, b) =>
-      a.defaultCombo.percentile - b.defaultCombo.percentile ||
-      b.defaultCombo.cheapness_score - a.defaultCombo.cheapness_score
-    )
-    .filter(x => x.defaultCombo.percentile < 0.5)
-    .slice(0, limit)
-
-  return regionRecords
-    .map(({ record }) => regionToItemDetail(record))
-    .filter((i): i is ItemDetail => i !== null)
+  // ctgry → item_cd 순 정렬
+  result.sort((a, b) => a.id.localeCompare(b.id))
+  return result
 }

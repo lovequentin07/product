@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { getAllItems, getItemBySlug, getItemBySlugForRegion } from '@market/lib/market-data'
+import { getItemBySlugForRegion } from '@market/lib/market-data'
+import regionStatsRaw from '@market/data/market-stats-by-region.json' // metadata용 정적 import
 import { detectRegion } from '@market/lib/region'
 import { Category, getDefaultKind } from '@market/types/market'
 import PriceTrendChart from '@market/components/PriceTrendChart'
@@ -24,16 +25,17 @@ const CATEGORY_LABELS: Record<Category, string> = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { item: id } = await params
-  const item = getItemBySlug(id)  // metadata는 전국 평균 기준 (정적 생성)
-  if (!item) return {}
+  // metadata는 JSON 정적 import 기반 (전국 평균 기준, 생성 속도 중요)
+  const regionStats = regionStatsRaw as any[]
+  const record = regionStats.find((r) => r.item_cd === id)
+  if (!record) return {}
+  const combo = record.combos.find((c: any) => c.is_default) ?? record.combos[0]
+  if (!combo) return {}
 
-  const todayPrice = getDefaultKind(item).retailPrice
-  const rate = item.trendMeta.vsYearAvgRate
-  const changeStr = rate < 0
-    ? `▼ ${Math.abs(rate).toFixed(1)}% 저렴`
-    : `▲ ${Math.abs(rate).toFixed(1)}% 비쌈`
-  const title = `${item.name} 오늘 ${todayPrice.toLocaleString()}원/${item.unit} — ${changeStr}`
-  const description = `${item.name} 오늘 소매가 ${todayPrice.toLocaleString()}원/${item.unit}. 1년 평균 대비 ${Math.abs(rate).toFixed(1)}% ${rate < 0 ? '저렴' : '비쌈'}. 1년 가격 추이를 확인하세요.`
+  const todayPrice = combo.latest_price
+  const unit = record.unit_sz === '1' ? record.unit : `${record.unit_sz}${record.unit}`
+  const title = `${record.item_nm} 오늘 ${todayPrice.toLocaleString()}원/${unit}`
+  const description = `${record.item_nm} 오늘 소매가 ${todayPrice.toLocaleString()}원/${unit}. 공공데이터 기반 가격 정보 및 1년 추이를 확인하세요.`
 
   return {
     title,
@@ -47,7 +49,7 @@ export default async function ItemPage({ params }: Props) {
   const { item: id } = await params
   const headersList = await headers()
   const sgg_cd = detectRegion(headersList)
-  const item = getItemBySlugForRegion(id, sgg_cd)
+  const item = await getItemBySlugForRegion(id, sgg_cd)
   if (!item) notFound()
 
   const priceData = getDefaultKind(item)

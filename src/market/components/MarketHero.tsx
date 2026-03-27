@@ -1,8 +1,17 @@
-import { getAllItems } from '@market/lib/market-data'
+import regionStatsRaw from '@market/data/market-stats-by-region.json'
 import MarketSearchInput from './MarketSearchInput'
 
 export default function MarketHero() {
-  const searchItems = getAllItems().map((item) => ({ id: item.id, name: item.name }))
+  // 정적 JSON에서 아이템 리스트 추출 (검색용, item_cd 중복 제거)
+  const regionStats = regionStatsRaw as any[]
+  const seenItemCds = new Set<string>()
+  const searchItems = regionStats
+    .filter((r) => {
+      if (seenItemCds.has(r.item_cd)) return false
+      seenItemCds.add(r.item_cd)
+      return true
+    })
+    .map((r) => ({ id: r.item_cd, name: r.item_nm }))
 
   return (
     <div className="bg-white">

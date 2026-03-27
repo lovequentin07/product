@@ -225,3 +225,74 @@ CREATE TABLE IF NOT EXISTS apt_mgmt_fee_summary (
   avg_other_indiv_per_hh   REAL,
   PRIMARY KEY (billing_ym, sgg_nm, umd_nm)
 );
+
+-- ============================================================
+-- market_daily_prices: 농산물 일별 시세 이력 테이블
+-- ============================================================
+CREATE TABLE IF NOT EXISTS market_daily_prices (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_cd    TEXT NOT NULL,
+  sgg_cd     TEXT NOT NULL,
+  grd_cd     TEXT NOT NULL,
+  vrty_cd    TEXT NOT NULL,
+  ymd        TEXT NOT NULL,  -- YYYYMMDD (KAMIS regday)
+  high_price INTEGER,
+  low_price  INTEGER,
+  avg_price  INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(item_cd, sgg_cd, grd_cd, vrty_cd, ymd)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mdp_item_sgg ON market_daily_prices(item_cd, sgg_cd);
+CREATE INDEX IF NOT EXISTS idx_mdp_ymd ON market_daily_prices(ymd);
+
+-- ============================================================
+-- market_monthly_prices: 농산물 월별 시세 이력 테이블
+-- ============================================================
+CREATE TABLE IF NOT EXISTS market_monthly_prices (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_cd    TEXT NOT NULL,
+  sgg_cd     TEXT NOT NULL,
+  grd_cd     TEXT NOT NULL,
+  vrty_cd    TEXT NOT NULL,
+  ym         TEXT NOT NULL,  -- YYYYMM
+  high_price INTEGER,
+  low_price  INTEGER,
+  avg_price  INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(item_cd, sgg_cd, grd_cd, vrty_cd, ym)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mmp_item_sgg ON market_monthly_prices(item_cd, sgg_cd);
+CREATE INDEX IF NOT EXISTS idx_mmp_ym ON market_monthly_prices(ym);
+
+-- ============================================================
+-- market_item_stats: 농산물 품목별 사전계산 통계 테이블
+-- ============================================================
+CREATE TABLE IF NOT EXISTS market_item_stats (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_cd         TEXT NOT NULL,
+  item_nm         TEXT NOT NULL,
+  ctgry_cd        TEXT NOT NULL,
+  ctgry_nm        TEXT NOT NULL,
+  sgg_cd          TEXT NOT NULL,
+  sgg_nm          TEXT NOT NULL,
+  se_cd           TEXT,
+  unit            TEXT,
+  unit_sz         TEXT,
+  grd_cd          TEXT NOT NULL,
+  grd_label       TEXT,
+  vrty_cd         TEXT NOT NULL,
+  vrty_label      TEXT,
+  is_default      INTEGER NOT NULL DEFAULT 0,
+  latest_price    INTEGER,
+  latest_ymd      TEXT,  -- YYYYMMDD (market_daily_prices 기준)
+  percentile      REAL,
+  cheapness_score REAL,
+  updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(item_cd, sgg_cd, grd_cd, vrty_cd)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mis_sgg_pct ON market_item_stats(sgg_cd, percentile);
+CREATE INDEX IF NOT EXISTS idx_mis_item_sgg ON market_item_stats(item_cd, sgg_cd);

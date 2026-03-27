@@ -33,6 +33,44 @@ export interface MonthlyPoint {
   avg: number | null    // latest_ym 달에는 null (라인 끊김)
 }
 
+// 일별 가격 포인트
+export interface DailyPriceRow {
+  ymd: string  // "YYYYMMDD"
+  high: number | null
+  low: number | null
+  avg: number | null
+}
+
+// 월별 가격 포인트 (DB 조회용)
+export interface MonthlyPriceRow {
+  ym: string
+  high: number | null
+  low: number | null
+  avg: number | null
+}
+
+// DB에서 조회한 품목 통계 (사전계산)
+export interface MarketItemStats {
+  item_cd: string
+  item_nm: string
+  ctgry_cd: string
+  ctgry_nm: string
+  sgg_cd: string
+  sgg_nm: string
+  se_cd: string | null
+  unit: string
+  unit_sz: string
+  grd_cd: string
+  grd_label: string | null
+  vrty_cd: string
+  vrty_label: string | null
+  is_default: number
+  latest_price: number | null
+  latest_ym: string | null  // YYYYMMDD
+  percentile: number | null  // 0~1
+  cheapness_score: number | null
+}
+
 // 추세 요약 (지금 싼지/비싼지 판단 근거)
 export interface TrendMeta {
   yearMin: number
