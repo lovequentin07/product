@@ -67,9 +67,10 @@ export default function PriceTrendChart({ monthly, currentPrice, trendMeta }: Pr
   // 데이터에 high/low/currentDot 추가
   const chartData: { date: string; mAvg: number | null; high: number | null; low: number | null; currentDot: number | null }[] = []
   if (lastYmRaw) {
-    let fy = parseInt(lastYmRaw.slice(0, 4))
-    let fm = parseInt(lastYmRaw.slice(4, 6)) - 23
-    while (fm <= 0) { fm += 12; fy-- }
+    // 실제 데이터 첫 달부터 시작 (빈 슬롯 제거)
+    const firstYmRaw = monthly24[0].ym
+    let fy = parseInt(firstYmRaw.slice(0, 4))
+    let fm = parseInt(firstYmRaw.slice(4, 6))
     const endY = parseInt(lastYmRaw.slice(0, 4))
     const endM = parseInt(lastYmRaw.slice(4, 6))
     let y = fy, m = fm
