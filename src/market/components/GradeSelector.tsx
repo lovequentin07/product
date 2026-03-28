@@ -158,7 +158,6 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
         <div className="max-w-2xl mx-auto">
           <PriceTrendChart
             monthly={filteredMonthly}
-            unit={unit}
             currentPrice={currentPrice}
             trendMeta={trendMeta}
           />

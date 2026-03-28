@@ -1,10 +1,10 @@
 // src/app/apt-mgmt/[sgg_nm]/[apt_nm]/page.tsx
 // 관리비 분석 결과 페이지
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getMgmtFeeResult, getMgmtFeeTopApts } from '@apt-mgmt/lib/db/management-fee';
+import { getMgmtFeeResult, getMgmtFeeTopApts, getMgmtFeeApts } from '@apt-mgmt/lib/db/management-fee';
 import type { MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
 import AptMgmtResultClient from '@apt-mgmt/components/AptMgmtResultClient';
 
@@ -36,12 +36,18 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
   const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
 
-  if (!kaptCode) {
-    notFound();
+  const resolvedKaptCode = kaptCode;
+
+  // kaptCode 없을 때: sgg_nm + apt_nm으로 DB 조회 후 리다이렉트 (SEO 크롤러 지원)
+  if (!resolvedKaptCode) {
+    const apts = await getMgmtFeeApts(decodedSggNm);
+    const match = apts.find((a) => a.apt_nm === aptName);
+    if (!match) notFound();
+    redirect(`/apt-mgmt/${sgg_nm}/${apt_nm}?kaptCode=${match!.kapt_code}`);
   }
 
   // DB 에러 시 error.tsx가 처리 (try-catch로 notFound() 하지 않음)
-  const result = await getMgmtFeeResult(kaptCode);
+  const result = await getMgmtFeeResult(resolvedKaptCode!);
 
   if (!result) {
     notFound();
@@ -49,9 +55,9 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
 
   let topApts: { umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null } = { umd: null, seoul: null };
   try {
-    topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, kaptCode);
+    topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, resolvedKaptCode!);
   } catch (e) {
-    console.error('[apt-mgmt] getMgmtFeeTopApts failed:', kaptCode, e);
+    console.error('[apt-mgmt] getMgmtFeeTopApts failed:', resolvedKaptCode, e);
     // 페이지 자체는 렌더링 (추천 섹션만 미표시)
   }
 

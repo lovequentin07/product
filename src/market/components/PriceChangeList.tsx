@@ -24,6 +24,7 @@ export default function PriceChangeList({ items, title }: Props) {
 
   // 카테고리 변경 시 limit 리셋
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLimit(6)
   }, [category])
 

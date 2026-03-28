@@ -73,6 +73,7 @@ export default function TransactionsClientComponent({
 
   // URL의 searchTerm이 바뀌면 로컬 상태 동기화 + selectMode 해제
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalSearchTerm(searchTerm);
     setSelectMode(false);
   }, [searchTerm]);
@@ -146,16 +147,16 @@ export default function TransactionsClientComponent({
 
   const handleAreaFilter = (min: number | undefined, max: number | undefined) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    min !== undefined ? current.set('areaMin', String(min)) : current.delete('areaMin');
-    max !== undefined ? current.set('areaMax', String(max)) : current.delete('areaMax');
+    if (min !== undefined) current.set('areaMin', String(min)); else current.delete('areaMin');
+    if (max !== undefined) current.set('areaMax', String(max)); else current.delete('areaMax');
     current.set('pageNo', '1');
     router.push(`?${current.toString()}`, { scroll: false });
   };
 
   const handlePriceFilter = (min: number | undefined, max: number | undefined) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    min !== undefined ? current.set('priceMin', String(min)) : current.delete('priceMin');
-    max !== undefined ? current.set('priceMax', String(max)) : current.delete('priceMax');
+    if (min !== undefined) current.set('priceMin', String(min)); else current.delete('priceMin');
+    if (max !== undefined) current.set('priceMax', String(max)); else current.delete('priceMax');
     current.set('pageNo', '1');
     router.push(`?${current.toString()}`, { scroll: false });
   };

@@ -23,9 +23,6 @@ import {
 } from '@market/lib/db/market'
 import type { MarketItemStats } from '@market/types/market'
 
-const _now = new Date()
-const CURRENT_YM = `${_now.getFullYear()}${String(_now.getMonth() + 1).padStart(2, '0')}`
-
 // =====================================================================
 // 순수 함수들 (재사용)
 // =====================================================================
@@ -220,6 +217,9 @@ function buildGradeGroup(combos: MarketItemStats[], monthlyMap: Map<string, Mont
 async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemStats[]): Promise<ItemDetail | null> {
   if (!stat.latest_price) return null
 
+  const now = new Date()
+  const CURRENT_YM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+
   // monthly 데이터 로드
   const monthly = await getMonthlyPrices(
     stat.item_cd,
@@ -243,25 +243,21 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
   // gradeGroup: 같은 item_cd + sgg_cd의 combos 모음 (allStats에서 item_cd 필터링)
   const combos = allStats?.filter((s) => s.item_cd === stat.item_cd) ?? await getItemStats(stat.item_cd, stat.sgg_cd)
 
-  // 모든 combos의 monthly 데이터 로드
+  // 모든 combos의 monthly 데이터 로드 (Promise.all 병렬 배치)
+  const uniqueCombos = combos.filter((combo, idx, arr) =>
+    arr.findIndex((c) => c.grd_cd === combo.grd_cd && c.vrty_cd === combo.vrty_cd) === idx
+  )
+  const monthlyResults = await Promise.all(
+    uniqueCombos.map((combo) =>
+      getMonthlyPrices(combo.item_cd, combo.sgg_cd, combo.grd_cd, combo.vrty_cd)
+    )
+  )
   const monthlyMap = new Map<string, MonthlyPoint[]>()
-  for (const combo of combos) {
+  uniqueCombos.forEach((combo, i) => {
     const monthlyKey = `${combo.grd_cd}_${combo.vrty_cd}`
-    if (!monthlyMap.has(monthlyKey)) {
-      const comboMonthly = await getMonthlyPrices(
-        combo.item_cd,
-        combo.sgg_cd,
-        combo.grd_cd,
-        combo.vrty_cd
-      )
-      const filteredComboMonthly = comboMonthly.filter((m) => m.ym !== CURRENT_YM)
-      const pointedComboMonthly = appendLatestYmPoint(
-        filteredComboMonthly,
-        combo.latest_ym?.slice(0, 6) || CURRENT_YM
-      )
-      monthlyMap.set(monthlyKey, pointedComboMonthly)
-    }
-  }
+    const filtered = monthlyResults[i].filter((m) => m.ym !== CURRENT_YM)
+    monthlyMap.set(monthlyKey, appendLatestYmPoint(filtered, combo.latest_ym?.slice(0, 6) || CURRENT_YM))
+  })
 
   const gradeGroup = buildGradeGroup(combos, monthlyMap)
 
@@ -320,12 +316,8 @@ export async function getCheapItemsByRegion(sgg_cd: string, limit = 6): Promise<
     .sort((a, b) => (a.percentile || 0) - (b.percentile || 0))
     .slice(0, limit)
 
-  const result: ItemDetail[] = []
-  for (const stat of selectedStats) {
-    const item = await statsToItemDetail(stat, cheapStats)
-    if (item) result.push(item)
-  }
-  return result
+  const items = await Promise.all(selectedStats.map((stat) => statsToItemDetail(stat, cheapStats)))
+  return items.filter((item): item is ItemDetail => item !== null)
 }
 
 /** slug + 지역 기반 단일 품목 조회 */
@@ -353,14 +345,16 @@ export async function getAllItemsByCategory(
     itemMap.get(stat.item_cd)!.push(stat)
   }
 
-  const result: ItemDetail[] = []
-  for (const combos of itemMap.values()) {
-    const defaultCombo = combos.find((c) => c.is_default) ?? combos[0]
-    const item = await statsToItemDetail(defaultCombo, combos)
-    if (item) result.push(item)
-  }
+  const allCombosGroups = Array.from(itemMap.values())
+  const items = await Promise.all(
+    allCombosGroups.map((combos) => {
+      const defaultCombo = combos.find((c) => c.is_default) ?? combos[0]
+      return statsToItemDetail(defaultCombo, combos)
+    })
+  )
 
   // ctgry → item_cd 순 정렬
-  result.sort((a, b) => a.id.localeCompare(b.id))
-  return result
+  return items
+    .filter((item): item is ItemDetail => item !== null)
+    .sort((a, b) => a.id.localeCompare(b.id))
 }

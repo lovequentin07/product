@@ -36,7 +36,7 @@ const regions = [
  * @param durationYears 수집 기간(년)
  */
 function generateCombinations(startYear: number, durationYears: number) {
-  const combinations: any[] = [];
+  const combinations: { regionCode: string; regionName: string; yearMonth: string; status: string; attempt: number }[] = [];
 
   for (const region of regions) {
     for (let year = startYear; year < startYear + durationYears; year++) {

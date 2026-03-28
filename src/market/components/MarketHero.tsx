@@ -3,7 +3,8 @@ import MarketSearchInput from './MarketSearchInput'
 
 export default function MarketHero() {
   // 정적 JSON에서 아이템 리스트 추출 (검색용, item_cd 중복 제거)
-  const regionStats = regionStatsRaw as any[]
+  type RegionStatRecord = { item_cd: string; item_nm: string }
+  const regionStats = regionStatsRaw as RegionStatRecord[]
   const seenItemCds = new Set<string>()
   const searchItems = regionStats
     .filter((r) => {

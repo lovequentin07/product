@@ -230,7 +230,7 @@ function buildStatsUpsert(
   isDefault: boolean,
   latestYm: string // monthly[monthly.length - 1].ym (정렬된 최신 월)
 ): string {
-  const latestYmd = `${latestYm}15`
+  const latestYmd = `${latestYm}01`
 
   return `INSERT INTO market_item_stats (
   item_cd, item_nm, ctgry_cd, ctgry_nm, sgg_cd, sgg_nm, se_cd, unit, unit_sz,

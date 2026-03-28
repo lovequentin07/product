@@ -135,7 +135,7 @@ export default function MarketPriceGuidePage() {
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             percentile은 과거 1년간의 가격 이력 중 현재 가격이 어느 수준에 위치하는지를 보여줍니다.
-            예를 들어 "하위 20%"는 과거 1년 중 가장 저렴한 하위 20% 구간에 속한다는 뜻입니다.
+            예를 들어 &ldquo;하위 20%&rdquo;는 과거 1년 중 가장 저렴한 하위 20% 구간에 속한다는 뜻입니다.
           </p>
           <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950 text-sm text-gray-700 dark:text-gray-300">
             <p className="font-medium text-blue-900 dark:text-blue-200 mb-3">

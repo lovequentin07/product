@@ -27,10 +27,11 @@ const CATEGORY_LABELS: Record<Category, string> = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { item: id } = await params
   // metadata는 JSON 정적 import 기반 (전국 평균 기준, 생성 속도 중요)
-  const regionStats = regionStatsRaw as any[]
+  type RegionStatRecord = { item_cd: string; item_nm: string; unit: string; unit_sz: string; combos: { is_default: boolean; latest_price: number }[] }
+  const regionStats = regionStatsRaw as RegionStatRecord[]
   const record = regionStats.find((r) => r.item_cd === id)
   if (!record) return {}
-  const combo = record.combos.find((c: any) => c.is_default) ?? record.combos[0]
+  const combo = record.combos.find((c) => c.is_default) ?? record.combos[0]
   if (!combo) return {}
 
   const todayPrice = combo.latest_price
@@ -211,7 +212,7 @@ export default async function ItemPage({ params, searchParams }: Props) {
               cheapnessExplanation={item.cheapness_explanation ?? ''}
             />
             <div className="bg-white border-t border-gray-100">
-              <PriceTrendChart monthly={item.monthly} unit={item.unit} currentPrice={todayPrice} trendMeta={item.trendMeta} />
+              <PriceTrendChart monthly={item.monthly} currentPrice={todayPrice} trendMeta={item.trendMeta} />
             </div>
           </>
         )}

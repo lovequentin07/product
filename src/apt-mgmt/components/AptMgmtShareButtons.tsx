@@ -8,6 +8,7 @@ export default function AptMgmtShareButtons() {
   const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanShare(typeof navigator !== 'undefined' && !!navigator.share);
   }, []);
 

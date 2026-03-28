@@ -22,7 +22,7 @@ async function fetchHistoricalData() {
   }
 
   const combinations = JSON.parse(fs.readFileSync(COMBINATIONS_PATH, 'utf-8'));
-  const pendingItems = combinations.filter((item: any) => item.status === 'pending');
+  const pendingItems = combinations.filter((item: { status: string }) => item.status === 'pending');
 
   console.log(`전체 ${combinations.length}개 중 ${pendingItems.length}개의 대기 항목을 처리합니다.`);
 

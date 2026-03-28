@@ -32,28 +32,6 @@ type ItemStatsRow = {
   updated_at: string | null
 }
 
-type MonthlyPriceRowDB = {
-  item_cd: string
-  sgg_cd: string
-  grd_cd: string
-  vrty_cd: string
-  ym: string
-  high_price: number | null
-  low_price: number | null
-  avg_price: number | null
-}
-
-type DailyPriceRowDB = {
-  item_cd: string
-  sgg_cd: string
-  grd_cd: string
-  vrty_cd: string
-  ymd: string
-  high_price: number | null
-  low_price: number | null
-  avg_price: number | null
-}
-
 // =====================================================================
 // Mock 데이터 (로컬 개발용)
 // =====================================================================

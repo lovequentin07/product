@@ -26,6 +26,7 @@ export default function AptMgmtSearchForm() {
 
   // 구 변경 시 아파트 목록 로드 + 선택 초기화
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedApt(null);
     setInputValue('');
     setShowDropdown(false);

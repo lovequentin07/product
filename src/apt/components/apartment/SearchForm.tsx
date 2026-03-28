@@ -29,6 +29,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
     const lawdCd = initialLawdCd || searchParams.get('lawdCd');
     const dealYmd = searchParams.get('dealYmd');
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedGu(lawdCd || ALL_SEOUL_CODE);
 
     if (!dealYmd) {

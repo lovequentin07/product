@@ -55,7 +55,7 @@ async function verifyDataIntegrity() {
   }
 
   const allCombinations = JSON.parse(fs.readFileSync(COMBINATIONS_PATH, 'utf-8'));
-  const verifiedCombinations = allCombinations.filter((item: any) => item.status === 'completed');
+  const verifiedCombinations = allCombinations.filter((item: { status: string }) => item.status === 'completed');
 
   if (verifiedCombinations.length === 0) {
     console.warn('완료된 조합이 없습니다. 검증할 데이터가 없습니다.');

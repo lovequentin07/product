@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default async function MarketPage() {
   const headersList = await headers()
   const sgg_cd = detectRegion(headersList)
-  const cheapItems = await getCheapItemsByRegion(sgg_cd, 60)
+  const cheapItems = await getCheapItemsByRegion(sgg_cd, 12)
 
   // BreadcrumbList
   const breadcrumbJsonLd = {

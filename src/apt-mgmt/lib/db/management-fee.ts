@@ -1,7 +1,7 @@
 // src/lib/db/management-fee.ts
 // 관리비 지킴이 D1 쿼리 함수
 
-import { MgmtFeeApt, MgmtFeeResult, MgmtFeeHistory, MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
+import { MgmtFeeApt, MgmtFeeResult, MgmtFeeRow, MgmtFeeHistory, MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
 
 // -------------------------
 // Mock 데이터 (로컬 개발용)
@@ -277,15 +277,54 @@ async function getD1MgmtFeeResult(
   }
 
   // Step 1: 메인 행 (SELECT * — D1 100컬럼 한계로 JOIN 제거)
-  const row = await db
+  const baseRow = await db
     .prepare(`SELECT * FROM apt_mgmt_fee WHERE kapt_code = ? AND billing_ym = ?`)
     .bind(kapt_code, billing_ym)
-    .first<Record<string, unknown>>();
+    .first<MgmtFeeRow>();
 
-  if (!row) return null;
+  if (!baseRow) return null;
 
-  const sgg = row.sgg_nm as string;
-  const umd = row.umd_nm as string | null;
+  const sgg = baseRow.sgg_nm;
+  const umd = baseRow.umd_nm;
+
+  // 랭킹/평균 계산 필드 null로 초기화 후 아래에서 채움
+  const row: MgmtFeeResult = {
+    ...baseRow,
+    umd_rank: null, umd_total: null, umd_avg_common: null, umd_avg_total: null, umd_avg_security: null,
+    sgg_rank: null, sgg_total: null, sgg_avg_common: null, sgg_avg_security: null, sgg_avg_total: null,
+    seoul_rank: null, seoul_total: null, seoul_avg_common: null, seoul_avg_security: null, seoul_avg_total: null,
+    common_seoul_rank: null, common_sgg_rank: null,
+    personal_seoul_rank: null, personal_sgg_rank: null,
+    sgg_avg_cleaning: null, umd_avg_cleaning: null,
+    sgg_avg_heating: null, umd_avg_heating: null,
+    sgg_avg_electricity: null, umd_avg_electricity: null,
+    sgg_avg_water: null, umd_avg_water: null,
+    sgg_avg_ltm: null, umd_avg_ltm: null,
+    sgg_avg_labor: null, umd_avg_labor: null,
+    sgg_avg_elevator: null, umd_avg_elevator: null,
+    sgg_avg_repair: null, umd_avg_repair: null,
+    sgg_avg_trust_mgmt: null, umd_avg_trust_mgmt: null,
+    sgg_avg_hot_water: null, umd_avg_hot_water: null,
+    sgg_avg_gas: null, umd_avg_gas: null,
+    sgg_avg_office: null, umd_avg_office: null,
+    sgg_avg_tax: null, umd_avg_tax: null,
+    sgg_avg_clothing: null, umd_avg_clothing: null,
+    sgg_avg_training: null, umd_avg_training: null,
+    sgg_avg_vehicle: null, umd_avg_vehicle: null,
+    sgg_avg_other_overhead: null, umd_avg_other_overhead: null,
+    sgg_avg_disinfection: null, umd_avg_disinfection: null,
+    sgg_avg_network: null, umd_avg_network: null,
+    sgg_avg_facility: null, umd_avg_facility: null,
+    sgg_avg_safety: null, umd_avg_safety: null,
+    sgg_avg_disaster: null, umd_avg_disaster: null,
+    sgg_avg_tv: null, umd_avg_tv: null,
+    sgg_avg_sewage: null, umd_avg_sewage: null,
+    sgg_avg_waste: null, umd_avg_waste: null,
+    sgg_avg_tenant_rep: null, umd_avg_tenant_rep: null,
+    sgg_avg_insurance: null, umd_avg_insurance: null,
+    sgg_avg_election: null, umd_avg_election: null,
+    sgg_avg_other_indiv: null, umd_avg_other_indiv: null,
+  };
 
   // Step 2: 사전집계 평균 (최대 3행 × 36컬럼 — D1 한계 안전)
   try {
@@ -305,9 +344,9 @@ async function getD1MgmtFeeResult(
     const umdSum   = sumRows.results.find(r => r.sgg_nm === sgg && r.umd_nm === (umd ?? ''));
 
     if (seoulSum) {
-      row.seoul_avg_common   = seoulSum.avg_common_per_hh   ?? null;
-      row.seoul_avg_security = seoulSum.avg_security_per_hh ?? null;
-      row.seoul_avg_total    = seoulSum.avg_total_per_hh    ?? null;
+      row.seoul_avg_common   = (seoulSum.avg_common_per_hh   as number | null) ?? null;
+      row.seoul_avg_security = (seoulSum.avg_security_per_hh as number | null) ?? null;
+      row.seoul_avg_total    = (seoulSum.avg_total_per_hh    as number | null) ?? null;
     }
 
     const SUMMARY_MAP: [string, string][] = [
@@ -345,19 +384,20 @@ async function getD1MgmtFeeResult(
       ['avg_other_indiv_per_hh',   'avg_other_indiv'],
     ];
 
+    const rowDyn = row as unknown as Record<string, number | null>;
     if (sggSum) {
-      for (const [src, sfx] of SUMMARY_MAP) row[`sgg_${sfx}`] = sggSum[src] ?? null;
+      for (const [src, sfx] of SUMMARY_MAP) rowDyn[`sgg_${sfx}`] = (sggSum[src] as number | null) ?? null;
     }
     if (umdSum) {
-      for (const [src, sfx] of SUMMARY_MAP) row[`umd_${sfx}`] = umdSum[src] ?? null;
+      for (const [src, sfx] of SUMMARY_MAP) rowDyn[`umd_${sfx}`] = (umdSum[src] as number | null) ?? null;
     }
   } catch (e) {
     console.error('[apt-mgmt] summary query failed:', kapt_code, e);
   }
 
   // Step 3: 순위 계산 — db.batch()로 10개 COUNT 쿼리를 한 번에 전송
-  const total = row.total_per_hh as number | null;
-  const common = row.common_per_hh as number | null;
+  const total = row.total_per_hh;
+  const common = row.common_per_hh;
   const personal = (total ?? 0) - (common ?? 0);
 
   const BASE = `billing_ym=? AND total_per_hh IS NOT NULL AND total_per_hh > 0 AND household_cnt >= 10`;
@@ -402,7 +442,7 @@ async function getD1MgmtFeeResult(
     }
   }
 
-  return row as unknown as MgmtFeeResult;
+  return row;
 }
 
 async function getD1MgmtFeeTopApts(

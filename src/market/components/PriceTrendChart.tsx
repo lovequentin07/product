@@ -13,10 +13,8 @@ import { MonthlyPoint, TrendMeta } from '@market/types/market'
 
 interface Props {
   monthly: MonthlyPoint[]  // 최대 24개월
-  unit: string
   currentPrice?: number
   trendMeta?: TrendMeta
-  cheapnessExplanation?: string
 }
 
 interface TooltipPayload {
@@ -47,7 +45,7 @@ function CustomTooltip({
   )
 }
 
-export default function PriceTrendChart({ monthly, unit, currentPrice, trendMeta, cheapnessExplanation }: Props) {
+export default function PriceTrendChart({ monthly, currentPrice, trendMeta }: Props) {
   const monthly24 = monthly.slice(-24)
 
   const allAvgs = monthly24.map((m) => m.avg)
