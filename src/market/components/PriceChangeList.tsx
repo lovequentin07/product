@@ -35,8 +35,6 @@ export default function PriceChangeList({ items, title }: Props) {
   const filtered = allFiltered.slice(0, limit)
   const hasMore = allFiltered.length > limit
 
-  if (filtered.length === 0) return null
-
   return (
     <section
       id="price-drop-section"
@@ -56,7 +54,13 @@ export default function PriceChangeList({ items, title }: Props) {
       {/* 카테고리 필터 */}
       <CategoryQuickAccess />
 
+      {/* 빈 결과 */}
+      {allFiltered.length === 0 && (
+        <p className="mt-6 mb-2 text-center text-sm text-gray-400">해당 카테고리에 저렴한 품목이 없습니다</p>
+      )}
+
       {/* 카드 그리드 */}
+      {allFiltered.length > 0 && (
       <div className="grid grid-cols-2 gap-2 mt-3">
         {filtered.map((item) => {
           const primary = getDefaultKind(item)
@@ -101,8 +105,10 @@ export default function PriceChangeList({ items, title }: Props) {
           )
         })}
       </div>
+      )}
 
       {/* 더보기/접기 버튼 */}
+      {allFiltered.length > 0 && (
       <div className="flex gap-2 mt-3">
         {/* 더보기 버튼 */}
         {hasMore && (
@@ -123,6 +129,7 @@ export default function PriceChangeList({ items, title }: Props) {
           </button>
         )}
       </div>
+      )}
     </section>
   )
 }
