@@ -43,7 +43,7 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     const apts = await getMgmtFeeApts(decodedSggNm);
     const match = apts.find((a) => a.apt_nm === aptName);
     if (!match) notFound();
-    redirect(`/apt-mgmt/${sgg_nm}/${apt_nm}?kaptCode=${match!.kapt_code}`);
+    redirect(`/apt-mgmt/${encodeURIComponent(decodedSggNm)}/${encodeURIComponent(aptName)}?kaptCode=${match!.kapt_code}`);
   }
 
   // DB 에러 시 error.tsx가 처리 (try-catch로 notFound() 하지 않음)
