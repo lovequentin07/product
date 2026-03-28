@@ -1,0 +1,10 @@
+{
+  "lastUpdated": "2026-03-28T08:58:01.466Z",
+  "period": {
+    "startYm": "2025-9",
+    "endYm": "202603"
+  },
+  "comboCount": 1746,
+  "source": "public-data-api",
+  "logic": "analyze-market-region.ts와 동일"
+}

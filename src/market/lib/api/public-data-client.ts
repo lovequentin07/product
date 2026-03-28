@@ -16,6 +16,8 @@ export interface PriceItem {
   ctgry_nm: string   // 카테고리 명
   se_cd: string      // 구분 ('01'=소매, '02'=도매)
   se_nm: string      // 구분 명
+  sgg_cd: string     // 지역 코드 (예: '1101'=서울, '2100'=부산)
+  sgg_nm: string     // 지역 명
   item_cd: string    // 품목 코드
   item_nm: string    // 품목 명
   vrty_cd: string    // 신선도 코드
