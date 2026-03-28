@@ -49,6 +49,19 @@ const TMP_SQL_FILE = path.join(process.cwd(), '.tmp/update-market.sql')
 const MAX_RETRIES = 3
 const RETRY_DELAY_MS = 5000
 
+// ⚠️ 향후 개선: 동시 실행 방지 메커니즘
+// GitHub Actions 무료 플랜은 스케줄 정확도 보장 안 함 (최대 15분 지연)
+// → 두 개의 인스턴스가 동시에 실행될 수 있음
+// → 해결책: Cloudflare D1 또는 KV에 분산 잠금 구현
+// 예시 구현:
+// ```typescript
+// const lockKey = 'market-update-lock'
+// const lockTtl = 3600 // 1시간
+// const hasLock = await acquireLock(lockKey, lockTtl)
+// if (!hasLock) { console.log('다른 인스턴스에서 실행 중'); process.exit(0) }
+// try { /* 메인 로직 */ } finally { await releaseLock(lockKey) }
+// ```
+
 // 조회 기간: 최근 25개월 (현재월 + 과거 24개월)
 function getDateRange(): { startYm: string; endYm: string } {
   const now = new Date()
@@ -268,11 +281,13 @@ async function runSQL(sql: string, label: string, attempt = 1): Promise<void> {
 // =====================================================================
 
 async function main() {
+  const startTime = Date.now()
   const { startYm, endYm } = getDateRange()
 
   console.log(`
 🚀 공공데이터포털 농산물 가격 수집 + D1 갱신 시작 (로컬 파이프라인과 동일 로직)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  시작: ${new Date().toISOString()}
   기간: ${startYm} ~ ${endYm} (25개월)
   API: https://apis.data.go.kr/B552845/perYearMonth/price
 ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
@@ -498,6 +513,9 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
     )
   }
 
+  const elapsedMs = Date.now() - startTime
+  const elapsedSec = (elapsedMs / 1000).toFixed(2)
+
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ 공공데이터포털 농산물 가격 수집 + D1 갱신 완료
@@ -507,11 +525,14 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
   조합(품목×지역×등급×신선도): ${finalStatsUpserts.length}개
   월별 데이터: ${monthlyInserts.length}개 UPSERT
   통계 데이터: ${finalStatsUpserts.length}개 UPSERT (is_default 포함)
+  ⏱️  실행 시간: ${elapsedSec}초
 
 📊 생성된 데이터:
   - percentile: 과거 12개월 대비 현재 가격의 상대 순위 (0~1)
   - cheapness_score: (평균 - 현재가) / 표준편차
   - is_default: 각 지역별 품목당 가장 흔한 등급/신선도 조합
+
+🔔 다음 자동 실행: 평일 오전 10시 KST (UTC 01:00)
   `)
 }
 

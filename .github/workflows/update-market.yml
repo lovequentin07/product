@@ -1,10 +1,13 @@
 name: Update Market Prices
 
 on:
-  # 평일 매일 오전 10시 KST (UTC 01:00)
+  # 평일 매일 오전 10시 KST 자동 갱신
+  # Cron: '0 1 * * 1-5' = UTC 01:00 (월-금)
+  # UTC 01:00 + 9시간 = KST 10:00 (오전)
+  # 참고: GitHub Actions 무료 플랜은 스케줄 정확도 보장 안 함 (최대 15분 지연)
   schedule:
     - cron: '0 1 * * 1-5'
-  # 수동 트리거 (테스트용)
+  # 수동 트리거 (테스트/긴급 실행용)
   workflow_dispatch:
 
 jobs:
@@ -39,12 +42,37 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
 
-      # 5. 완료 알림 (선택사항)
+      # 5. 완료 알림
       - name: Notify completion
         if: success()
-        run: echo "✅ Market data update completed successfully"
+        run: echo "✅ Market data update completed successfully at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-      # 6. 실패 알림 (선택사항)
-      - name: Notify failure
+      # 6. 실패 알림 - GitHub Issue 자동 생성
+      - name: Create GitHub Issue on failure
         if: failure()
-        run: echo "❌ Market data update failed"
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const now = new Date().toISOString();
+            const logUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `## 🔴 Market data update failed\n\n` +
+              `**실패 시간**: ${now}\n` +
+              `**실행 유형**: 평일 오전 10시 KST 자동 갱신\n` +
+              `**상태**: ❌ Failed\n\n` +
+              `### 확인 사항\n` +
+              `1. 공공데이터포털 API 응답 상태\n` +
+              `2. Cloudflare D1 접근 권한\n` +
+              `3. GitHub Secrets 설정 (DATA_GO_KR_API_KEY, CLOUDFLARE_*)\n\n` +
+              `### 참고\n` +
+              `- [Workflow 로그](${logUrl})\n` +
+              `- 스크립트: \`src/market/scripts/update-market.ts\`\n` +
+              `- 다음 자동 실행: 내일 오전 10시 KST (또는 수동 실행)`;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔴 Market data update failed',
+              body: body,
+              labels: ['bug', 'market', 'automated']
+            });
