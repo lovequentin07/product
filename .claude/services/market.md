@@ -55,9 +55,15 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 - GitHub Actions Cron: 평일 매일 오전 10시 KST (UTC 01:00)
 - `npx tsx src/market/scripts/update-market.ts` 자동 실행
 - 공공데이터포털 API: `https://apis.data.go.kr/B552845/perYearMonth/price`
-- 지난 13개월 데이터 수집 → D1 UPSERT (용량 일정 유지)
+- **최근 25개월 데이터 수집** → 지역별(sgg_cd) 동적 처리 + D1 UPSERT
+  - **처리 단계**:
+    1. se_cd 자동 결정: 품목별로 도매가(02) 최신 데이터 여부 판단
+    2. IQR 기반 이상치 제거 후 월별 가격 집계
+    3. percentile 계산: 과거 12개월 대비 현재 가격 순위 (0~1)
+    4. cheapness_score 계산: (평균 - 현재가) / 표준편차
+    5. is_default 결정: 지역×품목별 최빈 등급/신선도 조합
 
-**지역 코드**: 전국(1100) 기준 (공공데이터 API 지역 미포함)
+**지역 코드**: API 응답값 직접 사용 (서울=1101, 부산=2100, 대구=2200 등) — 이전의 전국(1100) 하드코딩 제거
 
 ---
 
@@ -160,7 +166,13 @@ const cheapItems = getCheapItemsByRegion('11110', 6)
 **수집 스크립트**:
 - 파일: `src/market/scripts/update-market.ts`
 - 실행: GitHub Actions (평일 매일 10시) + 수동 트리거 가능
-- 처리: 54,462건 수집 → 38,972건 소매가 필터 → D1 UPSERT
+- 처리:
+  - 62,397건 수집 (25개월)
+  - **품목별 se_cd 자동 결정** (도매가 최신 여부 판단 202601 이상)
+  - 지역별(sgg_cd) 분리 저장 (1101, 2100, 2200 등)
+  - IQR 이상치 제거 + 월별 집계
+  - percentile, cheapness_score, is_default 계산
+  - 최종: 1,746개 combo × 15+ 월별 가격 → D1 UPSERT
 
 **데이터 계층**:
 - `src/market/lib/db/market.ts` — D1 쿼리 함수 + JSON fallback

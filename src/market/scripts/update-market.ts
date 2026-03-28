@@ -386,15 +386,18 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
   console.log(`  - market_item_stats: ${statsUpserts.length}개 (임시, is_default 미결정)`)
 
   // 5. is_default 결정: 지역별로 품목당 가장 흔한 등급/신선도 조합
+  //    예: 무(231) 서울(1101)에서 가장 많이 거래되는 것이 '상(04)/월동(01)'이면
+  //    그 조합을 is_default=1로 표시. 사용자가 상세페이지에 진입할 때 기본으로 표시될 데이터.
   console.log('\n✨ is_default 조합 결정 중...')
 
   const itemRegionComboFreq = new Map<string, Map<string, number>>()
 
+  // 각 combo의 출현 빈도 집계 (같은 item×region×grd×vrty 조합이 API에 얼마나 자주 나타났는가)
   for (const [comboKeyStr, rows] of comboMap.entries()) {
     const [item_cd, sgg_cd_raw, grd_cd, vrty_cd] = comboKeyStr.split('|')
     const sgg_cd = sgg_cd_raw || '1100'
 
-    // se_cd 필터링
+    // se_cd 필터링: 이미 결정된 도매/소매 기준으로 필터링
     const seCd = itemToSeCd.get(item_cd) || '01'
     const filteredRows = rows.filter((r) => r.se_cd === seCd)
 
@@ -405,12 +408,13 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
       itemRegionComboFreq.set(key, new Map())
     }
 
+    // grd_cd|vrty_cd 조합의 빈도 증가 (같은 조합이 얼마나 자주 나타났는가)
     const comboKey = `${grd_cd}|${vrty_cd}`
     const freq = itemRegionComboFreq.get(key)!
     freq.set(comboKey, (freq.get(comboKey) || 0) + filteredRows.length)
   }
 
-  // 각 item×region의 최빈 combo 찾기
+  // 각 item×region별로 빈도가 가장 높은 combo 선택 (is_default 후보)
   const defaultCombos = new Map<string, string>()
   for (const [itemRegion, comboFreq] of itemRegionComboFreq.entries()) {
     const maxCombo = [...comboFreq.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
