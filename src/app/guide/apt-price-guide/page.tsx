@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "아파트 실거래가 보는 법 완벽 가이드 | DataZip",
   description:
     "아파트 실거래가 조회 방법부터 시세 분석, 층·면적별 가격 차이까지 알기 쉽게 설명합니다. 국토교통부 공개 데이터를 활용한 실전 가이드.",
+  keywords: ['아파트 시세 조회', '실거래가 보는 법', '부동산 가격 확인'],
   alternates: { canonical: "/guide/apt-price-guide" },
   openGraph: {
     title: "아파트 실거래가 보는 법 완벽 가이드",

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getLatestDealDate } from "@apt/lib/db/apt";
 import { getMgmtFeeAptUrlList } from "@apt-mgmt/lib/db/management-fee";
 import { regions } from "@shared/data/regions";
+import marketStatsRaw from "@market/data/market-stats-by-region.json";
 
 const BASE_URL = "https://datazip.net";
 
@@ -79,5 +80,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...mgmtAptUrls,
   ];
 
-  return [...staticUrls, ...regionUrls, ...mgmtUrls];
+  // 농수축산물 품목 상세 페이지 (정적 JSON → 94개 품목, DB 쿼리 불필요)
+  type MarketStatEntry = { item_cd: string }
+  const uniqueItemCds = [...new Set((Object.values(marketStatsRaw) as MarketStatEntry[]).map((e) => e.item_cd).filter(Boolean))]
+  const marketItemUrls: MetadataRoute.Sitemap = uniqueItemCds.map((item_cd) => ({
+    url: `${BASE_URL}/market/${item_cd}`,
+    lastModified: latestDate,
+    changeFrequency: 'daily',
+    priority: 0.8,
+  }))
+
+  return [...staticUrls, ...regionUrls, ...mgmtUrls, ...marketItemUrls];
 }

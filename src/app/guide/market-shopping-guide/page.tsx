@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "알뜰 장보기 완벽 가이드 — 오늘 뭐가 싼지 찾는 법",
   description:
     "장바구니 물가 지수란 무엇인지, 오늘 저렴한 농산물 찾는 법, 채소·과일·수산물별 선택 기준과 보관 방법을 알려드립니다.",
+  keywords: ['알뜰 장보기', '오늘 싼 채소', '저렴한 과일', '장보기 꿀팁'],
   alternates: { canonical: "/guide/market-shopping-guide" },
   openGraph: {
     title: "알뜰 장보기 완벽 가이드 — 오늘 뭐가 싼지 찾는 법",

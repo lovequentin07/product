@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    keywords: [`${record.item_nm} 가격`, `${record.item_nm} 오늘 시세`, `${record.item_nm} 소매가`, '농산물 가격', '오늘 시세'],
     alternates: { canonical: `/market/${id}` },
     openGraph: { title, description, url: `/market/${id}` },
   }

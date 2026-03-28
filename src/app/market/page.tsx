@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: '오늘의 장바구니 — 지금 뭐가 싼지 바로 확인',
   description:
     '오늘 저렴해진 채소·과일·수산·곡물·식품을 한눈에 확인하세요. 공공데이터 기반 소매가 비교와 1년 평균 대비 가격 변동 제공.',
+  keywords: ['오늘 채소 가격', '오늘 과일 가격', '농수산물 시세', '장바구니 물가', '소매가 비교', '공공데이터 농산물'],
   alternates: { canonical: '/market' },
   openGraph: {
     title: '오늘의 장바구니 — 지금 뭐가 싼지 바로 확인',

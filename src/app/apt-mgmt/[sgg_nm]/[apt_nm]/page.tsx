@@ -68,7 +68,7 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
       { '@type': 'ListItem', position: 1, name: '홈', item: 'https://datazip.net' },
       { '@type': 'ListItem', position: 2, name: '관리비 지킴이', item: 'https://datazip.net/apt-mgmt' },
       { '@type': 'ListItem', position: 3, name: `${decodedSggNm} 관리비`, item: `https://datazip.net/apt-mgmt/${sgg_nm}` },
-      { '@type': 'ListItem', position: 4, name: `${aptName} 관리비` },
+      { '@type': 'ListItem', position: 4, name: `${aptName} 관리비`, item: `https://datazip.net/apt-mgmt/${sgg_nm}/${apt_nm}` },
     ],
   };
 

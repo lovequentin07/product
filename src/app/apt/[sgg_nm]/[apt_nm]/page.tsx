@@ -202,7 +202,7 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: '홈', item: 'https://datazip.net' },
       { '@type': 'ListItem', position: 2, name: '실거래가 조회', item: 'https://datazip.net/apt' },
-      { '@type': 'ListItem', position: 3, name: `${aptName} 실거래가` },
+      { '@type': 'ListItem', position: 3, name: `${aptName} 실거래가`, item: `https://datazip.net/apt/${sgg_nm}/${apt_nm}` },
     ],
   };
 

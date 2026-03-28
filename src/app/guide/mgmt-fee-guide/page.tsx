@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "적정 관리비 판단 기준과 절약 방법 | DataZip",
   description:
     "아파트 관리비가 적정한지 판단하는 기준과 관리비를 절약하는 실전 방법을 알아보세요. K-apt 공시 데이터를 활용한 관리비 비교 가이드.",
+  keywords: ['아파트 관리비 절감', '관리비 비교', '관리비 항목별 분석'],
   alternates: { canonical: "/guide/mgmt-fee-guide" },
   openGraph: {
     title: "적정 관리비 판단 기준과 절약 방법",

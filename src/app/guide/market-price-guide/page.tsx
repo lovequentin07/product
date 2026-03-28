@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "농산물 가격 정보 활용 가이드 — 소매가·등급·percentile 완벽 이해",
   description:
     "농산물 소매가란 무엇인지, 등급(상/중/하)의 의미, 하위 N%(percentile) 읽는 법을 알기 쉽게 설명합니다.",
+  keywords: ['농산물 가격 보는 법', '소매가 등급', '퍼센타일 의미', '장바구니 물가'],
   alternates: { canonical: "/guide/market-price-guide" },
   openGraph: {
     title: "농산물 가격 정보 활용 가이드 — 소매가·등급·percentile 완벽 이해",
