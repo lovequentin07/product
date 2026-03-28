@@ -12,7 +12,7 @@
  *   DATA_GO_KR_API_KEY     공공데이터포털 API 키 (필수)
  *   CLOUDFLARE_API_TOKEN   wrangler D1 인증 (필수)
  *   CLOUDFLARE_ACCOUNT_ID  Cloudflare 계정 ID (필수)
- *   CLOUDFLARE_D1_DATABASE_ID  D1 DB ID (필수)
+ *   CLOUDFLARE_D1_DATABASE_ID  D1 DB ID (wrangler 인증용; 스크립트는 DB_NAME='apt-trade-db'로 실행)
  */
 
 import { config } from 'dotenv'
@@ -48,6 +48,7 @@ const DB_NAME = 'apt-trade-db'
 const TMP_SQL_FILE = path.join(process.cwd(), '.tmp/update-market.sql')
 const MAX_RETRIES = 3
 const RETRY_DELAY_MS = 5000
+const WHOLESALE_QUALITY_START_YM = 202601 // 도매가 데이터 품질 개선 시점
 
 // ⚠️ 향후 개선: 동시 실행 방지 메커니즘
 // GitHub Actions 무료 플랜은 스케줄 정확도 보장 안 함 (최대 15분 지연)
@@ -68,13 +69,11 @@ function getDateRange(): { startYm: string; endYm: string } {
   const endYear = now.getFullYear()
   const endMonth = now.getMonth() + 1
 
-  let startYear = endYear
-  let startMonth = endMonth - 24
-
-  if (startMonth <= 0) {
-    startYear -= 1
-    startMonth += 12
-  }
+  // Date 객체가 음수 월을 자동으로 연도 차감 처리
+  // 예: new Date(2026, 3-1-24, 1) = new Date(2026, -22, 1) → 2024년 3월
+  const startDate = new Date(endYear, endMonth - 1 - 24, 1)
+  const startYear = startDate.getFullYear()
+  const startMonth = startDate.getMonth() + 1
 
   const startYm = `${startYear}${String(startMonth).padStart(2, '0')}`
   const endYm = `${endYear}${String(endMonth).padStart(2, '0')}`
@@ -228,9 +227,10 @@ function buildStatsUpsert(
   latestPrice: number,
   percentile: number,
   cheapness_score: number,
-  isDefault: boolean
+  isDefault: boolean,
+  latestYm: string // monthly[monthly.length - 1].ym (정렬된 최신 월)
 ): string {
-  const latestYm = `${item.exmn_ym}15`
+  const latestYmd = `${latestYm}15`
 
   return `INSERT INTO market_item_stats (
   item_cd, item_nm, ctgry_cd, ctgry_nm, sgg_cd, sgg_nm, se_cd, unit, unit_sz,
@@ -239,7 +239,7 @@ function buildStatsUpsert(
   ${esc(item.item_cd)}, ${esc(item.item_nm)}, ${esc(item.ctgry_cd)}, ${esc(item.ctgry_nm)},
   ${esc(sgg_cd)}, ${esc(sgg_nm)}, ${esc(item.se_cd)}, ${esc(item.unit)}, ${esc(item.unit_sz)},
   ${esc(combo.grd_cd)}, ${esc(item.grd_nm)}, ${esc(combo.vrty_cd)}, ${esc(item.vrty_nm)},
-  ${isDefault ? 1 : 0}, ${num(latestPrice)}, ${esc(latestYm)}, ${percentile.toFixed(4)}, ${cheapness_score.toFixed(4)}, datetime('now')
+  ${isDefault ? 1 : 0}, ${num(latestPrice)}, ${esc(latestYmd)}, ${percentile.toFixed(4)}, ${cheapness_score.toFixed(4)}, datetime('now')
 )
 ON CONFLICT(item_cd, sgg_cd, grd_cd, vrty_cd) DO UPDATE SET
   latest_price = excluded.latest_price,
@@ -315,13 +315,6 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
   // 2. 품목×지역×등급×신선도별 그룹화
   console.log('\n📋 데이터 그룹화 중...')
 
-  interface ComboKey {
-    item_cd: string
-    sgg_cd: string
-    grd_cd: string
-    vrty_cd: string
-  }
-
   const comboMap = new Map<string, PriceItem[]>()
 
   for (const item of items) {
@@ -342,8 +335,8 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
     const wholesaleRows = itemRows.filter((r) => r.se_cd === '02')
     const wholesaleLatest = wholesaleRows.length > 0 ? Math.max(...wholesaleRows.map((r) => parseInt(r.exmn_ym))) : 0
 
-    // 도매가가 최근(202601 이상)에 있으면 도매가 선택, 없으면 소매가
-    const seCd = wholesaleLatest >= 202601 ? '02' : '01'
+    // 도매가가 최근(WHOLESALE_QUALITY_START_YM 이상)에 있으면 도매가 선택, 없으면 소매가
+    const seCd = wholesaleLatest >= WHOLESALE_QUALITY_START_YM ? '02' : '01'
     itemToSeCd.set(item_cd, seCd)
   }
 
@@ -351,7 +344,13 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
   console.log('\n💾 D1 적재용 SQL 생성 중...')
 
   const monthlyInserts: string[] = []
-  const statsUpserts: string[] = []
+
+  // 계산 결과 캐시 (Step 6에서 재사용, buildMonthly/calcScores 이중 실행 방지)
+  const monthlyCache = new Map<string, MonthlyPoint[]>()
+  const scoresCache = new Map<string, { percentile: number; cheapness_score: number }>()
+  const latestAvgCache = new Map<string, number>()
+  const sampleCache = new Map<string, PriceItem>()
+  const sggNmCache = new Map<string, string>()
 
   // combo별로 순회하며 SQL 생성
   for (const [comboKeyStr, rows] of comboMap.entries()) {
@@ -372,33 +371,27 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
 
     if (monthly.length === 0) continue
 
-    // 최신 가격
+    // 최신 가격 (buildMonthly는 ym으로 정렬됨)
     const latestAvg = monthly[monthly.length - 1]?.avg
     if (!latestAvg) continue
 
     // Percentile 및 cheapness_score 계산
     const { percentile, cheapness_score } = calcScores(monthly, latestAvg)
 
+    // Step 6에서 재사용하기 위해 캐시
+    monthlyCache.set(comboKeyStr, monthly)
+    scoresCache.set(comboKeyStr, { percentile, cheapness_score })
+    latestAvgCache.set(comboKeyStr, latestAvg)
+    sampleCache.set(comboKeyStr, sample)
+    sggNmCache.set(comboKeyStr, sgg_nm)
+
     // Monthly inserts 생성
     const monthlyStmts = buildMonthlyInsert(item_cd, sgg_cd, grd_cd, vrty_cd, monthly)
     monthlyInserts.push(...monthlyStmts)
-
-    // Stats upsert 생성
-    const statsStmt = buildStatsUpsert(
-      sample,
-      { grd_cd, vrty_cd },
-      sgg_cd,
-      sgg_nm,
-      latestAvg,
-      percentile,
-      cheapness_score,
-      false // is_default은 아래에서 결정
-    )
-    statsUpserts.push(statsStmt)
   }
 
   console.log(`  - market_monthly_prices: ${monthlyInserts.length}개`)
-  console.log(`  - market_item_stats: ${statsUpserts.length}개 (임시, is_default 미결정)`)
+  console.log(`  - market_item_stats: ${monthlyCache.size}개 (임시, is_default 미결정)`)
 
   // 5. is_default 결정: 지역별로 품목당 가장 흔한 등급/신선도 조합
   //    예: 무(231) 서울(1101)에서 가장 많이 거래되는 것이 '상(04)/월동(01)'이면
@@ -438,30 +431,26 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
     }
   }
 
-  // 6. is_default 플래그로 statsUpserts 재생성
+  // 6. is_default 플래그로 statsUpserts 생성 (캐시 재사용으로 이중 계산 없음)
   console.log('🔧 is_default 플래그 적용 중...')
 
   const finalStatsUpserts: string[] = []
 
-  for (const [comboKeyStr, rows] of comboMap.entries()) {
+  for (const [comboKeyStr] of comboMap.entries()) {
     const [item_cd, sgg_cd_raw, grd_cd, vrty_cd] = comboKeyStr.split('|')
     const sgg_cd = sgg_cd_raw || '1100'
 
-    const seCd = itemToSeCd.get(item_cd) || '01'
-    const filteredRows = rows.filter((r) => r.se_cd === seCd)
+    // Step 4에서 캐시된 결과 재사용 (buildMonthly/calcScores 재호출 불필요)
+    const monthly = monthlyCache.get(comboKeyStr)
+    if (!monthly) continue
 
-    if (filteredRows.length === 0) continue
-
-    const sample = filteredRows[0]
-    const sgg_nm = sample.sgg_nm || '전국'
-
-    const monthly = buildMonthly(filteredRows)
-    if (monthly.length === 0) continue
-
-    const latestAvg = monthly[monthly.length - 1]?.avg
+    const latestAvg = latestAvgCache.get(comboKeyStr)
     if (!latestAvg) continue
 
-    const { percentile, cheapness_score } = calcScores(monthly, latestAvg)
+    const { percentile, cheapness_score } = scoresCache.get(comboKeyStr)!
+    const sample = sampleCache.get(comboKeyStr)!
+    const sgg_nm = sggNmCache.get(comboKeyStr) || '전국'
+    const latestYm = monthly[monthly.length - 1].ym
 
     // is_default 결정
     const itemRegionKey = `${item_cd}|${sgg_cd}`
@@ -477,7 +466,8 @@ ${isDryRun ? '  [dry-run] 실제 실행하지 않음' : ''}
       latestAvg,
       percentile,
       cheapness_score,
-      isDefault
+      isDefault,
+      latestYm
     )
     finalStatsUpserts.push(statsStmt)
   }

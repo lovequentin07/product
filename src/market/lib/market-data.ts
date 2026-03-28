@@ -268,6 +268,13 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
   const defaultGrade = gradeGroup?.grades.find((g) => g.is_default) ?? gradeGroup?.grades[0]
   const defaultVariety = defaultGrade?.varieties.find((v) => v.is_default) ?? defaultGrade?.varieties[0]
 
+  const cheapnessInfo = getCheapnessInfo(
+    stat.percentile || 0,
+    stat.latest_price,
+    trendMeta.yearMin,
+    trendMeta.yearMax
+  )
+
   return {
     id: stat.item_cd,
     name: stat.item_nm,
@@ -291,18 +298,8 @@ async function statsToItemDetail(stat: MarketItemStats, allStats?: MarketItemSta
     featuredVrtyCd: stat.vrty_cd,
     seCd: stat.se_cd as '01' | '02' | undefined,
     percentile: stat.percentile || 0,
-    cheapness_label: getCheapnessInfo(
-      stat.percentile || 0,
-      stat.latest_price,
-      trendMeta.yearMin,
-      trendMeta.yearMax
-    ).label,
-    cheapness_explanation: getCheapnessInfo(
-      stat.percentile || 0,
-      stat.latest_price,
-      trendMeta.yearMin,
-      trendMeta.yearMax
-    ).explanation,
+    cheapness_label: cheapnessInfo.label,
+    cheapness_explanation: cheapnessInfo.explanation,
   }
 }
 

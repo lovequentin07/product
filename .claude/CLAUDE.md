@@ -124,7 +124,6 @@ src/
 │   │   └── types.ts              # DB 레이어 내부 타입
 │   ├── market-data.ts            # 농수축산물 시세 비즈니스 로직 (D1 기반, JSON fallback)
 │   ├── apt-utils.ts              # 실거래가 서비스 공용 유틸 함수
-│   ├── region.ts                 # CF-IPCity 헤더 기반 지역 감지 유틸
 │   └── db/
 ├── types/
 │   ├── real-estate.ts            # 실거래가 타입

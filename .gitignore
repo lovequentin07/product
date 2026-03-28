@@ -60,3 +60,6 @@ next-env.d.ts
 .claude/api/**/*.docx
 .claude/*.json
 .idx/
+
+# temporary script output
+.tmp/
