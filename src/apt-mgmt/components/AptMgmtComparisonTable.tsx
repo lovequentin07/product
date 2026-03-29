@@ -111,7 +111,7 @@ export default function AptMgmtComparisonTable({ result }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-xs text-gray-500">
+            <tr className="text-xs text-gray-500" style={{ background: 'var(--ds-cream-muted)' }}>
               <th className="text-left px-2 sm:px-4 py-3 font-medium">항목</th>
               <th className="text-right px-2 sm:px-4 py-3 font-medium">우리 아파트</th>
               <th className="text-right px-2 sm:px-4 py-3 font-medium">{result.sgg_nm} 평균</th>
@@ -126,7 +126,7 @@ export default function AptMgmtComparisonTable({ result }: Props) {
                 <Fragment key={row.label}>
                   <tr
                     onClick={() => hasChildren && toggleGroup(row.label)}
-                    className={hasChildren ? 'cursor-pointer hover:bg-gray-50' : ''}
+                    className={hasChildren ? 'cursor-pointer hover:bg-(--ds-cream-muted)' : ''}
                   >
                     <td className="px-2 sm:px-4 py-3 font-medium text-gray-700">
                       {hasChildren && (
@@ -145,7 +145,7 @@ export default function AptMgmtComparisonTable({ result }: Props) {
                     </td>
                   </tr>
                   {isOpen && row.children?.map((child) => (
-                    <tr key={child.label} className="bg-gray-50/50">
+                    <tr key={child.label} style={{ background: 'var(--ds-cream-muted)' }}>
                       <td className="px-2 sm:px-4 py-2 pl-5 sm:pl-8 text-gray-500 text-xs">{child.label}</td>
                       <td className="text-right px-2 sm:px-4 py-2 text-xs text-gray-600">
                         {formatWon(child.mine)}
@@ -165,7 +165,7 @@ export default function AptMgmtComparisonTable({ result }: Props) {
         </table>
       </div>
 
-      <div className="px-5 py-3 bg-gray-50 text-xs text-gray-400">
+      <div className="px-5 py-3 text-xs text-gray-400" style={{ background: 'var(--ds-cream-muted)' }}>
         * 구 평균 및 서울 평균은 공용관리비 기준. 세대당 = 단지 전체 합계 ÷ 세대수.
       </div>
     </div>

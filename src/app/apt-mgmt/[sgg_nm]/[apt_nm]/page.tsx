@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getMgmtFeeResult, getMgmtFeeTopApts, getMgmtFeeApts } from '@apt-mgmt/lib/db/management-fee';
 import type { MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
 import AptMgmtResultClient from '@apt-mgmt/components/AptMgmtResultClient';
+import ServiceLayout from '@shared/components/ui/ServiceLayout';
 
 interface PageProps {
   params: Promise<{ sgg_nm: string; apt_nm: string }>;
@@ -73,7 +74,7 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl overflow-x-hidden">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -89,6 +90,6 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
       </nav>
 
       <AptMgmtResultClient result={result} topApts={topApts} />
-    </div>
+    </ServiceLayout>
   );
 }

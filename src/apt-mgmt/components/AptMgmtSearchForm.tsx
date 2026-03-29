@@ -105,7 +105,7 @@ export default function AptMgmtSearchForm() {
           <select
             value={sggNm}
             onChange={(e) => setSggNm(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent)"
           >
             <option value="">-- 구를 선택하세요 --</option>
             {SEOUL_DISTRICTS.map((r) => (
@@ -130,7 +130,7 @@ export default function AptMgmtSearchForm() {
               '아파트명 입력'
             }
             autoComplete="off"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent) disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400"
           />
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
 
@@ -141,7 +141,7 @@ export default function AptMgmtSearchForm() {
                 <li
                   key={a.kapt_code}
                   onMouseDown={() => handleSelect(a)}
-                  className="flex items-baseline justify-between px-3 py-2 cursor-pointer hover:bg-blue-50 text-sm"
+                  className="flex items-baseline justify-between px-3 py-2 cursor-pointer hover:bg-(--ds-accent-faint) text-sm"
                 >
                   <span className="font-medium text-gray-900">{a.apt_nm}</span>
                   {a.umd_nm && (
@@ -162,7 +162,8 @@ export default function AptMgmtSearchForm() {
       <button
         type="submit"
         disabled={!sggNm || !selectedApt}
-        className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-95 disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+        style={{ background: 'var(--ds-accent)' }}
+        className="w-full hover:opacity-80 active:opacity-70 active:scale-95 disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-lg transition-opacity text-sm"
       >
         관리비 분석 시작
       </button>
