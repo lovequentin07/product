@@ -4,10 +4,25 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Price status colors */
-  --color-price-high: #DC2626;    /* 최고가 (빨강) */
-  --color-price-current: #1E40AF;  /* 현재가 (진한 파랑) */
-  --color-price-low: #059669;      /* 최저가 (진한 초록) */
+  /* Price status colors (기존 유지) */
+  --color-price-high: #DC2626;
+  --color-price-current: #1E40AF;
+  --color-price-low: #059669;
+
+  /* DataZip Design System Tokens */
+  --ds-cream:        #F7F4EF;
+  --ds-cream-card:   #FFFFFF;
+  --ds-cream-border: #E8E3DC;
+  --ds-cream-muted:  #F3F0EB;
+  --ds-ink:          #1A1918;
+  --ds-ink-muted:    #4A4540;
+  --ds-ink-faint:    #9A9085;
+  --ds-accent:       #C94B1A;
+  --ds-accent-faint: rgba(201,75,26,0.08);
+  --ds-success:      #047857;
+  --ds-success-bg:   #ECFDF5;
+  --ds-danger:       #B91C1C;
+  --ds-danger-bg:    #FEF2F2;
 }
 
 @theme inline {
@@ -23,8 +38,8 @@ html {
 }
 
 body {
-  background: #ffffff;
-  color: #171717;
+  background: var(--ds-cream);
+  color: var(--ds-ink);
   font-family: Arial, Helvetica, sans-serif;
 }
 
