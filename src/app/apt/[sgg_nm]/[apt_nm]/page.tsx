@@ -32,6 +32,7 @@ const AreaBarChart = dynamic(
   }
 );
 import { NormalizedTransaction } from '@apt/types/real-estate';
+import ServiceLayout from '@shared/components/ui/ServiceLayout';
 
 interface PageProps {
   params: Promise<{ sgg_nm: string; apt_nm: string }>;
@@ -207,7 +208,7 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
+    <ServiceLayout contentClassName="max-w-6xl mx-auto px-4 pt-6 pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -224,6 +225,6 @@ export default async function AptDetailPage({ params, searchParams }: PageProps)
           areaBucket={parsedAreaBucket}
         />
       </Suspense>
-    </div>
+    </ServiceLayout>
   );
 }

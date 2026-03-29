@@ -11,6 +11,7 @@ import { ensureString, toNormalized, formatPeriodLabel } from '@apt/lib/apt-util
 import SearchForm from '@apt/components/apartment/SearchForm';
 import TransactionsClientComponent from '@apt/components/apartment/TransactionsClientComponent';
 import LoadingSkeleton from '@apt/components/apartment/LoadingSkeleton';
+import ServiceLayout from '@shared/components/ui/ServiceLayout';
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -143,7 +144,7 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <ServiceLayout contentClassName="max-w-4xl mx-auto px-4 pt-6 pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -157,35 +158,33 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
         </p>
       </header>
 
-      <main>
-        <SearchForm initialLawdCd={sgg_cd} />
+      <SearchForm initialLawdCd={sgg_cd} />
 
-        <Suspense
-          fallback={<LoadingSkeleton />}
-          key={`${sgg_cd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}-${initialAreaMin ?? ''}-${initialAreaMax ?? ''}-${initialPriceMin ?? ''}-${initialPriceMax ?? ''}`}
-        >
-          <TransactionsLoader
-            lawdCd={sgg_cd}
-            dealYmd={initialDealYmd}
-            numOfRows={initialNumOfRows}
-            pageNo={initialPageNo}
-            searchTerm={initialSearchTerm}
-            sortBy={initialSortBy}
-            sortDir={initialSortDir}
-            areaMin={initialAreaMin}
-            areaMax={initialAreaMax}
-            priceMin={initialPriceMin}
-            priceMax={initialPriceMax}
-          />
-        </Suspense>
+      <Suspense
+        fallback={<LoadingSkeleton />}
+        key={`${sgg_cd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}-${initialAreaMin ?? ''}-${initialAreaMax ?? ''}-${initialPriceMin ?? ''}-${initialPriceMax ?? ''}`}
+      >
+        <TransactionsLoader
+          lawdCd={sgg_cd}
+          dealYmd={initialDealYmd}
+          numOfRows={initialNumOfRows}
+          pageNo={initialPageNo}
+          searchTerm={initialSearchTerm}
+          sortBy={initialSortBy}
+          sortDir={initialSortDir}
+          areaMin={initialAreaMin}
+          areaMax={initialAreaMax}
+          priceMin={initialPriceMin}
+          priceMax={initialPriceMax}
+        />
+      </Suspense>
 
-        <section className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-500 space-y-2 text-center">
-          <p>2006년부터 현재까지 {decodedSggNm} 아파트 전체 매매 거래 이력을 조회할 수 있습니다.</p>
-          <p>
-            거래 연월을 선택하거나 아파트명을 검색하여 원하는 조건의 실거래 정보를 확인하세요.
-          </p>
-        </section>
-      </main>
-    </div>
+      <section className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-500 space-y-2 text-center">
+        <p>2006년부터 현재까지 {decodedSggNm} 아파트 전체 매매 거래 이력을 조회할 수 있습니다.</p>
+        <p>
+          거래 연월을 선택하거나 아파트명을 검색하여 원하는 조건의 실거래 정보를 확인하세요.
+        </p>
+      </section>
+    </ServiceLayout>
   );
 }
