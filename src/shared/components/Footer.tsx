@@ -2,7 +2,10 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-gray-50">
+    <footer
+      className="mt-16"
+      style={{ borderTop: '1px solid var(--ds-cream-border)', background: 'var(--ds-cream-muted)' }}
+    >
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <p className="text-sm font-medium text-gray-700">DataZip</p>

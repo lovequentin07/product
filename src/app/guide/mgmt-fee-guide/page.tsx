@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
+import PrimaryButton from "@shared/components/ui/PrimaryButton";
 
 export const metadata: Metadata = {
   title: "적정 관리비 판단 기준과 절약 방법 | DataZip",
@@ -38,7 +40,7 @@ const breadcrumbJsonLd = {
 
 export default function MgmtFeeGuidePage() {
   return (
-    <div className="mx-auto max-w-2xl p-4 pb-16">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -89,7 +91,7 @@ export default function MgmtFeeGuidePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="bg-gray-100">
+                <tr style={{ background: 'var(--ds-cream-muted)' }}>
                   <th className="text-left px-4 py-2 text-gray-700 font-medium">항목</th>
                   <th className="text-left px-4 py-2 text-gray-700 font-medium">구분</th>
                   <th className="text-left px-4 py-2 text-gray-700 font-medium">설명</th>
@@ -109,7 +111,12 @@ export default function MgmtFeeGuidePage() {
                   <tr key={item} className="text-gray-600">
                     <td className="px-4 py-2 font-medium text-gray-700">{item}</td>
                     <td className="px-4 py-2">
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${type === "공용" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"}`}>
+                      <span
+                        className="text-xs px-1.5 py-0.5 rounded"
+                        style={type === "공용"
+                          ? { background: 'var(--ds-accent-faint)', color: 'var(--ds-accent)' }
+                          : { background: '#dcfce7', color: '#15803d' }}
+                      >
                         {type}
                       </span>
                     </td>
@@ -228,14 +235,9 @@ export default function MgmtFeeGuidePage() {
         </section>
 
         <div className="mt-8 pt-6 border-t border-gray-100">
-          <Link
-            href="/apt-mgmt"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-          >
-            우리 아파트 관리비 확인하기 →
-          </Link>
+          <PrimaryButton href="/apt-mgmt">우리 아파트 관리비 확인하기 →</PrimaryButton>
         </div>
       </article>
-    </div>
+    </ServiceLayout>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
+import PrimaryButton from "@shared/components/ui/PrimaryButton";
 
 export const metadata: Metadata = {
   title: "아파트 실거래가 보는 법 완벽 가이드 | DataZip",
@@ -38,7 +40,7 @@ const breadcrumbJsonLd = {
 
 export default function AptPriceGuidePage() {
   return (
-    <div className="mx-auto max-w-2xl p-4 pb-16">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -116,9 +118,9 @@ export default function AptPriceGuidePage() {
             특정 아파트의 적정 시세를 파악하려면 <strong>같은 면적대의 최근 3~6개월 거래</strong>를 확인하세요.
             거래 건수가 적은 소규모 단지라면 최근 1~2년치 데이터를 참고하되, 시장 흐름도 함께 고려해야 합니다.
           </p>
-          <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800 space-y-2">
-            <p className="font-medium">시세 분석 순서</p>
-            <ol className="list-decimal list-inside space-y-1 text-blue-700">
+          <div className="rounded-xl p-4 text-sm space-y-2" style={{ background: 'var(--ds-accent-faint)' }}>
+            <p className="font-medium" style={{ color: 'var(--ds-ink-muted)' }}>시세 분석 순서</p>
+            <ol className="list-decimal list-inside space-y-1" style={{ color: 'var(--ds-ink-muted)' }}>
               <li>아파트 이름 검색 후 최근 6개월 거래 확인</li>
               <li>같은 전용면적 거래만 필터링</li>
               <li>취소 거래 제외 후 평균·최고·최저 확인</li>
@@ -179,14 +181,9 @@ export default function AptPriceGuidePage() {
         </section>
 
         <div className="mt-8 pt-6 border-t border-gray-100">
-          <Link
-            href="/apt"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-          >
-            실거래가 조회하기 →
-          </Link>
+          <PrimaryButton href="/apt">실거래가 조회하기 →</PrimaryButton>
         </div>
       </article>
-    </div>
+    </ServiceLayout>
   );
 }

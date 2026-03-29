@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침",
@@ -9,7 +10,7 @@ export default function PrivacyPolicyPage() {
   const lastUpdated = "2026년 2월 21일";
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <ServiceLayout>
       <h1 className="text-2xl font-bold mb-2">개인정보처리방침</h1>
       <p className="text-sm text-gray-500 mb-8">최종 수정일: {lastUpdated}</p>
 
@@ -34,7 +35,7 @@ export default function PrivacyPolicyPage() {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline"
+                className="underline" style={{ color: 'var(--ds-accent)' }}
               >
                 Google 개인정보처리방침
               </a>
@@ -50,7 +51,7 @@ export default function PrivacyPolicyPage() {
                 href="https://privacy.microsoft.com/privacystatement"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline"
+                className="underline" style={{ color: 'var(--ds-accent)' }}
               >
                 Microsoft 개인정보처리방침
               </a>
@@ -66,7 +67,7 @@ export default function PrivacyPolicyPage() {
                 href="https://www.google.com/settings/ads"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline"
+                className="underline" style={{ color: 'var(--ds-accent)' }}
               >
                 Google 광고 설정
               </a>
@@ -98,7 +99,7 @@ export default function PrivacyPolicyPage() {
           개인정보처리방침에 대한 문의사항이 있으시면 아래로 연락해 주세요.
         </p>
         <p className="mt-2 text-gray-700">
-          사이트: <a href="https://datazip.net" className="text-blue-600 underline">datazip.net</a>
+          사이트: <a href="https://datazip.net" className="underline" style={{ color: 'var(--ds-accent)' }}>datazip.net</a>
         </p>
       </section>
 
@@ -109,6 +110,6 @@ export default function PrivacyPolicyPage() {
           변경 시 본 페이지에 최종 수정일을 업데이트합니다.
         </p>
       </section>
-    </div>
+    </ServiceLayout>
   );
 }
