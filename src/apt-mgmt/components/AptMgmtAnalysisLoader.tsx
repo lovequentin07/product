@@ -43,8 +43,8 @@ export default function AptMgmtAnalysisLoader({ onComplete }: Props) {
     <div className="flex flex-col items-center justify-center py-10 sm:py-20 space-y-6">
       {/* 스피너 */}
       <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
-        <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+        <div className="absolute inset-0 rounded-full border-4 border-(--ds-cream-border)" />
+        <div className="absolute inset-0 rounded-full border-4 border-(--ds-accent) border-t-transparent animate-spin" />
       </div>
 
       {/* 단계 텍스트 */}
@@ -60,7 +60,7 @@ export default function AptMgmtAnalysisLoader({ onComplete }: Props) {
       {/* 진행 바 */}
       <div className="w-full max-w-[16rem] h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out"
+          className="h-full bg-(--ds-accent) rounded-full transition-all duration-700 ease-out"
           style={{ width: `${((stepIdx + 1) / STEPS.length) * 100}%` }}
         />
       </div>

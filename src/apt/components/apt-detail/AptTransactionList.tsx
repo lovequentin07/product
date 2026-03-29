@@ -70,7 +70,7 @@ const AptTransactionList: React.FC<Props> = ({ transactions, title = '전체 거
             {sorted.map((t) => (
               <tr key={t.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 whitespace-nowrap text-gray-600">{t.deal_date}</td>
-                <td className="px-4 py-3 whitespace-nowrap font-semibold text-blue-600 text-right">
+                <td className="px-4 py-3 whitespace-nowrap font-semibold text-(--ds-accent) text-right">
                   {t.deal_amount_billion.toFixed(1)}억
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap font-bold text-red-600 text-right">

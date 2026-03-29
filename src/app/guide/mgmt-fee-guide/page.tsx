@@ -155,7 +155,7 @@ export default function MgmtFeeGuidePage() {
           </div>
           <p className="text-sm text-gray-600 leading-relaxed">
             같은 동(洞)·구(區)의 비슷한 규모 단지와 비교했을 때 관리비가 20% 이상 높다면 원인을 파악할 필요가 있습니다.
-            DataZip의 <Link href="/apt-mgmt" className="text-blue-500 hover:underline">관리비 지킴이</Link> 서비스에서
+            DataZip의 <Link href="/apt-mgmt" className="hover:underline" style={{ color: 'var(--ds-accent)' }}>관리비 지킴이</Link> 서비스에서
             우리 아파트의 동·구·서울 전체 순위를 무료로 확인할 수 있습니다.
           </p>
         </section>
@@ -194,7 +194,7 @@ export default function MgmtFeeGuidePage() {
                   "관리비 내역 투명화: K-apt 공시 데이터와 우리 단지 내역을 정기적으로 비교",
                 ].map((item) => (
                   <li key={item} className="flex gap-2">
-                    <span className="shrink-0 text-blue-500">✓</span>
+                    <span className="shrink-0" style={{ color: 'var(--ds-accent)' }}>✓</span>
                     <span>{item}</span>
                   </li>
                 ))}

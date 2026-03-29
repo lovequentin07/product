@@ -91,7 +91,7 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
             onClick={() => handleTabSelect(null)}
             className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
               selectedBucket === null
-                ? 'bg-blue-600 text-white'
+                ? 'bg-(--ds-accent) text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -103,7 +103,7 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
               onClick={() => handleTabSelect(a.minPyeong)}
               className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
                 selectedBucket === a.minPyeong
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-(--ds-accent) text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >

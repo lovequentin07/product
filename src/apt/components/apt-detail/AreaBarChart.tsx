@@ -17,7 +17,7 @@ interface Props {
   byArea: AreaStats[];
 }
 
-const COLORS = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'];
+const COLORS = ['#C94B1A', '#a83c14', '#8a310f', '#6e270c'];
 
 interface TooltipPayload {
   value: number;
@@ -38,7 +38,7 @@ function CustomTooltip({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-gray-700 mb-1">{label}</p>
-      <p className="text-blue-600">평균가: <strong>{avgBillion}억</strong></p>
+      <p style={{ color: 'var(--ds-accent)' }}>평균가: <strong>{avgBillion}억</strong></p>
     </div>
   );
 }

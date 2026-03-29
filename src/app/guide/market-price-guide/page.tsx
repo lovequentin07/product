@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
 
 export const metadata: Metadata = {
   title: "농산물 가격 정보 활용 가이드 — 소매가·등급·percentile 완벽 이해",
@@ -37,7 +38,7 @@ const breadcrumbJsonLd = {
 
 export default function MarketPriceGuidePage() {
   return (
-    <div className="mx-auto max-w-2xl p-4 pb-16">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -77,8 +78,8 @@ export default function MarketPriceGuidePage() {
             소매가는 마트나 전통시장에서 일반 소비자가 실제로 지불하는 가격입니다.
             생산지에서 소비자에게 도달하기까지 중간 비용(운송, 보관, 판매 마진)이 포함되어 있습니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
-            <p className="font-medium text-blue-900 mb-2">
+          <div className="mt-4 p-4 rounded-lg bg-(--ds-cream-muted) text-sm text-gray-700">
+            <p className="font-medium text-(--ds-ink) mb-2">
               ℹ️ 도매가 vs 소매가
             </p>
             <ul className="space-y-1.5">
@@ -138,8 +139,8 @@ export default function MarketPriceGuidePage() {
             percentile은 과거 1년간의 가격 이력 중 현재 가격이 어느 수준에 위치하는지를 보여줍니다.
             예를 들어 &ldquo;하위 20%&rdquo;는 과거 1년 중 가장 저렴한 하위 20% 구간에 속한다는 뜻입니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
-            <p className="font-medium text-blue-900 mb-3">
+          <div className="mt-4 p-4 rounded-lg bg-(--ds-cream-muted) text-sm text-gray-700">
+            <p className="font-medium text-(--ds-ink) mb-3">
               📊 percentile 활용 사례
             </p>
             <div className="space-y-2">
@@ -239,12 +240,12 @@ export default function MarketPriceGuidePage() {
         <div className="mt-8 pt-6 border-t border-gray-100">
           <Link
             href="/market"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-(--ds-accent) px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             시세 정보 보기 →
           </Link>
         </div>
       </article>
-    </div>
+    </ServiceLayout>
   );
 }

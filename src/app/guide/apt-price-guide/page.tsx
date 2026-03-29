@@ -170,7 +170,7 @@ export default function AptPriceGuidePage() {
             6. DataZip에서 실거래가 조회하기
           </h2>
           <p className="text-sm text-gray-600 leading-relaxed">
-            DataZip의 <Link href="/apt" className="text-blue-500 hover:underline">아파트 실거래가 조회</Link> 서비스에서는
+            DataZip의 <Link href="/apt" className="hover:underline" style={{ color: 'var(--ds-accent)' }}>아파트 실거래가 조회</Link> 서비스에서는
             서울 전체 131만건 이상의 실거래 데이터를 무료로 검색할 수 있습니다.
             아파트 이름으로 검색하거나, 지역(구)과 거래 연월을 선택해 원하는 조건의 거래 내역을 확인하세요.
           </p>

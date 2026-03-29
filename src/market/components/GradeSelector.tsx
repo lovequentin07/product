@@ -131,8 +131,8 @@ export default function GradeSelector({ gradeGroup, defaultPrice, unit, seCd, fe
                 onClick={() => setSelectedVrtyIdx(idx)}
                 className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${
                   idx === selectedVrtyIdx
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-50 text-blue-400 hover:bg-blue-100'
+                    ? 'bg-(--ds-accent) text-white'
+                    : 'bg-(--ds-cream-muted) text-(--ds-ink-faint) hover:bg-(--ds-cream-border)'
                 }`}
               >
                 {variety.vrty_label}

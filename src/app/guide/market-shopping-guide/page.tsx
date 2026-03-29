@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
 
 export const metadata: Metadata = {
   title: "알뜰 장보기 완벽 가이드 — 오늘 뭐가 싼지 찾는 법",
@@ -76,7 +77,7 @@ const faqJsonLd = {
 
 export default function MarketShoppingGuidePage() {
   return (
-    <div className="mx-auto max-w-2xl p-4 pb-16">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -123,8 +124,8 @@ export default function MarketShoppingGuidePage() {
             종합적으로 보여주는 경제 지표입니다. 이를 통해 현재 식재료 가격 수준이
             평년보다 비싼지 저렴한지 한눈에 파악할 수 있습니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
-            <p className="font-medium text-blue-900 mb-2">
+          <div className="mt-4 p-4 rounded-lg bg-(--ds-cream-muted) text-sm text-gray-700">
+            <p className="font-medium text-(--ds-ink) mb-2">
               💡 장바구니 물가 지수가 높으면
             </p>
             <ul className="space-y-1">
@@ -150,8 +151,8 @@ export default function MarketShoppingGuidePage() {
             DataZip의 시세 정보를 활용하면 오늘 기준 가장 저렴한 농산물을 실시간으로
             확인할 수 있습니다. 이를 활용해 알뜰하게 장을 보는 방법을 소개합니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
-            <p className="font-medium text-blue-900 mb-3">
+          <div className="mt-4 p-4 rounded-lg bg-(--ds-cream-muted) text-sm text-gray-700">
+            <p className="font-medium text-(--ds-ink) mb-3">
               📍 DataZip으로 저렴한 품목 찾기
             </p>
             <div className="space-y-2">
@@ -212,7 +213,7 @@ export default function MarketShoppingGuidePage() {
             장을 볼 때 큰 도움이 됩니다.
           </p>
           <div className="mt-4 space-y-3">
-            <div className="p-3 rounded-lg bg-blue-50">
+            <div className="p-3 rounded-lg bg-(--ds-cream-muted)">
               <p className="font-semibold text-gray-800 text-sm mb-2">
                 🍎 과일 선택 기준
               </p>
@@ -299,12 +300,12 @@ export default function MarketShoppingGuidePage() {
         <div className="mt-8 pt-6 border-t border-gray-100">
           <Link
             href="/market"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-(--ds-accent) px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             시세 정보 보기 →
           </Link>
         </div>
       </article>
-    </div>
+    </ServiceLayout>
   );
 }
