@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { getCheapItemsByRegion } from "@market/lib/market-data";
+import { detectRegion } from "@market/lib/region";
+import type { ItemDetail } from "@market/types/market";
 
 export const metadata: Metadata = {
-  title: "DataZip — 오늘의 장바구니. 지금 뭐가 싼지",
+  title: "DataZip — 오늘 바로 쓸 수 있는 정보",
   description:
-    "오늘 저렴해진 채소·과일·수산·곡물·식품을 한눈에 확인하세요. 공공데이터 기반 소매가 비교.",
+    "장바구니 시세, 아파트 실거래가, 관리비 분석까지. 매일 업데이트되는 생활 데이터를 한눈에 확인하세요.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "DataZip — 오늘의 장바구니. 지금 뭐가 싼지",
+    title: "DataZip — 오늘 바로 쓸 수 있는 정보",
     description:
-      "오늘 저렴해진 식재료를 확인하고 알뜰 장을 보세요. 공공데이터 기반 농산물 시세.",
+      "장바구니 시세, 아파트 실거래가, 관리비 분석. 매일 업데이트.",
     url: "/",
   },
 };
@@ -29,72 +33,217 @@ const websiteJsonLd = {
   },
 };
 
-const services = [
+const secondaryServices = [
   {
-    emoji: "🥦",
-    title: "농수축산물 시세",
-    desc: "오늘 저렴한 식재료 한눈에",
-    href: "/market",
+    href: "/apt",
+    label: "아파트 실거래가",
+    desc: "우리 동네 아파트, 실제로 얼마에 팔렸나",
+    tag: "REAL ESTATE",
   },
   {
-    emoji: "🏢",
-    title: "아파트 실거래가",
-    desc: "서울 아파트 실거래가 조회",
-    href: "/apt",
+    href: "/apt-mgmt",
+    label: "관리비 지킴이",
+    desc: "우리 단지 관리비, 비싼 편인지 확인",
+    tag: "MGMT FEE",
   },
 ];
 
-export default function HomePage() {
+function formatPrice(price: number): string {
+  return price.toLocaleString("ko-KR");
+}
+
+function PercentileBadge({ percentile }: { percentile: number }) {
+  const pct = Math.round(percentile * 100);
+  const isLow = pct <= 20;
   return (
-    <div className="min-h-screen bg-white">
+    <span
+      className="inline-flex items-center text-xs font-mono font-semibold px-1.5 py-0.5 rounded"
+      style={{
+        color: isLow ? "#047857" : "#9A9085",
+        background: isLow ? "#ECFDF5" : "#F3F0EB",
+      }}
+    >
+      하위 {pct}%
+    </span>
+  );
+}
+
+export default async function HomePage() {
+  const headersList = await headers();
+  const sgg_cd = detectRegion(headersList);
+
+  let liveItems: ItemDetail[] = [];
+  try {
+    liveItems = await getCheapItemsByRegion(sgg_cd, 6);
+  } catch {
+    liveItems = [];
+  }
+
+  return (
+    <div style={{ background: "#F7F4EF", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
 
-      <div className="max-w-xl mx-auto px-4">
-        {/* Hero */}
-        <section className="text-center pt-24 pb-16">
-          <h1
-            className="font-bold text-gray-900 leading-tight mb-3"
-            style={{ fontSize: "36px" }}
-          >
-            오늘 장바구니 시세<br />
-            3초 만에 파악하세요
-          </h1>
-          <p className="text-gray-400 text-sm mb-10">
-            공공데이터 기반 농수축산물 소매가 · 매일 업데이트
-          </p>
-          <Link
-            href="/market"
-            className="inline-block bg-gray-900 text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-gray-700 transition-colors"
-          >
-            시세 확인하기 →
-          </Link>
-        </section>
+      <div className="max-w-2xl mx-auto px-5 pt-8 pb-24">
 
-        {/* 서비스 소개 */}
-        <section className="pb-20">
-          <p className="text-xs text-gray-400 mb-3">서비스</p>
-          <div className="grid grid-cols-2 gap-3">
-            {services.map((s) => (
-              <Link
-                key={s.href}
-                href={s.href}
-                className="block border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow"
+        {/* 헤더 */}
+        <header className="flex items-center justify-between mb-5">
+          <span
+            className="text-sm font-semibold tracking-widest"
+            style={{ color: "#1A1918", letterSpacing: "0.12em" }}
+          >
+            datazip
+          </span>
+          <span className="flex items-center gap-1.5 text-xs" style={{ color: "#9A9085" }}>
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full animate-live-pulse"
+              style={{ background: "#C94B1A" }}
+            />
+            매일 업데이트
+          </span>
+        </header>
+
+        {/* 주홍 구분선 */}
+        <div style={{ height: "1px", background: "#C94B1A", marginBottom: "32px" }} />
+
+        {/* 장바구니 시세 — 풀너비 카드 */}
+        <section
+          className="rounded-2xl p-6 mb-4"
+          style={{ background: "#FFFFFF", border: "1px solid #E8E3DC" }}
+        >
+          {/* 카드 헤더 */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <p
+                className="text-xs font-mono font-semibold tracking-widest mb-1.5"
+                style={{ color: "#C94B1A", letterSpacing: "0.15em" }}
               >
-                <div className="text-2xl mb-3">{s.emoji}</div>
-                <div className="font-semibold text-gray-900 text-sm">
-                  {s.title}
-                </div>
-                <div className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  {s.desc}
-                </div>
-              </Link>
-            ))}
+                MARKET
+              </p>
+              <h2
+                className="text-xl font-bold leading-tight mb-1"
+                style={{
+                  fontFamily: "var(--font-noto-serif-kr)",
+                  color: "#1A1918",
+                }}
+              >
+                장바구니 시세
+              </h2>
+              <p className="text-sm" style={{ color: "#4A4540" }}>
+                지금 사면 이득인 식재료들을 3초만에 확인하세요
+              </p>
+            </div>
+            <span
+              className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+              style={{
+                background: "rgba(201,75,26,0.08)",
+                color: "#C94B1A",
+              }}
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full animate-live-pulse" style={{ background: "#C94B1A" }} />
+              LIVE
+            </span>
+          </div>
+
+          {/* 가격 목록 */}
+          {liveItems.length > 0 ? (
+            <div className="mb-6">
+              {liveItems.map((item, i) => {
+                const price = item.retailPrice ?? item.kinds?.[0]?.retailPrice ?? 0;
+                const percentile = item.percentile ?? 0;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between py-2.5 animate-stagger-in"
+                    style={{
+                      borderBottom: i < liveItems.length - 1 ? "1px solid #F0EBE4" : "none",
+                      animationDelay: `${i * 60}ms`,
+                    }}
+                  >
+                    <span className="text-sm" style={{ color: "#1A1918" }}>
+                      {item.name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono font-semibold" style={{ color: "#1A1918" }}>
+                        {formatPrice(price)}
+                        <span className="text-xs font-normal" style={{ color: "#9A9085" }}>
+                          원/{item.unit}
+                        </span>
+                      </span>
+                      <PercentileBadge percentile={percentile} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mb-6 py-4 text-center text-sm" style={{ color: "#9A9085" }}>
+              데이터를 불러오는 중입니다
+            </div>
+          )}
+
+          <div style={{ borderTop: "1px solid #E8E3DC", paddingTop: "16px" }}>
+            <Link
+              href="/market"
+              className="text-sm font-semibold transition-opacity hover:opacity-70"
+              style={{ color: "#C94B1A" }}
+            >
+              전체 시세 보기 →
+            </Link>
           </div>
         </section>
+
+        {/* 2열 서비스 카드 */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {secondaryServices.map((s) => (
+            <Link
+              key={s.href}
+              href={s.href}
+              className="flex flex-col rounded-2xl p-5 transition-shadow hover:shadow-md"
+              style={{ background: "#FFFFFF", border: "1px solid #E8E3DC", minHeight: "140px" }}
+            >
+              <p
+                className="text-xs font-mono font-semibold tracking-widest mb-2"
+                style={{ color: "#C94B1A", letterSpacing: "0.15em" }}
+              >
+                {s.tag}
+              </p>
+              <h3
+                className="font-bold text-sm leading-snug mb-1"
+                style={{
+                  fontFamily: "var(--font-noto-serif-kr)",
+                  color: "#1A1918",
+                }}
+              >
+                {s.label}
+              </h3>
+              <p className="text-xs flex-1" style={{ color: "#9A9085" }}>
+                {s.desc}
+              </p>
+              <span
+                className="inline-block text-xs font-semibold mt-4 px-3 py-1.5 rounded-lg self-start"
+                style={{ background: "#F7F4EF", color: "#C94B1A" }}
+              >
+                조회 →
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* 추가 예정 카드 */}
+        <div
+          className="rounded-2xl px-5 py-4 text-center text-sm"
+          style={{
+            border: "1.5px dashed #DDD8D0",
+            color: "#B5AFA7",
+          }}
+        >
+          · · · &nbsp; 곧 추가됩니다
+        </div>
+
       </div>
     </div>
   );
