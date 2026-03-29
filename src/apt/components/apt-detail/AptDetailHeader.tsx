@@ -26,7 +26,8 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
       {/* 뒤로가기 */}
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-3"
+        className="inline-flex items-center gap-1 text-sm hover:underline mb-3"
+        style={{ color: 'var(--ds-accent)' }}
       >
         ← 목록으로 돌아가기
       </Link>
@@ -46,7 +47,7 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
           <Stat
             label="최근 거래"
             value={latestPrice ? `${toBillion(latestPrice)}억` : '-'}
-            color="text-blue-600"
+            accentStyle={{ color: 'var(--ds-accent)' }}
           />
           <Stat
             label="전체 평균"
@@ -59,11 +60,11 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
   );
 };
 
-function Stat({ label, value, color = 'text-gray-800' }: { label: string; value: string; color?: string }) {
+function Stat({ label, value, color = 'text-gray-800', accentStyle }: { label: string; value: string; color?: string; accentStyle?: React.CSSProperties }) {
   return (
     <div className="text-center">
       <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-      <p className={`text-lg font-bold ${color}`}>{value}</p>
+      <p className={`text-lg font-bold ${accentStyle ? '' : color}`} style={accentStyle}>{value}</p>
     </div>
   );
 }

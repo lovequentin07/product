@@ -87,7 +87,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
               : '선택하신 조건에 해당하는 실거래가 정보가 없습니다.'}
           </p>
           {searchTerm && (
-            <button onClick={() => onSearchTermChange('')} className="mt-2 text-blue-600 underline">
+            <button onClick={() => onSearchTermChange('')} className="mt-2 underline" style={{ color: 'var(--ds-accent)' }}>
               검색 초기화
             </button>
           )}
@@ -131,11 +131,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 : `/apt?lawdCd=${sggCd}`;
 
               return (
-                <tr key={t.id} className={isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}>
+                <tr key={t.id} className={isSelected ? '' : 'hover:bg-gray-50'} style={isSelected ? { background: 'var(--ds-accent-faint)' } : undefined}>
                   <td
-                    className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 ${
-                      isSelected ? 'text-blue-700 font-bold' : 'text-gray-900'
+                    className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer ${
+                      isSelected ? 'font-bold' : 'text-gray-900'
                     }`}
+                    style={isSelected ? { color: 'var(--ds-accent)' } : undefined}
                     onClick={() => onSearchTermSelect
                       ? onSearchTermSelect(t.aptName)
                       : onSearchTermChange(isSelected ? '' : t.aptName)
@@ -173,7 +174,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <Link
                         href={detailHref}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="hover:underline font-medium"
+                        style={{ color: 'var(--ds-accent)' }}
                       >
                         상세 →
                       </Link>
@@ -212,9 +214,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     onClick={() => onPageChange(page)}
                     className={`px-3 py-2 border border-gray-300 text-sm rounded-md ${
                       page === currentPage
-                        ? 'bg-blue-600 text-white border-blue-600'
+                        ? ''
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
+                    style={page === currentPage ? { background: 'var(--ds-accent)', borderColor: 'var(--ds-accent)', color: '#fff' } : undefined}
                   >
                     {page}
                   </button>
@@ -236,7 +239,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
         <div className="text-center mt-4">
           <button
             onClick={onLoadMore}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-6 py-3 text-white font-bold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ds-accent) hover:opacity-80"
+            style={{ background: 'var(--ds-accent)' }}
           >
             더보기 ({totalCount - currentPage * itemsPerPage}개 남음)
           </button>
@@ -280,7 +284,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
       <input
         type="text"
         placeholder="아파트명으로 검색 (클릭 시 필터, 다시 클릭 시 해제)..."
-        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-(--ds-accent) focus:border-(--ds-accent) text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

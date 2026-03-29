@@ -20,10 +20,10 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ transactions, totalCount, s
   const { avgPrice, maxPrice, avgPricePerPyeong } = summary;
 
   const cards = [
-    { label: '총 거래', value: `${totalCount}건`, sub: '해당 조건 전체', color: 'text-gray-800' },
-    { label: '평균 거래가', value: `${toBillion(avgPrice)}억`, sub: '조건 전체 평균', color: 'text-blue-600' },
-    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '조건 전체 최고', color: 'text-amber-600' },
-    { label: '평균 평당가', value: `${avgPricePerPyeong.toFixed(1)}억`, sub: '조건 전체 평균', color: 'text-amber-600' },
+    { label: '총 거래', value: `${totalCount}건`, sub: '해당 조건 전체', color: 'text-gray-800', accentStyle: undefined as React.CSSProperties | undefined },
+    { label: '평균 거래가', value: `${toBillion(avgPrice)}억`, sub: '조건 전체 평균', color: '', accentStyle: { color: 'var(--ds-accent)' } as React.CSSProperties },
+    { label: '최고 거래가', value: `${toBillion(maxPrice)}억`, sub: '조건 전체 최고', color: 'text-amber-600', accentStyle: undefined as React.CSSProperties | undefined },
+    { label: '평균 평당가', value: `${avgPricePerPyeong.toFixed(1)}억`, sub: '조건 전체 평균', color: 'text-amber-600', accentStyle: undefined as React.CSSProperties | undefined },
   ];
 
   return (
@@ -34,7 +34,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ transactions, totalCount, s
           className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 py-3"
         >
           <p className="text-xs text-gray-500 mb-1">{card.label}</p>
-          <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+          <p className={`text-xl font-bold ${card.color}`} style={card.accentStyle}>{card.value}</p>
           <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
         </div>
       ))}

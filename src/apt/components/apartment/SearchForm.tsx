@@ -88,7 +88,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
               id="gu-select"
               value={selectedGu}
               onChange={(e) => setSelectedGu(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-(--ds-accent) focus:border-(--ds-accent) sm:text-sm rounded-md shadow-sm"
             >
               <option value={ALL_SEOUL_CODE}>서울 전체</option>
               {SEOUL_DISTRICTS.map((r) => (
@@ -112,7 +112,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
                   // 연도를 전체로 바꾸면 월도 전체로 자동 설정
                   if (e.target.value === YEAR_ALL) setSelectedMonth(MONTH_ALL);
                 }}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-(--ds-accent) focus:border-(--ds-accent) sm:text-sm rounded-md shadow-sm"
               >
                 <option value={YEAR_ALL}>전체</option>
                 {years.map((y) => (
@@ -136,7 +136,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 disabled={isYearAll}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-(--ds-accent) focus:border-(--ds-accent) sm:text-sm rounded-md shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value={MONTH_ALL}>전체</option>
                 {months.map((m) => (
@@ -149,7 +149,8 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
 
         <button
           onClick={handleSearch}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+          className="w-full text-white font-bold py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--ds-accent) hover:opacity-80 transition duration-150 ease-in-out"
+          style={{ background: 'var(--ds-accent)' }}
         >
           아파트 실거래가 조회
         </button>
