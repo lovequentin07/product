@@ -95,7 +95,7 @@ export default function AptMgmtSearchForm() {
           <input
             readOnly
             value="서울특별시"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-(--ds-cream-muted) text-gray-500 cursor-not-allowed"
           />
         </div>
 
@@ -130,7 +130,7 @@ export default function AptMgmtSearchForm() {
               '아파트명 입력'
             }
             autoComplete="off"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent) disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent) disabled:bg-(--ds-cream-muted) disabled:text-gray-400 placeholder:text-gray-400"
           />
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
 
