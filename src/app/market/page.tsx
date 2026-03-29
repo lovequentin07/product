@@ -5,6 +5,7 @@ import { detectRegion } from '@market/lib/region'
 import MarketHero from '@market/components/MarketHero'
 import PriceChangeList from '@market/components/PriceChangeList'
 import MarketFAQ from '@market/components/MarketFAQ'
+import ServiceLayout from '@shared/components/ui/ServiceLayout'
 
 export const metadata: Metadata = {
   title: '오늘의 장바구니 — 지금 뭐가 싼지 바로 확인',
@@ -105,7 +106,7 @@ export default async function MarketPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -134,6 +135,6 @@ export default async function MarketPage() {
           <p>현재 표시 가격은 최근 수집된 공공데이터 기준입니다</p>
         </div>
       </div>
-    </div>
+    </ServiceLayout>
   )
 }

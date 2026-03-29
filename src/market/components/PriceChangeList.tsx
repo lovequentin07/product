@@ -41,12 +41,12 @@ export default function PriceChangeList({ items, title }: Props) {
       className="bg-white px-4 pt-4 pb-4 border-t border-gray-100"
     >
       {/* 섹션 헤더 */}
-      <div className="border-l-4 border-blue-600 pl-3 mb-1">
+      <div className="border-l-4 border-(--ds-accent) pl-3 mb-1">
         <h2
           className="flex items-center gap-1.5 leading-snug text-gray-900"
           style={{ fontSize: '20px', fontWeight: 700 }}
         >
-          <span className="text-blue-600">▼</span>
+          <span style={{ color: 'var(--ds-accent)' }}>▼</span>
           {title}
         </h2>
       </div>

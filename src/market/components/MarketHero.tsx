@@ -15,7 +15,7 @@ export default function MarketHero() {
     .map((r) => ({ id: r.item_cd, name: r.item_nm }))
 
   return (
-    <div className="bg-white">
+    <div>
       <div className="max-w-2xl mx-auto px-5 pt-10 pb-6">
         <h1 className="text-gray-900 font-bold leading-tight mb-5" style={{ fontSize: '32px' }}>
           오늘 장바구니 시세<br />3초 만에 파악하세요

@@ -45,9 +45,10 @@ export default function CategoryQuickAccess() {
             onClick={() => handleSelect(value)}
             className={`shrink-0 px-3 py-2 text-sm transition-colors border-b-2 -mb-px ${
               isActive
-                ? 'border-blue-600 text-blue-600 font-semibold'
+                ? 'border-(--ds-accent) font-semibold'
                 : 'border-transparent text-gray-400 font-normal'
             }`}
+            style={isActive ? { color: 'var(--ds-accent)' } : undefined}
           >
             {label}
           </button>

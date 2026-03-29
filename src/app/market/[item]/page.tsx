@@ -9,6 +9,7 @@ import { Category, getDefaultKind } from '@market/types/market'
 import PriceTrendChart from '@market/components/PriceTrendChart'
 import BuySignalBanner from '@market/components/BuySignalBanner'
 import GradeSelector from '@market/components/GradeSelector'
+import ServiceLayout from '@shared/components/ui/ServiceLayout'
 
 interface Props {
   params: Promise<{ item: string }>
@@ -147,7 +148,7 @@ export default async function ItemPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <ServiceLayout>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -236,6 +237,6 @@ export default async function ItemPage({ params, searchParams }: Props) {
           </div>
         </div>
       )}
-    </div>
+    </ServiceLayout>
   )
 }

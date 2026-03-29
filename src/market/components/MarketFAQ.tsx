@@ -35,7 +35,7 @@ export default function MarketFAQ() {
           >
             <summary className="flex items-center justify-between cursor-pointer py-4 list-none min-h-[44px]">
               <dt className="text-sm font-medium text-gray-800">
-                <span className="text-blue-600 font-bold mr-1.5">Q.</span>
+                <span className="font-bold mr-1.5" style={{ color: 'var(--ds-accent)' }}>Q.</span>
                 {question}
               </dt>
               <span className="ml-3 shrink-0 text-gray-400 group-open:rotate-180 transition-transform">
