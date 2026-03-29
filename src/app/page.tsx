@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { getCheapItemsByRegion } from "@market/lib/market-data";
 import { detectRegion } from "@market/lib/region";
 import type { ItemDetail } from "@market/types/market";
+import ServiceLayout from "@shared/components/ui/ServiceLayout";
 
 export const metadata: Metadata = {
   title: "DataZip — 오늘 바로 쓸 수 있는 정보",
@@ -80,34 +81,12 @@ export default async function HomePage() {
   }
 
   return (
-    <div style={{ background: "#F7F4EF", minHeight: "100vh" }}>
+    <ServiceLayout>
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-
-      <div className="max-w-2xl mx-auto px-5 pt-8 pb-24">
-
-        {/* 헤더 */}
-        <header className="flex items-center justify-between mb-5">
-          <span
-            className="text-sm font-semibold tracking-widest"
-            style={{ color: "#1A1918", letterSpacing: "0.12em" }}
-          >
-            datazip
-          </span>
-          <span className="flex items-center gap-1.5 text-xs" style={{ color: "#9A9085" }}>
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full animate-live-pulse"
-              style={{ background: "#C94B1A" }}
-            />
-            매일 업데이트
-          </span>
-        </header>
-
-        {/* 주홍 구분선 */}
-        <div style={{ height: "1px", background: "#C94B1A", marginBottom: "32px" }} />
 
         {/* 장바구니 시세 — 풀너비 카드 */}
         <section
@@ -152,7 +131,7 @@ export default async function HomePage() {
           {liveItems.length > 0 ? (
             <div className="mb-6">
               {liveItems.map((item, i) => {
-                const price = item.retailPrice ?? item.kinds?.[0]?.retailPrice ?? 0;
+                const price = item.kinds?.[0]?.retailPrice ?? 0;
                 const percentile = item.percentile ?? 0;
                 return (
                   <div
@@ -244,7 +223,6 @@ export default async function HomePage() {
           · · · &nbsp; 곧 추가됩니다
         </div>
 
-      </div>
-    </div>
+    </ServiceLayout>
   );
 }
