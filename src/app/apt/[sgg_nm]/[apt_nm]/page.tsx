@@ -12,9 +12,9 @@ const PriceTrendChart = dynamic(
   () => import('@apt/components/apt-detail/PriceTrendChart'),
   {
     loading: () => (
-      <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
-        <div className="h-56 bg-gray-100 dark:bg-gray-700 rounded" />
+      <div className="animate-pulse bg-white rounded-lg border border-gray-100 p-5">
+        <div className="h-4 bg-gray-200 rounded w-40 mb-4" />
+        <div className="h-56 bg-gray-100 rounded" />
       </div>
     ),
   }
@@ -24,9 +24,9 @@ const AreaBarChart = dynamic(
   () => import('@apt/components/apt-detail/AreaBarChart'),
   {
     loading: () => (
-      <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4" />
-        <div className="h-56 bg-gray-100 dark:bg-gray-700 rounded" />
+      <div className="animate-pulse bg-white rounded-lg border border-gray-100 p-5">
+        <div className="h-4 bg-gray-200 rounded w-32 mb-4" />
+        <div className="h-56 bg-gray-100 rounded" />
       </div>
     ),
   }
@@ -99,7 +99,7 @@ async function AptDetailContent({
 
   if (!data) {
     return (
-      <div className="p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center text-yellow-700 dark:text-yellow-300">
+      <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center text-yellow-700">
         <p className="font-semibold">데이터를 찾을 수 없습니다.</p>
         <p className="text-sm mt-1">아파트명이나 지역 코드를 확인해주세요.</p>
       </div>
@@ -112,7 +112,7 @@ async function AptDetailContent({
     <div>
       <AptDetailHeader data={data} backHref={backHref} />
 
-      <section className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+      <section className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-600 leading-relaxed">
         <h2 className="sr-only">{data.aptName} 아파트 개요</h2>
         <p>
           {data.aptName} 아파트는 서울 {data.sggNm} {data.umdNm}에 위치하며,
@@ -122,12 +122,12 @@ async function AptDetailContent({
             href="https://rtdown.molit.go.kr"
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="underline hover:text-gray-800 dark:hover:text-gray-200"
+            className="underline hover:text-gray-800"
           >
             국토교통부 실거래가 공개시스템
           </a>
           {' '}기준 총{' '}
-          <strong className="text-gray-800 dark:text-gray-200">
+          <strong className="text-gray-800">
             {data.totalCount.toLocaleString()}건
           </strong>
           의 매매 거래 이력이 있습니다.
@@ -165,12 +165,12 @@ async function AptDetailContent({
 function LoadingSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
-      <div className="h-24 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+      <div className="h-24 bg-gray-100 rounded-lg" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg" />
-        <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+        <div className="h-64 bg-gray-100 rounded-lg" />
+        <div className="h-64 bg-gray-100 rounded-lg" />
       </div>
-      <div className="h-48 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+      <div className="h-48 bg-gray-100 rounded-lg" />
     </div>
   );
 }

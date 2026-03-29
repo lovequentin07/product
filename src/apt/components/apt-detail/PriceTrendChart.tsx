@@ -38,8 +38,8 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-lg text-sm">
-      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+    <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-sm">
+      <p className="font-semibold text-gray-700 mb-1">{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }}>
           {p.name}: <strong>{p.value.toFixed(1)}억</strong>
@@ -80,10 +80,10 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
   const displayData = toChartData(monthly);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 mb-4">
       {/* 헤더 + 평수 탭 */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+        <h2 className="text-base font-semibold text-gray-800">
           월별 평균 거래가 추이
         </h2>
         <div className="flex flex-wrap gap-1">
@@ -92,7 +92,7 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
             className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
               selectedBucket === null
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             전체
@@ -104,7 +104,7 @@ const PriceTrendChart: React.FC<Props> = ({ monthly, byArea }) => {
               className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
                 selectedBucket === a.minPyeong
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {a.label}

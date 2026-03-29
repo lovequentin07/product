@@ -55,10 +55,10 @@ function perHh(total: number, hh: number | null): number | null {
 
 function SubRow({ label, amount, avg = null }: { label: string; amount: number | null; avg?: number | null }) {
   return (
-    <div className="grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-      <span className="text-xs text-gray-500 dark:text-gray-400 pl-6">{label}</span>
-      <span className="text-xs text-gray-700 dark:text-gray-300 text-right whitespace-nowrap">{fmt(amount)}</span>
-      <span className="text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">{avg != null ? fmt(avg) : '-'}</span>
+    <div className="grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-2 border-b border-gray-50 last:border-0">
+      <span className="text-xs text-gray-500 pl-6">{label}</span>
+      <span className="text-xs text-gray-700 text-right whitespace-nowrap">{fmt(amount)}</span>
+      <span className="text-xs text-gray-400 text-right whitespace-nowrap">{avg != null ? fmt(avg) : '-'}</span>
     </div>
   );
 }
@@ -74,19 +74,19 @@ function MainRow({
 }) {
   return (
     <div
-      className={`grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-3 border-b border-gray-100 dark:border-gray-700 ${toggle ? 'cursor-pointer select-none' : ''}`}
+      className={`grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-3 border-b border-gray-100 ${toggle ? 'cursor-pointer select-none' : ''}`}
       onClick={toggle}
     >
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
         {label}
         {toggle && (
-          <span className="text-gray-400 dark:text-gray-500 text-xs">{open ? '▾' : '▸'}</span>
+          <span className="text-gray-400 text-xs">{open ? '▾' : '▸'}</span>
         )}
       </span>
-      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 text-right whitespace-nowrap">
+      <span className="text-sm font-bold text-gray-900 text-right whitespace-nowrap">
         {fmt(amount)}
       </span>
-      <span className="text-xs text-gray-400 dark:text-gray-500 text-right whitespace-nowrap">
+      <span className="text-xs text-gray-400 text-right whitespace-nowrap">
         {fmt(avg)}
       </span>
     </div>
@@ -114,14 +114,14 @@ export default function AptMgmtCompareSection({
     : null;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl px-5 py-5">
-      <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+    <div className="bg-gray-50 rounded-2xl px-5 py-5">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
         주요 항목 비교
       </p>
-      <div className="grid grid-cols-[1fr_5.5rem_5.5rem] gap-x-3 pb-2 border-b border-gray-200 dark:border-gray-700 mb-1">
-        <span className="text-xs text-gray-400 dark:text-gray-500">항목</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">우리 단지</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500 text-right">{avgLabel}</span>
+      <div className="grid grid-cols-[1fr_5.5rem_5.5rem] gap-x-3 pb-2 border-b border-gray-200 mb-1">
+        <span className="text-xs text-gray-400">항목</span>
+        <span className="text-xs text-gray-400 text-right">우리 단지</span>
+        <span className="text-xs text-gray-400 text-right">{avgLabel}</span>
       </div>
 
       <MainRow label="총 관리비" amount={result.total_per_hh} avg={activeAvgTotal} />

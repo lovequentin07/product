@@ -60,8 +60,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-40 text-gray-500 dark:text-gray-400">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
+      <div className="flex justify-center items-center h-40 text-gray-500">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
         <p className="ml-3 text-lg">데이터 로딩 중...</p>
       </div>
     );
@@ -69,7 +69,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg max-w-6xl mx-auto my-4">
+      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-6xl mx-auto my-4">
         <p className="font-bold">오류 발생:</p>
         <p>{error}</p>
       </div>
@@ -80,14 +80,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return (
       <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
         {!hideSearch && <SearchInput value={searchTerm} onChange={onSearchTermChange} />}
-        <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg text-center">
+        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg text-center">
           <p>
             {searchTerm
               ? `'${searchTerm}'에 해당하는 검색 결과가 없습니다.`
               : '선택하신 조건에 해당하는 실거래가 정보가 없습니다.'}
           </p>
           {searchTerm && (
-            <button onClick={() => onSearchTermChange('')} className="mt-2 text-blue-600 dark:text-blue-400 underline">
+            <button onClick={() => onSearchTermChange('')} className="mt-2 text-blue-600 underline">
               검색 초기화
             </button>
           )}
@@ -100,9 +100,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
     <div className="max-w-6xl mx-auto my-4 px-4 sm:px-0">
       {!hideSearch && <SearchInput value={searchTerm} onChange={onSearchTermChange} />}
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg border border-transparent dark:border-gray-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900/50">
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg border border-transparent">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
               <Th onClick={() => onSortChange('apt_nm')}>아파트명{ind('apt_nm')}</Th>
               {showGuColumn && <Th onClick={() => onSortChange('sgg_nm')}>구{ind('sgg_nm')}</Th>}
@@ -114,13 +114,13 @@ const TransactionList: React.FC<TransactionListProps> = ({
               <Th onClick={() => onSortChange('floor')} right>층{ind('floor')}</Th>
               <Th onClick={() => onSortChange('build_year')} right>건축년도{ind('build_year')}</Th>
               {!hideDetailLink && (
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   상세
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-white divide-y divide-gray-200">
             {displayTransactions.map((t) => {
               const pyeong = t.area * 0.3025;
               const pricePerPyeong = pyeong > 0 ? t.price / pyeong : 0;
@@ -131,10 +131,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 : `/apt?lawdCd=${sggCd}`;
 
               return (
-                <tr key={t.id} className={isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}>
+                <tr key={t.id} className={isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}>
                   <td
-                    className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
-                      isSelected ? 'text-blue-700 dark:text-blue-300 font-bold' : 'text-gray-900 dark:text-gray-100'
+                    className={`px-4 py-3 whitespace-nowrap text-sm font-medium cursor-pointer hover:text-blue-600 ${
+                      isSelected ? 'text-blue-700 font-bold' : 'text-gray-900'
                     }`}
                     onClick={() => onSearchTermSelect
                       ? onSearchTermSelect(t.aptName)
@@ -144,36 +144,36 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {t.aptName}
                   </td>
                   {showGuColumn && (
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       {t.sggNm ?? '—'}
                     </td>
                   )}
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {t.address}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {t.date}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-700 dark:text-slate-200 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-700 text-right">
                     {(t.price / 10000).toFixed(1)}억
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-amber-600 dark:text-amber-400 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-amber-600 text-right">
                     {(pricePerPyeong / 10000).toFixed(1)}억
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                     {Math.round(pyeong)}평
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                     {t.floor}층
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                     {t.buildYear}년
                   </td>
                   {!hideDetailLink && (
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <Link
                         href={detailHref}
-                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                        className="text-blue-600 hover:underline font-medium"
                       >
                         상세 →
                       </Link>
@@ -187,33 +187,33 @@ const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       {displayTransactions.length === 0 && (
-        <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-lg text-center mt-4">
+        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg text-center mt-4">
           <p>현재 필터 조건에 해당하는 결과가 없습니다.</p>
         </div>
       )}
 
       {totalPages > 1 && (
-        <nav className="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6 rounded-lg shadow-md mt-4">
+        <nav className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-md mt-4">
           <div className="flex-1 flex justify-between sm:justify-end gap-2">
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               이전
             </button>
             <div className="hidden sm:flex gap-1 items-center">
               {getPageWindow(currentPage, totalPages).map((page, i) =>
                 page === '…' ? (
-                  <span key={`ellipsis-${i}`} className="px-2 py-2 text-sm text-gray-400 dark:text-gray-500 select-none">…</span>
+                  <span key={`ellipsis-${i}`} className="px-2 py-2 text-sm text-gray-400 select-none">…</span>
                 ) : (
                   <button
                     key={page}
                     onClick={() => onPageChange(page)}
-                    className={`px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-md ${
+                    className={`px-3 py-2 border border-gray-300 text-sm rounded-md ${
                       page === currentPage
                         ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {page}
@@ -224,7 +224,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               다음
             </button>
@@ -251,7 +251,7 @@ function Th({ children, onClick, right }: { children: React.ReactNode; onClick?:
     <th
       scope="col"
       onClick={onClick}
-      className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider${right ? ' text-right' : ' text-left'}${onClick ? ' cursor-pointer hover:text-gray-700 dark:hover:text-gray-200' : ''}`}
+      className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider${right ? ' text-right' : ' text-left'}${onClick ? ' cursor-pointer hover:text-gray-700' : ''}`}
     >
       {children}
     </th>
@@ -280,7 +280,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
       <input
         type="text"
         placeholder="아파트명으로 검색 (클릭 시 필터, 다시 클릭 시 해제)..."
-        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

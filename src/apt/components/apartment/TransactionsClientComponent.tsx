@@ -218,7 +218,7 @@ function FilterBar({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">{label}</span>
+      <span className="text-xs font-medium text-gray-500 mr-1">{label}</span>
       {options.map((opt, i) => (
         <button
           key={opt}
@@ -226,7 +226,7 @@ function FilterBar({
           className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
             selected === i
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           {opt}

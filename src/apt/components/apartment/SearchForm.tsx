@@ -76,19 +76,19 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
   const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg mb-6 max-w-6xl mx-auto border border-transparent dark:border-gray-700">
+    <div className="p-4 bg-white shadow-md rounded-lg mb-6 max-w-6xl mx-auto border border-transparent">
       <div className="px-4 md:px-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {/* 시군구 */}
           <div>
-            <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="gu-select" className="block text-sm font-medium text-gray-700 mb-1">
               시군구
             </label>
             <select
               id="gu-select"
               value={selectedGu}
               onChange={(e) => setSelectedGu(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
             >
               <option value={ALL_SEOUL_CODE}>서울 전체</option>
               {SEOUL_DISTRICTS.map((r) => (
@@ -101,7 +101,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
           <div className="flex space-x-2 md:col-span-2">
             {/* 연도 */}
             <div className="flex-1">
-              <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="year-select" className="block text-sm font-medium text-gray-700 mb-1">
                 년도
               </label>
               <select
@@ -112,7 +112,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
                   // 연도를 전체로 바꾸면 월도 전체로 자동 설정
                   if (e.target.value === YEAR_ALL) setSelectedMonth(MONTH_ALL);
                 }}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
               >
                 <option value={YEAR_ALL}>전체</option>
                 {years.map((y) => (
@@ -126,7 +126,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
               <label
                 htmlFor="month-select"
                 className={`block text-sm font-medium mb-1 ${
-                  isYearAll ? 'text-gray-400 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'
+                  isYearAll ? 'text-gray-400' : 'text-gray-700'
                 }`}
               >
                 월
@@ -136,7 +136,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ initialLawdCd }) => {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 disabled={isYearAll}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value={MONTH_ALL}>전체</option>
                 {months.map((m) => (

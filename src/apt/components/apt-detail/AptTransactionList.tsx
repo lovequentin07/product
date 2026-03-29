@@ -40,45 +40,45 @@ const AptTransactionList: React.FC<Props> = ({ transactions, title = '전체 거
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-        <p className="text-gray-500 dark:text-gray-400 text-center py-8">거래 이력이 없습니다.</p>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+        <p className="text-gray-500 text-center py-8">거래 이력이 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 className="text-base font-semibold text-gray-800 mb-4">
         {title} <span className="text-gray-400 font-normal text-sm">({transactions.length}건)</span>
       </h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-900/50">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50">
             <tr>
               {COLUMNS.map(({ key, label, right }) => (
                 <th
                   key={key}
                   onClick={() => handleSort(key)}
-                  className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200${right ? ' text-right' : ' text-left'}`}
+                  className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700${right ? ' text-right' : ' text-left'}`}
                 >
                   {label}{ind(key)}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-200">
             {sorted.map((t) => (
-              <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">{t.deal_date}</td>
-                <td className="px-4 py-3 whitespace-nowrap font-semibold text-blue-600 dark:text-blue-400 text-right">
+              <tr key={t.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600">{t.deal_date}</td>
+                <td className="px-4 py-3 whitespace-nowrap font-semibold text-blue-600 text-right">
                   {t.deal_amount_billion.toFixed(1)}억
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap font-bold text-red-600 dark:text-red-400 text-right">
+                <td className="px-4 py-3 whitespace-nowrap font-bold text-red-600 text-right">
                   {t.price_per_pyeong.toFixed(1)}억
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 text-right">{t.area_pyeong}평</td>
-                <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 text-right">{t.floor}층</td>
-                <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400 text-right">{t.build_year}년</td>
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-right">{t.area_pyeong}평</td>
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-right">{t.floor}층</td>
+                <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-right">{t.build_year}년</td>
               </tr>
             ))}
           </tbody>

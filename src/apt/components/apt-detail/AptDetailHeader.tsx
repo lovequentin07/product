@@ -22,11 +22,11 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
       : 0;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 mb-6">
       {/* 뒤로가기 */}
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline mb-3"
+        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-3"
       >
         ← 목록으로 돌아가기
       </Link>
@@ -34,8 +34,8 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
       {/* 아파트 정보 */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{data.aptName} 아파트</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900">{data.aptName} 아파트</h1>
+          <p className="text-sm text-gray-500 mt-1">
             {data.sggNm} · {data.umdNm} · 건축 {data.buildYear}년
           </p>
         </div>
@@ -46,12 +46,12 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
           <Stat
             label="최근 거래"
             value={latestPrice ? `${toBillion(latestPrice)}억` : '-'}
-            color="text-blue-600 dark:text-blue-400"
+            color="text-blue-600"
           />
           <Stat
             label="전체 평균"
             value={avgPrice ? `${toBillion(avgPrice)}억` : '-'}
-            color="text-red-600 dark:text-red-400"
+            color="text-red-600"
           />
         </div>
       </div>
@@ -59,10 +59,10 @@ const AptDetailHeader: React.FC<Props> = ({ data, backHref }) => {
   );
 };
 
-function Stat({ label, value, color = 'text-gray-800 dark:text-gray-100' }: { label: string; value: string; color?: string }) {
+function Stat({ label, value, color = 'text-gray-800' }: { label: string; value: string; color?: string }) {
   return (
     <div className="text-center">
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</p>
+      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
       <p className={`text-lg font-bold ${color}`}>{value}</p>
     </div>
   );

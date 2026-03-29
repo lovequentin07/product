@@ -36,8 +36,8 @@ function CustomTooltip({
   if (!active || !payload?.length) return null;
   const avgBillion = (payload[0].value / 10000).toFixed(1);
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-lg text-sm">
-      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+    <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-sm">
+      <p className="font-semibold text-gray-700 mb-1">{label}</p>
       <p className="text-blue-600">평균가: <strong>{avgBillion}억</strong></p>
     </div>
   );
@@ -51,8 +51,8 @@ const AreaBarChart: React.FC<Props> = ({ byArea }) => {
   }));
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-5 mb-4">
-      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 mb-4">
+      <h2 className="text-base font-semibold text-gray-800 mb-4">
         면적대별 평균 거래가
       </h2>
       <ResponsiveContainer width="100%" height={220}>
@@ -75,7 +75,7 @@ const AreaBarChart: React.FC<Props> = ({ byArea }) => {
       {/* 거래 건수 요약 */}
       <div className="flex gap-4 mt-3 justify-center flex-wrap">
         {byArea.map((a, i) => (
-          <div key={a.label} className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <div key={a.label} className="flex items-center gap-1.5 text-xs text-gray-500">
             <span
               className="inline-block w-3 h-3 rounded-sm"
               style={{ backgroundColor: COLORS[i % COLORS.length] }}

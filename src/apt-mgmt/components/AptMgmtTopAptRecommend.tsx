@@ -27,13 +27,13 @@ function TopAptCard({
   return (
     <Link
       href={href}
-      className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-4 hover:border-emerald-400 dark:hover:border-emerald-500 transition-colors"
+      className="block bg-white border border-gray-200 rounded-2xl px-5 py-4 hover:border-emerald-400 transition-colors"
     >
-      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+      <p className="text-xs font-semibold text-emerald-600 mb-1">
         {icon} {title}
       </p>
-      <p className="text-base font-bold text-gray-800 dark:text-gray-100">{aptLabel}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      <p className="text-base font-bold text-gray-800">{aptLabel}</p>
+      <p className="text-sm text-gray-500 mt-0.5">
         월 {apt.total_per_hh.toLocaleString()}원/세대 · 비교하기 →
       </p>
     </Link>

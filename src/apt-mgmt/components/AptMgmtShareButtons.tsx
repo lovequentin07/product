@@ -64,7 +64,7 @@ export default function AptMgmtShareButtons() {
       {canShare && (
         <button
           onClick={handleShare}
-          className="flex items-center gap-1.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium py-1.5 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 active:scale-95 transition-colors text-xs"
+          className="flex items-center gap-1.5 border border-gray-200 text-gray-600 font-medium py-1.5 px-4 rounded-xl hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-colors text-xs"
         >
           공유하기
         </button>

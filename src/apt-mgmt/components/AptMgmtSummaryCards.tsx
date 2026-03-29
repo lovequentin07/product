@@ -92,15 +92,15 @@ function BarRow({ label, dotColor, score }: BarRowProps) {
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-1.5 w-[6.5rem] sm:w-28 shrink-0">
         <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-        <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
+        <span className="text-sm text-gray-600">{label}</span>
       </div>
-      <div className="flex-1 h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${scoreColor(score)}`}
           style={{ width: `${score}%` }}
         />
       </div>
-      <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 w-12 text-right shrink-0">
+      <span className="text-xs font-semibold text-gray-600 w-12 text-right shrink-0">
         {score}점
       </span>
     </div>
@@ -259,14 +259,14 @@ export default function AptMgmtSummaryCards({ result }: Props) {
     <div className="space-y-8 py-2">
 
       {/* 상단 헤더 */}
-      <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">
-        <p className="text-xl font-bold text-gray-800 dark:text-gray-100 break-words leading-tight">
+      <div className="text-center pb-4 border-b border-gray-100">
+        <p className="text-xl font-bold text-gray-800 break-words leading-tight">
           {result.apt_nm}
         </p>
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm font-medium text-gray-500 mt-1">
           관리비 분석 결과
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           {formatBillingYm(result.billing_ym)}
           {' | '}{useUmd ? (result.umd_nm ?? result.sgg_nm) : result.sgg_nm} 기준
           {result.household_cnt ? ` | ${result.household_cnt.toLocaleString()}세대` : ''}
@@ -275,16 +275,16 @@ export default function AptMgmtSummaryCards({ result }: Props) {
 
       {/* 메인 결과 */}
       <div className="text-center space-y-4">
-        <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800 dark:text-gray-100'}`}>
+        <p className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${config?.color ?? 'text-gray-800'}`}>
           {scoreLabel}
         </p>
-        <h3 className="text-lg sm:text-xl font-semibold leading-snug break-words text-gray-700 dark:text-gray-200">
+        <h3 className="text-lg sm:text-xl font-semibold leading-snug break-words text-gray-700">
           {title}
         </h3>
         {desc && (
           <div className="space-y-2 text-center">
             {desc.split('\n').map((line, i) => (
-              <p key={i} className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              <p key={i} className="text-sm text-gray-500 leading-relaxed">
                 {line}
               </p>
             ))}
@@ -293,7 +293,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       </div>
 
       {/* 바 차트 (동→구→서울) */}
-      <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl px-5 py-6 space-y-4">
+      <div className="bg-gray-50 rounded-2xl px-5 py-6 space-y-4">
         <BarRow
           label="동네 절약점수"
           dotColor="bg-cyan-400"

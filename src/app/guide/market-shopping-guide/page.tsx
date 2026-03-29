@@ -93,38 +93,38 @@ export default function MarketShoppingGuidePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      <nav className="text-xs text-gray-400 dark:text-gray-500 mt-4 mb-6 flex items-center gap-1.5 flex-wrap">
-        <Link href="/" className="hover:text-gray-600 dark:hover:text-gray-300">
+      <nav className="text-xs text-gray-400 mt-4 mb-6 flex items-center gap-1.5 flex-wrap">
+        <Link href="/" className="hover:text-gray-600">
           홈
         </Link>
         <span>›</span>
-        <span className="text-gray-600 dark:text-gray-300 font-medium">
+        <span className="text-gray-600 font-medium">
           알뜰 장보기 완벽 가이드
         </span>
       </nav>
 
       <article className="space-y-8">
         <header>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
+          <h1 className="text-2xl font-bold text-gray-900 leading-snug">
             알뜰 장보기 완벽 가이드
           </h1>
-          <p className="mt-3 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+          <p className="mt-3 text-gray-500 text-sm leading-relaxed">
             저렴한 시기를 찾고, 신선한 제품을 고르고, 오래 보관하는 방법까지.
             현명한 장보기의 모든 것을 배워보세요.
           </p>
         </header>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             1. 장바구니 물가 지수란
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed">
             장바구니 물가 지수는 대표 농산물(채소, 과일, 수산물, 곡물 등)의 가격 변화를
             종합적으로 보여주는 경제 지표입니다. 이를 통해 현재 식재료 가격 수준이
             평년보다 비싼지 저렴한지 한눈에 파악할 수 있습니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950 text-sm text-gray-700 dark:text-gray-300">
-            <p className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
+            <p className="font-medium text-blue-900 mb-2">
               💡 장바구니 물가 지수가 높으면
             </p>
             <ul className="space-y-1">
@@ -143,15 +143,15 @@ export default function MarketShoppingGuidePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             2. 오늘 저렴한 품목 찾는 법
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed">
             DataZip의 시세 정보를 활용하면 오늘 기준 가장 저렴한 농산물을 실시간으로
             확인할 수 있습니다. 이를 활용해 알뜰하게 장을 보는 방법을 소개합니다.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-950 text-sm text-gray-700 dark:text-gray-300">
-            <p className="font-medium text-blue-900 dark:text-blue-200 mb-3">
+          <div className="mt-4 p-4 rounded-lg bg-blue-50 text-sm text-gray-700">
+            <p className="font-medium text-blue-900 mb-3">
               📍 DataZip으로 저렴한 품목 찾기
             </p>
             <div className="space-y-2">
@@ -171,15 +171,15 @@ export default function MarketShoppingGuidePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             3. 채소 고르는 법
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed">
             신선한 채소는 맛과 영양가가 모두 높습니다. 다음의 체크리스트를 참고해 좋은
             채소를 선택하세요.
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300">
-            <p className="font-medium text-gray-800 dark:text-gray-200 mb-3">
+          <div className="mt-4 p-4 rounded-lg bg-gray-50 text-sm text-gray-700">
+            <p className="font-medium text-gray-800 mb-3">
               ✓ 신선한 채소 선택 체크리스트
             </p>
             <ul className="space-y-1.5">
@@ -197,26 +197,26 @@ export default function MarketShoppingGuidePage() {
               ))}
             </ul>
           </div>
-          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="mt-3 text-sm text-gray-600 leading-relaxed">
             여름에는 상한 채소가 더 빨리 나타나므로, 구매 후 2-3일 내에 사용하는 것을
             권장합니다.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             4. 과일·수산물 고르는 법
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed">
             과일과 수산물은 신선도가 맛을 좌우합니다. 카테고리별 선택 기준을 알아두면
             장을 볼 때 큰 도움이 됩니다.
           </p>
           <div className="mt-4 space-y-3">
-            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
-              <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">
+            <div className="p-3 rounded-lg bg-blue-50">
+              <p className="font-semibold text-gray-800 text-sm mb-2">
                 🍎 과일 선택 기준
               </p>
-              <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+              <ul className="text-xs text-gray-700 space-y-1">
                 {[
                   "색깔: 자연스러운 색감, 너무 밝거나 어두우면 탈색·병해 의심",
                   "향기: 과일 특유의 향기가 살짝 나야 익은 정도가 좋음",
@@ -230,11 +230,11 @@ export default function MarketShoppingGuidePage() {
                 ))}
               </ul>
             </div>
-            <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950">
-              <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">
+            <div className="p-3 rounded-lg bg-orange-50">
+              <p className="font-semibold text-gray-800 text-sm mb-2">
                 🐟 수산물 선택 기준
               </p>
-              <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+              <ul className="text-xs text-gray-700 space-y-1">
                 {[
                   "신선도: 눈이 투명하고, 아가미 색이 선명한 빨간색",
                   "냄새: 비린내가 너무 심하지 않고, 신선한 수산물 냄새",
@@ -252,10 +252,10 @@ export default function MarketShoppingGuidePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             5. 식재료 보관 방법
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-600 leading-relaxed">
             올바른 보관 방법은 식재료의 신선도와 맛을 유지하는 핵심입니다.
             카테고리별 보관 팁을 알아두세요.
           </p>
@@ -279,11 +279,11 @@ export default function MarketShoppingGuidePage() {
                 tips: ["구매 후 2일 내 조리", "냉장이 아닌 냉동 보관 추천", "얼음팩과 함께 보관", "냉동 시 1개월 이내 사용"],
               },
             ].map(({ category, tips }) => (
-              <div key={category} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">
+              <div key={category} className="p-3 rounded-lg bg-gray-50">
+                <p className="font-semibold text-gray-800 text-sm mb-2">
                   {category}
                 </p>
-                <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+                <ul className="text-xs text-gray-700 space-y-1">
                   {tips.map((tip) => (
                     <li key={tip} className="flex gap-2">
                       <span className="shrink-0">•</span>
@@ -296,7 +296,7 @@ export default function MarketShoppingGuidePage() {
           </div>
         </section>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <div className="mt-8 pt-6 border-t border-gray-100">
           <Link
             href="/market"
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"

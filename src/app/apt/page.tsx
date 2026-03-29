@@ -202,8 +202,8 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
         </Suspense>
 
         {/* 이런 분께 유용합니다 */}
-        <section className="mt-10 text-sm text-gray-500 dark:text-gray-400 space-y-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-5 text-center">
-          <h2 className="font-medium text-gray-700 dark:text-gray-300">이런 분께 유용합니다</h2>
+        <section className="mt-10 text-sm text-gray-500 space-y-3 bg-gray-50 rounded-xl p-5 text-center">
+          <h2 className="font-medium text-gray-700">이런 분께 유용합니다</h2>
           <ul className="space-y-1.5">
             <li>아파트 매수·매도 전 시세를 직접 확인하고 싶은 분</li>
             <li>특정 단지의 최근 거래가 추이를 파악하고 싶은 분</li>
@@ -245,13 +245,13 @@ export default async function RealEstatePage({ searchParams }: RealEstatePagePro
             ].map(({ question, answer }) => (
               <details
                 key={question}
-                className="group bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden"
+                className="group bg-gray-50 rounded-xl overflow-hidden"
               >
-                <summary className="flex items-center justify-between cursor-pointer px-5 py-3 font-medium text-gray-800 dark:text-gray-200 list-none">
+                <summary className="flex items-center justify-between cursor-pointer px-5 py-3 font-medium text-gray-800 list-none">
                   <dt>{question}</dt>
                   <span className="ml-3 shrink-0 text-gray-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
-                <dd className="px-5 pb-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{answer}</dd>
+                <dd className="px-5 pb-3 text-sm text-gray-600 leading-relaxed">{answer}</dd>
               </details>
             ))}
           </dl>
