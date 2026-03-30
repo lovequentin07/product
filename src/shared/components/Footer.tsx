@@ -9,10 +9,10 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <p className="text-sm font-medium text-gray-700">DataZip</p>
-          <nav className="text-sm text-gray-500">
-            <Link href="/privacy-policy" className="hover:text-gray-700 hover:underline">
-              개인정보처리방침
-            </Link>
+          <nav className="flex gap-4 text-sm text-gray-500">
+            <Link href="/about" className="hover:text-gray-700 hover:underline">소개</Link>
+            <Link href="/contact" className="hover:text-gray-700 hover:underline">문의</Link>
+            <Link href="/privacy-policy" className="hover:text-gray-700 hover:underline">개인정보처리방침</Link>
           </nav>
         </div>
         <p className="mt-4 text-center text-xs text-gray-400">
