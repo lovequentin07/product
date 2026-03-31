@@ -82,6 +82,12 @@ CREATE TABLE IF NOT EXISTS apt_transactions (
   bubun               TEXT,                  -- 부번
   road_nm             TEXT,                  -- 도로명
 
+  -- [거래 유형 — 매매/신규분양권/입주권]
+  deal_type           TEXT NOT NULL DEFAULT '매매',  -- '매매' | '신규분양권' | '입주권'
+  ownership_gbn       TEXT,          -- 소유권 구분 (분양권 전용)
+  sler_gbn            TEXT,          -- 매도인 구분 (분양권 전용)
+  buyer_gbn           TEXT,          -- 매수인 구분 (분양권 전용)
+
   created_at          DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
