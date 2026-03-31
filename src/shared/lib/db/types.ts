@@ -35,7 +35,7 @@ export interface TransactionRow {
   road_nm: string | null;
   cdeal_type: string | null;
   deal_year: number;
-  deal_type: string;       // '매매' | '신규분양권' | '입주권'
+  deal_type: '매매' | '신규분양권' | '입주권';
   deal_month: number;
   deal_day: number;
 }
