@@ -60,6 +60,28 @@ export interface TransactionItem {
   slerGbn?: string; // 매도자 구분
 }
 
+// 분양권/입주권 전매 API 응답 아이템
+// RTMSDataSvcSilvTrade — aptSeq/buildYear/bonbun/bubun/roadNm 없음
+export interface SilvTradeItem {
+  dealAmount: string;       // 거래금액 (만원, 쉼표 포함)
+  dealYear: number;
+  dealMonth: number;
+  dealDay: number;
+  umdNm: string;
+  aptNm: string;
+  excluUseAr: number;
+  jibun: string;
+  sggCd: string;
+  floor: number;
+  cdealDay?: string;
+  cdealType?: string;
+  estateAgentSggNm?: string;
+  dealingGbn?: string;      // '01'=신규분양권, '02'=입주권
+  ownershipGbn?: string;    // 소유권 구분
+  slerGbn?: string;         // 매도인 구분
+  buyerGbn?: string;        // 매수인 구분
+}
+
 export interface NormalizedTransaction {
   id: string; // 고유 식별자 (생성)
   aptName: string;
@@ -71,4 +93,5 @@ export interface NormalizedTransaction {
   buildYear: number;
   isCancelled: boolean; // 해제 여부
   sggNm?: string; // 시군구명 (예: 송파구) — 전체 조회 시 표시용
+  dealType?: '매매' | '신규분양권' | '입주권';  // 거래 유형 (없으면 '매매')
 }
