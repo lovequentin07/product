@@ -53,6 +53,7 @@ async function TransactionsLoader({
   areaMax,
   priceMin,
   priceMax,
+  dealType,
 }: {
   lawdCd: string;
   dealYmd: string;
@@ -65,6 +66,7 @@ async function TransactionsLoader({
   areaMax?: number;
   priceMin?: number;
   priceMax?: number;
+  dealType?: string;
 }) {
   let transactions: NormalizedTransaction[] = [];
   let totalCount = 0;
@@ -84,6 +86,7 @@ async function TransactionsLoader({
       area_max: areaMax,
       price_min: priceMin,
       price_max: priceMax,
+      deal_type: dealType as TransactionQueryParams['deal_type'],
     });
     transactions = result.transactions.map(toNormalized);
     totalCount = result.totalCount;
@@ -109,6 +112,7 @@ async function TransactionsLoader({
       areaMax={areaMax}
       priceMin={priceMin}
       priceMax={priceMax}
+      dealType={dealType}
     />
   );
 }
@@ -120,7 +124,7 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
   if (!sgg_cd) notFound();
 
   const awaitedSearchParams = await searchParams;
-  const { dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir, areaMin, areaMax, priceMin, priceMax } = awaitedSearchParams;
+  const { dealYmd, pageNo, numOfRows, searchTerm, sortBy, sortDir, areaMin, areaMax, priceMin, priceMax, dealType } = awaitedSearchParams;
 
   const initialDealYmd = ensureString(dealYmd) || '';
   const initialNumOfRows = Number(numOfRows) || 15;
@@ -132,6 +136,7 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
   const initialAreaMax = Number(ensureString(areaMax)) || undefined;
   const initialPriceMin = Number(ensureString(priceMin)) || undefined;
   const initialPriceMax = Number(ensureString(priceMax)) || undefined;
+  const initialDealType = ensureString(dealType) || '전체';
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -162,7 +167,7 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
 
       <Suspense
         fallback={<LoadingSkeleton />}
-        key={`${sgg_cd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}-${initialAreaMin ?? ''}-${initialAreaMax ?? ''}-${initialPriceMin ?? ''}-${initialPriceMax ?? ''}`}
+        key={`${sgg_cd}-${initialDealYmd || 'all'}-${initialNumOfRows}-${initialPageNo}-${initialSortBy}-${initialSortDir}-${initialSearchTerm}-${initialAreaMin ?? ''}-${initialAreaMax ?? ''}-${initialPriceMin ?? ''}-${initialPriceMax ?? ''}-${initialDealType}`}
       >
         <TransactionsLoader
           lawdCd={sgg_cd}
@@ -176,6 +181,7 @@ export default async function RegionPage({ params, searchParams }: PageProps) {
           areaMax={initialAreaMax}
           priceMin={initialPriceMin}
           priceMax={initialPriceMax}
+          dealType={initialDealType !== '전체' ? initialDealType : undefined}
         />
       </Suspense>
 

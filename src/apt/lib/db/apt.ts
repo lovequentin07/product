@@ -79,7 +79,7 @@ async function getD1AptHistory(
   // 페이지네이션된 거래 목록 (areaBucket 필터 적용)
   const recentStmt = db
     .prepare(
-      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_year, deal_month, deal_day FROM apt_transactions ${filteredWhere} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
+      `SELECT id, apt_nm, deal_date, deal_amount, deal_amount_billion, area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year, umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type, deal_type, deal_year, deal_month, deal_day FROM apt_transactions ${filteredWhere} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
     )
     .bind(...filteredBindings, numOfRows, offset);
 

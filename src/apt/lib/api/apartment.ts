@@ -1,7 +1,7 @@
 // src/lib/api/apartment.ts
 
 import { callPublicDataApi } from '@shared/lib/api/client';
-import { TransactionItem, NormalizedTransaction, TransactionRequest, TransactionResponse } from '@apt/types/real-estate'; // Import TransactionResponse
+import { TransactionItem, NormalizedTransaction, TransactionRequest, TransactionResponse, SilvTradeItem } from '@apt/types/real-estate'; // Import TransactionResponse
 
 // -------------------------
 // 단지 기본 정보 API (관리비 세대수 보강용)
@@ -200,4 +200,63 @@ export async function getRawApartmentTransactions(
     transactions: allTransactions,
     totalCount: totalCount,
   };
+}
+
+const SILV_TRADE_API_PATH = '/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade';
+
+interface RawSilvTradeResult {
+  transactions: SilvTradeItem[];
+  totalCount: number;
+}
+
+/**
+ * 분양권/입주권 전매 거래 원천 데이터를 공공데이터포털에서 가져옵니다.
+ * API: RTMSDataSvcSilvTrade
+ * dealingGbn: '01'=신규분양권, '02'=입주권
+ */
+export async function getRawSilvTradeTransactions(
+  lawdCd: string,
+  dealYmd: string,
+  perPage: number = 1000
+): Promise<RawSilvTradeResult | null> {
+  let allTransactions: SilvTradeItem[] = [];
+  let currentPage = 1;
+  let hasMore = true;
+  let totalCount = 0;
+
+  while (hasMore) {
+    const params: TransactionRequest = {
+      LAWD_CD: lawdCd,
+      DEAL_YMD: dealYmd,
+      numOfRows: perPage,
+      pageNo: currentPage,
+    };
+
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    ) as Record<string, string | number>;
+
+    try {
+      const response: TransactionResponse = await callPublicDataApi(SILV_TRADE_API_PATH, filteredParams);
+
+      const items = (response?.response?.body?.items?.item ?? []) as SilvTradeItem[];
+      totalCount = response?.response?.body?.totalCount || 0;
+
+      if (!Array.isArray(items) || items.length === 0) {
+        hasMore = false;
+      } else {
+        allTransactions = allTransactions.concat(items);
+        if (allTransactions.length < totalCount) {
+          currentPage++;
+        } else {
+          hasMore = false;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching silv trade transactions:', error);
+      return null;
+    }
+  }
+
+  return { transactions: allTransactions, totalCount };
 }

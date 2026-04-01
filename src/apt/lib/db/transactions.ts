@@ -20,6 +20,7 @@ function getMockTransactions(params: TransactionQueryParams): TransactionsResult
     area_max,
     price_min,
     price_max,
+    // deal_type: mock에서는 무시 (모든 mock 데이터는 '매매')
   } = params;
 
   let filtered = [...MOCK_TRANSACTIONS];
@@ -96,7 +97,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
 
   // 캐시: apt_nm 검색은 동적 입력이므로 제외
   const shouldCache = !!cache && !apt_nm;
-  const cacheKey = `txn:${sgg_cd ?? '11000'}:${deal_ymd ?? 'all'}:${safeSort}:${safeOrder}:${page}:${limit}:${area_min ?? ''}:${area_max ?? ''}:${price_min ?? ''}:${price_max ?? ''}`;
+  const cacheKey = `txn:${sgg_cd ?? '11000'}:${deal_ymd ?? 'all'}:${safeSort}:${safeOrder}:${page}:${limit}:${area_min ?? ''}:${area_max ?? ''}:${price_min ?? ''}:${price_max ?? ''}:${params.deal_type ?? ''}`;
 
   if (shouldCache) {
     const cached = await cache!.get(cacheKey, 'json') as TransactionsResult | null;
@@ -134,6 +135,12 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
   if (price_min !== undefined) { conditions.push('deal_amount_billion >= ?'); bindings.push(price_min); }
   if (price_max !== undefined) { conditions.push('deal_amount_billion <= ?'); bindings.push(price_max); }
 
+  // 거래유형 필터
+  if (params.deal_type && params.deal_type !== '전체') {
+    conditions.push('deal_type = ?');
+    bindings.push(params.deal_type);
+  }
+
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   // 단일 쿼리: window function으로 집계+목록 동시 조회 (전체 스캔 2회 → 1회)
@@ -143,7 +150,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
       id, apt_nm, deal_date, deal_amount, deal_amount_billion,
       area_pyeong, price_per_pyeong, exclu_use_ar, floor, build_year,
       umd_nm, sgg_nm, sgg_cd, jibun, road_nm, cdeal_type,
-      deal_year, deal_month, deal_day,
+      deal_type, deal_year, deal_month, deal_day,
       COUNT(*) OVER() AS w_cnt,
       AVG(deal_amount) OVER() AS w_avg,
       MAX(deal_amount) OVER() AS w_max,

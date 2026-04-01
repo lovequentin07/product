@@ -25,6 +25,14 @@ const PRICE_OPTIONS = [
   { label: '20억+', min: 20, max: undefined },
 ] as const;
 
+// 거래유형 필터 옵션
+const DEAL_TYPE_OPTIONS = [
+  { label: '전체', value: '전체' },
+  { label: '매매', value: '매매' },
+  { label: '분양권', value: '신규분양권' },
+  { label: '입주권', value: '입주권' },
+] as const;
+
 export default function TransactionsClientComponent({
   transactions,
   totalCount,
@@ -41,6 +49,7 @@ export default function TransactionsClientComponent({
   areaMax,
   priceMin,
   priceMax,
+  dealType,
 }: {
   transactions: NormalizedTransaction[];
   totalCount: number;
@@ -57,6 +66,7 @@ export default function TransactionsClientComponent({
   areaMax?: number;
   priceMin?: number;
   priceMax?: number;
+  dealType?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,6 +77,7 @@ export default function TransactionsClientComponent({
   // URL props 기반으로 현재 선택된 필터 버튼 인덱스 결정
   const areaOptionIndex = AREA_OPTIONS.findIndex((o) => o.min === areaMin && o.max === areaMax);
   const priceOptionIndex = PRICE_OPTIONS.findIndex((o) => o.min === priceMin && o.max === priceMax);
+  const dealTypeOptionIndex = DEAL_TYPE_OPTIONS.findIndex((o) => o.value === (dealType || '전체'));
 
   const urlSortBy = searchParams.get('sortBy') || sortBy;
   const urlSortDir = (searchParams.get('sortDir') || sortDir) as 'asc' | 'desc';
@@ -161,6 +172,14 @@ export default function TransactionsClientComponent({
     router.push(`?${current.toString()}`, { scroll: false });
   };
 
+  const handleDealTypeFilter = (value: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (value && value !== '전체') current.set('dealType', value);
+    else current.delete('dealType');
+    current.set('pageNo', '1');
+    router.push(`?${current.toString()}`, { scroll: false });
+  };
+
   return (
     <div>
       {/* 요약 카드 */}
@@ -179,6 +198,12 @@ export default function TransactionsClientComponent({
           options={PRICE_OPTIONS.map((o) => o.label)}
           selected={priceOptionIndex < 0 ? 0 : priceOptionIndex}
           onChange={(i) => handlePriceFilter(PRICE_OPTIONS[i].min, PRICE_OPTIONS[i].max)}
+        />
+        <FilterBar
+          label="거래유형"
+          options={DEAL_TYPE_OPTIONS.map((o) => o.label)}
+          selected={dealTypeOptionIndex < 0 ? 0 : dealTypeOptionIndex}
+          onChange={(i) => handleDealTypeFilter(DEAL_TYPE_OPTIONS[i].value)}
         />
       </div>
 

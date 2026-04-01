@@ -143,6 +143,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     }
                   >
                     {t.aptName}
+                    <DealTypeBadge dealType={t.dealType} />
                   </td>
                   {showGuColumn && (
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -289,6 +290,20 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
         onChange={(e) => onChange(e.target.value)}
       />
     </div>
+  );
+}
+
+function DealTypeBadge({ dealType }: { dealType?: string }) {
+  if (!dealType || dealType === '매매') return null;
+  const isNew = dealType === '신규분양권';
+  return (
+    <span
+      className={`ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${
+        isNew ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+      }`}
+    >
+      {isNew ? '분양권' : '입주권'}
+    </span>
   );
 }
 

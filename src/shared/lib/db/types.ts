@@ -13,6 +13,7 @@ export interface TransactionQueryParams {
   area_max?: number;
   price_min?: number; // 억 단위
   price_max?: number;
+  deal_type?: '전체' | '매매' | '신규분양권' | '입주권';  // 거래유형 필터
 }
 
 export interface TransactionRow {
@@ -34,6 +35,7 @@ export interface TransactionRow {
   road_nm: string | null;
   cdeal_type: string | null;
   deal_year: number;
+  deal_type: '매매' | '신규분양권' | '입주권';
   deal_month: number;
   deal_day: number;
 }

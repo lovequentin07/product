@@ -25,6 +25,7 @@ export function toNormalized(row: TransactionRow): NormalizedTransaction {
     buildYear: row.build_year,
     isCancelled: !!row.cdeal_type,
     sggNm: row.sgg_nm ?? undefined,
+    dealType: (row.deal_type as '매매' | '신규분양권' | '입주권') || '매매',
   };
 }
 
