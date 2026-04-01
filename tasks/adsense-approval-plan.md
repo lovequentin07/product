@@ -4,6 +4,7 @@
 > 목표: Google AdSense 재승인 획득
 > 탈락 원인: 콘텐츠 절대량 부족, About/Contact 페이지 없음
 > 예상 완료 후 재신청 타이밍: 작업 완료 + 2~3주 구글 크롤링 대기
+> 문의 이메일: datazip.help@gmail.com (Gmail 계정 생성 완료 2026-03-30)
 
 ---
 
@@ -26,9 +27,9 @@
 
 ## 작업 목록
 
-### Phase 1 — 필수 페이지 추가 (최우선)
+### Phase 1 — 필수 페이지 추가 ✅ 완료 (2026-03-30, 커밋 7f4030a)
 
-#### [ ] 1-1. `/about` 페이지 생성
+#### [x] 1-1. `/about` 페이지 생성
 - 파일: `src/app/about/page.tsx`
 - 내용:
   - DataZip 소개 (공공데이터를 쉽게 찾아볼 수 있는 서비스)
@@ -39,7 +40,7 @@
 - `generateMetadata` 포함
 - 기존 가이드 페이지 스타일(`article` 태그, breadcrumb) 동일하게 적용
 
-#### [ ] 1-2. `/contact` 페이지 생성
+#### [x] 1-2. `/contact` 페이지 생성
 - 파일: `src/app/contact/page.tsx`
 - 내용:
   - 문의 이메일 표시 (하드코딩 또는 환경변수)
@@ -47,7 +48,7 @@
   - "데이터 오류 신고", "서비스 제안" 등 문의 유형 안내
 - `generateMetadata` 포함
 
-#### [ ] 1-3. Footer에 About/Contact 링크 추가
+#### [x] 1-3. Footer에 About/Contact 링크 추가
 - 파일: `src/components/Footer.tsx`
 - 현재: `개인정보처리방침`만 있음
 - 추가: `소개` `/about`, `문의` `/contact`
