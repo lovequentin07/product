@@ -16,6 +16,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { execSync } from 'child_process';
 import { getRawApartmentTransactions, getRawSilvTradeTransactions } from '@apt/lib/api/apartment';
 import { regions } from '@shared/data/regions';
@@ -25,8 +27,8 @@ import type { TransactionItem, SilvTradeItem } from '@apt/types/real-estate';
 // 설정
 // -------------------------
 const DB_NAME = 'apt-trade-db';
-const TMP_SQL_FILE = '/tmp/d1_update_recent.sql';
-const BATCH_SIZE = 500;
+const TMP_SQL_FILE = path.join(os.tmpdir(), 'd1_update_recent.sql');
+const BATCH_SIZE = 100;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 const API_CALL_DELAY_MS = 300;
