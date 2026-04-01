@@ -20,6 +20,7 @@ function getMockTransactions(params: TransactionQueryParams): TransactionsResult
     area_max,
     price_min,
     price_max,
+    // deal_type: mock에서는 무시 (모든 mock 데이터는 '매매')
   } = params;
 
   let filtered = [...MOCK_TRANSACTIONS];
@@ -133,6 +134,12 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
   if (area_max !== undefined) { conditions.push('area_pyeong <= ?'); bindings.push(area_max); }
   if (price_min !== undefined) { conditions.push('deal_amount_billion >= ?'); bindings.push(price_min); }
   if (price_max !== undefined) { conditions.push('deal_amount_billion <= ?'); bindings.push(price_max); }
+
+  // 거래유형 필터
+  if (params.deal_type && params.deal_type !== '전체') {
+    conditions.push('deal_type = ?');
+    bindings.push(params.deal_type);
+  }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
