@@ -17,9 +17,9 @@ config({ path: '.env.local' });
 
 import * as fs from 'fs';
 import { execSync } from 'child_process';
-import { getRawApartmentTransactions } from '@apt/lib/api/apartment';
+import { getRawApartmentTransactions, getRawSilvTradeTransactions } from '@apt/lib/api/apartment';
 import { regions } from '@shared/data/regions';
-import type { TransactionItem } from '@apt/types/real-estate';
+import type { TransactionItem, SilvTradeItem } from '@apt/types/real-estate';
 
 // -------------------------
 // 설정
@@ -66,7 +66,7 @@ function num(v: number | string | null | undefined): string {
   return isNaN(n) ? 'NULL' : String(n);
 }
 
-function toInsertValues(item: TransactionItem): string {
+function toInsertValues(item: TransactionItem | SilvTradeItem, dealType: '매매' | '신규분양권' | '입주권'): string {
   const dealAmount = parseInt(String(item.dealAmount).replace(/,/g, ''), 10);
   const excluUseAr = Number(item.excluUseAr) || 0;
   const dealAmountBillion = Math.round((dealAmount / 10000) * 100) / 100;
@@ -88,12 +88,28 @@ function toInsertValues(item: TransactionItem): string {
   const cdealDay = item.cdealDay === '' ? null : (item.cdealDay ?? null);
   const cdealType = item.cdealType === '' ? null : (item.cdealType ?? null);
 
+  // 매매 전용 필드 (분양권은 null)
+  const aptSeq = 'aptSeq' in item ? item.aptSeq : null;
+  const bonbun = 'bonbun' in item ? item.bonbun : null;
+  const bubun = 'bubun' in item ? item.bubun : null;
+  const roadNm = 'roadNm' in item ? item.roadNm : null;
+  const buildYear = 'buildYear' in item ? item.buildYear : null;
+
+  // 분양권 전용 필드 (매매는 null)
+  const ownershipGbn = 'ownershipGbn' in item ? item.ownershipGbn : null;
+  const slerGbn = item.slerGbn ?? null;
+  const buyerGbn = item.buyerGbn ?? null;
+
+  const jibunVal = 'jibun' in item ? item.jibun : null;
+  const umdCdVal = 'umdCd' in item ? (item as TransactionItem).umdCd : undefined;
+
   return `(${dealAmount},${excluUseAr},${dealAmountBillion},${areaPyeong},${pricePerPyeong},` +
-    `${esc(sggCd)},${esc(sggNm)},${esc(item.umdNm)},${num(item.umdCd)},` +
-    `${esc(item.aptNm)},${num(item.jibun)},${num(item.floor)},${num(item.buildYear)},` +
+    `${esc(sggCd)},${esc(sggNm)},${esc(item.umdNm)},${num(umdCdVal)},` +
+    `${esc(item.aptNm)},${num(jibunVal)},${num(item.floor)},${num(buildYear)},` +
     `${dealYear},${dealMonth},${dealDay},${esc(dealDate)},` +
-    `${esc(cdealDay)},${esc(cdealType)},${esc(item.aptSeq)},` +
-    `${num(item.bonbun)},${num(item.bubun)},${esc(item.roadNm)})`;
+    `${esc(cdealDay)},${esc(cdealType)},${esc(aptSeq)},` +
+    `${num(bonbun)},${num(bubun)},${esc(roadNm)},` +
+    `${esc(dealType)},${esc(ownershipGbn)},${esc(slerGbn)},${esc(buyerGbn)})`;
 }
 
 const INSERT_COLUMNS = `(deal_amount, exclu_use_ar, deal_amount_billion, area_pyeong, price_per_pyeong,
@@ -101,7 +117,8 @@ const INSERT_COLUMNS = `(deal_amount, exclu_use_ar, deal_amount_billion, area_py
   apt_nm, jibun, floor, build_year,
   deal_year, deal_month, deal_day, deal_date,
   cdeal_day, cdeal_type, apt_seq,
-  bonbun, bubun, road_nm)`;
+  bonbun, bubun, road_nm,
+  deal_type, ownership_gbn, sler_gbn, buyer_gbn)`;
 
 // -------------------------
 // 재시도 포함 wrangler 실행
@@ -136,53 +153,73 @@ async function runSQL(sql: string, label: string, attempt = 1): Promise<void> {
 // -------------------------
 // 월별 업데이트
 // -------------------------
-async function updateMonth(year: number, month: number, yyyymm: string): Promise<number> {
-  // 1. API 수집: 25개 구 순차 호출
-  const allItems: TransactionItem[] = [];
+async function updateMonth(year: number, month: number, yyyymm: string): Promise<{ trade: number; silv: number }> {
+  // === 매매 + 분양권 동시 수집 (구별로 Promise.all 병렬) ===
+  const tradeItems: TransactionItem[] = [];
+  const silvItems: SilvTradeItem[] = [];
+
   for (let i = 0; i < SEOUL_REGIONS.length; i++) {
     const region = SEOUL_REGIONS[i];
-    try {
-      const result = await getRawApartmentTransactions(region.code, yyyymm, 1000);
-      if (result && result.transactions.length > 0) {
-        allItems.push(...result.transactions);
-      }
-    } catch (e) {
-      console.warn(`  [경고] ${region.name}(${region.code}) ${yyyymm} API 실패, 건너뜀:`, e);
-    }
-    process.stdout.write(`\r  API 진행: ${i + 1}/${SEOUL_REGIONS.length} (${allItems.length}건)`);
+    const [tradeResult, silvResult] = await Promise.all([
+      getRawApartmentTransactions(region.code, yyyymm, 1000).catch(e => {
+        console.warn(`  [경고] 매매 ${region.name}(${region.code}) ${yyyymm} API 실패:`, e);
+        return null;
+      }),
+      getRawSilvTradeTransactions(region.code, yyyymm, 1000).catch(e => {
+        console.warn(`  [경고] 분양권 ${region.name}(${region.code}) ${yyyymm} API 실패:`, e);
+        return null;
+      }),
+    ]);
+    if (tradeResult && tradeResult.transactions.length > 0) tradeItems.push(...tradeResult.transactions);
+    if (silvResult && silvResult.transactions.length > 0) silvItems.push(...silvResult.transactions);
+    process.stdout.write(`\r  API 진행: ${i + 1}/${SEOUL_REGIONS.length} (매매 ${tradeItems.length}건, 분양권 ${silvItems.length}건)`);
     await sleep(API_CALL_DELAY_MS);
   }
   console.log('');
 
-  if (allItems.length === 0) {
-    console.log(`  거래 데이터 없음, DELETE만 수행`);
-  }
+  // === DELETE: deal_type 별로 분리 ===
+  const deleteTradeSql = `DELETE FROM apt_transactions WHERE deal_year = ${year} AND deal_month = ${month} AND deal_type = '매매';`;
+  const deleteSilvSql = `DELETE FROM apt_transactions WHERE deal_year = ${year} AND deal_month = ${month} AND deal_type IN ('신규분양권', '입주권');`;
+  await runSQL(deleteTradeSql, `DELETE 매매 ${yyyymm}`);
+  await runSQL(deleteSilvSql, `DELETE 분양권 ${yyyymm}`);
 
-  // 2. DELETE 기존 데이터
-  const deleteSql = `DELETE FROM apt_transactions WHERE deal_year = ${year} AND deal_month = ${month};`;
-  await runSQL(deleteSql, `DELETE ${yyyymm}`);
-
-  if (allItems.length === 0) return 0;
-
-  // 3. INSERT 신규 데이터 (배치 500행)
-  const valueRows: string[] = [];
-  for (const item of allItems) {
-    try {
-      valueRows.push(toInsertValues(item));
-    } catch {
-      // 변환 실패 항목 무시
+  // === INSERT 매매 ===
+  let tradeInserted = 0;
+  if (tradeItems.length > 0) {
+    const valueRows: string[] = [];
+    for (const item of tradeItems) {
+      try { valueRows.push(toInsertValues(item, '매매')); } catch { /* 변환 실패 무시 */ }
     }
+    const totalBatches = Math.ceil(valueRows.length / BATCH_SIZE);
+    for (let i = 0; i < valueRows.length; i += BATCH_SIZE) {
+      const batch = valueRows.slice(i, i + BATCH_SIZE);
+      const batchNo = Math.floor(i / BATCH_SIZE) + 1;
+      const insertSql = `INSERT INTO apt_transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
+      await runSQL(insertSql, `INSERT 매매 ${yyyymm} 배치 ${batchNo}/${totalBatches} (${batch.length}건)`);
+    }
+    tradeInserted = valueRows.length;
   }
 
-  const totalBatches = Math.ceil(valueRows.length / BATCH_SIZE);
-  for (let i = 0; i < valueRows.length; i += BATCH_SIZE) {
-    const batch = valueRows.slice(i, i + BATCH_SIZE);
-    const batchNo = Math.floor(i / BATCH_SIZE) + 1;
-    const insertSql = `INSERT INTO apt_transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
-    await runSQL(insertSql, `INSERT ${yyyymm} 배치 ${batchNo}/${totalBatches} (${batch.length}건)`);
+  // === INSERT 분양권/입주권 ===
+  let silvInserted = 0;
+  if (silvItems.length > 0) {
+    const valueRows: string[] = [];
+    for (const item of silvItems) {
+      const gbn = String(item.dealingGbn ?? '');
+      const dealType: '신규분양권' | '입주권' = gbn === '02' ? '입주권' : '신규분양권';
+      try { valueRows.push(toInsertValues(item, dealType)); } catch { /* 변환 실패 무시 */ }
+    }
+    const totalBatches = Math.ceil(valueRows.length / BATCH_SIZE);
+    for (let i = 0; i < valueRows.length; i += BATCH_SIZE) {
+      const batch = valueRows.slice(i, i + BATCH_SIZE);
+      const batchNo = Math.floor(i / BATCH_SIZE) + 1;
+      const insertSql = `INSERT INTO apt_transactions ${INSERT_COLUMNS} VALUES\n${batch.join(',\n')};`;
+      await runSQL(insertSql, `INSERT 분양권 ${yyyymm} 배치 ${batchNo}/${totalBatches} (${batch.length}건)`);
+    }
+    silvInserted = valueRows.length;
   }
 
-  return valueRows.length;
+  return { trade: tradeInserted, silv: silvInserted };
 }
 
 // -------------------------
@@ -202,9 +239,9 @@ async function main() {
   for (const { year, month, yyyymm } of months) {
     console.log(`[${yyyymm}] 처리 중...`);
     try {
-      const count = await updateMonth(year, month, yyyymm);
-      totalInserted += count;
-      console.log(`[${yyyymm}] 완료 — ${count.toLocaleString()}건 적재\n`);
+      const { trade, silv } = await updateMonth(year, month, yyyymm);
+      totalInserted += trade + silv;
+      console.log(`[${yyyymm}] 완료 — 매매 ${trade.toLocaleString()}건, 분양권 ${silv.toLocaleString()}건 적재\n`);
     } catch (e) {
       console.error(`[${yyyymm}] 실패:`, e);
       process.exit(1);
