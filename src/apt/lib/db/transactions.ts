@@ -97,7 +97,7 @@ async function getD1Transactions(db: D1Database, params: TransactionQueryParams,
 
   // 캐시: apt_nm 검색은 동적 입력이므로 제외
   const shouldCache = !!cache && !apt_nm;
-  const cacheKey = `txn:${sgg_cd ?? '11000'}:${deal_ymd ?? 'all'}:${safeSort}:${safeOrder}:${page}:${limit}:${area_min ?? ''}:${area_max ?? ''}:${price_min ?? ''}:${price_max ?? ''}`;
+  const cacheKey = `txn:${sgg_cd ?? '11000'}:${deal_ymd ?? 'all'}:${safeSort}:${safeOrder}:${page}:${limit}:${area_min ?? ''}:${area_max ?? ''}:${price_min ?? ''}:${price_max ?? ''}:${params.deal_type ?? ''}`;
 
   if (shouldCache) {
     const cached = await cache!.get(cacheKey, 'json') as TransactionsResult | null;
