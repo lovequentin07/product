@@ -38,6 +38,53 @@ const breadcrumbJsonLd = {
   ],
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "아파트 실거래가는 어디서 확인하나요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "국토교통부 실거래가 공개시스템(rt.molit.go.kr)에서 확인할 수 있으며, DataZip(datazip.net/apt)에서 서울 전 구의 아파트 실거래가를 한눈에 무료로 조회할 수 있습니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "실거래가와 호가의 차이는 무엇인가요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "호가는 매도자가 원하는 희망 판매가이고, 실거래가는 매수자와 매도자가 실제로 합의해 계약한 금액입니다. 시장이 약세일 때는 호가보다 실거래가가 크게 낮을 수 있으므로 반드시 실거래가를 기준으로 시세를 파악해야 합니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "같은 아파트인데 왜 층수마다 가격이 다른가요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "고층은 조망권과 채광 우위로 저층보다 5~15% 높게 거래되는 경향이 있습니다. 1~2층은 특수 상황을 제외하면 보통 할인 거래됩니다. 시세 분석 시 같은 면적대·비슷한 층수의 거래를 비교하는 것이 정확합니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "실거래가 데이터는 얼마나 자주 업데이트되나요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "국토교통부 실거래가 신고 기한은 계약 체결일로부터 30일 이내입니다. DataZip은 국토교통부 공개 API를 통해 정기적으로 데이터를 업데이트합니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "취소(해제)된 거래도 실거래가에 포함되나요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "네, 계약 해제된 거래도 실거래가 데이터에 포함됩니다. 취소 거래는 실제 시세를 반영하지 않으므로 시세 분석 시 반드시 제외해야 합니다. DataZip에서는 취소 거래를 별도로 표시합니다.",
+      },
+    },
+  ],
+};
+
 export default function AptPriceGuidePage() {
   return (
     <ServiceLayout>
@@ -50,6 +97,11 @@ export default function AptPriceGuidePage() {
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* 브레드크럼 */}

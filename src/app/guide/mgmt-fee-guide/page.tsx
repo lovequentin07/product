@@ -38,6 +38,45 @@ const breadcrumbJsonLd = {
   ],
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "아파트 관리비 적정 수준은 얼마인가요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "전용면적 84㎡ 기준 서울 아파트 평균 관리비는 월 20~30만원 수준입니다. 단지 규모, 난방 방식(중앙난방·개별난방), 건물 연식에 따라 차이가 큽니다. DataZip 관리비 지킴이에서 내 아파트와 동일 지역·유사 규모 단지와 비교해볼 수 있습니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "관리비는 어떤 항목으로 구성되나요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "관리비는 크게 일반관리비(청소·경비·관리사무소 운영), 공용부분 전기·수도, 장기수선충당금, 개별사용료(전기·가스·수도)로 나뉩니다. 이 중 장기수선충당금은 추후 환급받을 수 있으므로 관리 필요합니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "관리비를 줄이는 가장 효과적인 방법은?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "개별 사용료(전기·가스·수도) 절약이 가장 직접적입니다. 또한 입주자 대표회의를 통해 공용부분 LED 조명 교체, 불필요한 경비 인력 조정, 위탁관리 업체 재협상 등을 요구할 수 있습니다.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "관리비 공시 정보는 어디서 확인하나요?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "K-apt(공동주택관리정보시스템, k-apt.go.kr)에서 전국 의무관리 대상 아파트의 관리비 내역을 공시합니다. DataZip 관리비 지킴이에서 이 데이터를 기반으로 단지별 비교 분석을 제공합니다.",
+      },
+    },
+  ],
+};
+
 export default function MgmtFeeGuidePage() {
   return (
     <ServiceLayout>
@@ -50,6 +89,11 @@ export default function MgmtFeeGuidePage() {
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* 브레드크럼 */}

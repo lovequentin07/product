@@ -50,13 +50,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { sgg_nm, apt_nm } = await params;
   const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
-  const title = `${aptName} 아파트 실거래가 | ${decodedSggNm} 시세 추이 분석`;
-  const description = `${aptName} 아파트의 전체 실거래가 추이, 면적별 가격, 최근 거래 이력을 한눈에 확인하세요.`;
+  const title = `${aptName} 실거래가 2026 | ${decodedSggNm} 최신 시세`;
+  const description = `${aptName} 2026년 최신 실거래가, 면적별 시세, 거래 이력을 한눈에 확인하세요. 국토교통부 공식 데이터 기반.`;
   const canonicalUrl = `/apt/${sgg_nm}/${apt_nm}`;
   return {
     title,
     description,
-    keywords: [`${aptName} 아파트`, `${aptName} 실거래가`, `${decodedSggNm} 아파트`, `${aptName} 시세`, `${aptName} 매매가`],
+    keywords: [`${aptName} 아파트`, `${aptName} 실거래가`, `${aptName} 실거래가 2026`, `${decodedSggNm} 아파트`, `${aptName} 시세`, `${aptName} 매매가`],
     alternates: { canonical: canonicalUrl },
     openGraph: { title, description, url: canonicalUrl },
   };
