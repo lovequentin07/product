@@ -64,3 +64,10 @@ next-env.d.ts
 # temporary script output
 .tmp/
 .superpowers/
+
+# credentials
+ga4-credentials.json
+.mcp.json
+
+# playwright mcp artifacts
+.playwright-mcp/
