@@ -52,8 +52,10 @@ export function buildTrendMeta(monthly: MonthlyPoint[], latestPrice: number): Tr
   }
   const validAvgs = monthly.filter((m) => m.avg != null).map((m) => m.avg!)
   const yearAvg = validAvgs.length > 0 ? Math.round(validAvgs.reduce((s, v) => s + v, 0) / validAvgs.length) : 0
-  const yearMin = Math.min(...monthly.filter((m) => m.low != null).map((m) => m.low!))
-  const yearMax = Math.max(...monthly.filter((m) => m.high != null).map((m) => m.high!))
+  const lows = monthly.filter((m) => m.low != null).map((m) => m.low!)
+  const highs = monthly.filter((m) => m.high != null).map((m) => m.high!)
+  const yearMin = lows.length > 0 ? Math.min(...lows) : 0
+  const yearMax = highs.length > 0 ? Math.max(...highs) : 0
   const vsYearAvgRate = yearAvg > 0
     ? Math.round(((latestPrice - yearAvg) / yearAvg) * 1000) / 10
     : 0

@@ -36,7 +36,10 @@ export default function AptMgmtSearchForm() {
     setLoading(true);
     setError('');
     fetch(`/api/apt-mgmt/apts?sgg_nm=${encodeURIComponent(sggNm)}`)
-      .then((r) => r.json() as Promise<MgmtFeeApt[]>)
+      .then((r) => {
+        if (!r.ok) throw new Error(`서버 오류 (${r.status})`);
+        return r.json() as Promise<MgmtFeeApt[]>;
+      })
       .then((data) => setApts(Array.isArray(data) ? data : []))
       .catch(() => setError('아파트 목록을 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
