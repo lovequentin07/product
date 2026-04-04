@@ -71,3 +71,6 @@ ga4-credentials.json
 
 # playwright mcp artifacts
 .playwright-mcp/
+
+# git worktrees
+.worktrees/
