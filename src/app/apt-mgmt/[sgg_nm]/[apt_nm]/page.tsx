@@ -1,13 +1,13 @@
 // src/app/apt-mgmt/[sgg_nm]/[apt_nm]/page.tsx
 // 관리비 분석 결과 페이지
 
-import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getMgmtFeeResult, getMgmtFeeTopApts, getMgmtFeeApts } from '@apt-mgmt/lib/db/management-fee';
 import type { MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
 import AptMgmtResultClient from '@apt-mgmt/components/AptMgmtResultClient';
 import ServiceLayout from '@shared/components/ui/ServiceLayout';
+import DataNotFound from '@shared/components/ui/DataNotFound';
 
 interface PageProps {
   params: Promise<{ sgg_nm: string; apt_nm: string }>;
@@ -37,29 +37,63 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
   const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
 
-  const resolvedKaptCode = kaptCode;
+  const NOT_FOUND_PROPS = {
+    title: `${aptName} 관리비 정보를 찾을 수 없습니다`,
+    message: '해당 아파트의 관리비 데이터가 국토교통부 K-apt 공시 DB에 아직 수집되지 않았습니다.',
+    source: '국토교통부 K-apt',
+    backHref: '/apt-mgmt',
+    backLabel: '관리비 검색으로 돌아가기',
+  } as const;
 
-  // kaptCode 없을 때: sgg_nm + apt_nm으로 DB 조회 후 리다이렉트 (SEO 크롤러 지원)
+  // kaptCode resolve: URL에 없으면 DB에서 조회 (redirect 없이 직접 렌더링)
+  let resolvedKaptCode = kaptCode;
   if (!resolvedKaptCode) {
-    const apts = await getMgmtFeeApts(decodedSggNm);
-    const match = apts.find((a) => a.apt_nm === aptName);
-    if (!match) notFound();
-    redirect(`/apt-mgmt/${encodeURIComponent(decodedSggNm)}/${encodeURIComponent(aptName)}?kaptCode=${match!.kapt_code}`);
+    try {
+      const apts = await getMgmtFeeApts(decodedSggNm);
+      const match = apts.find((a) => a.apt_nm === aptName);
+      if (!match) return (
+        <ServiceLayout>
+          <DataNotFound {...NOT_FOUND_PROPS} />
+        </ServiceLayout>
+      );
+      resolvedKaptCode = match.kapt_code;
+    } catch (e) {
+      console.error('[apt-mgmt] getMgmtFeeApts failed:', decodedSggNm, aptName, e);
+      return (
+        <ServiceLayout>
+          <DataNotFound {...NOT_FOUND_PROPS} />
+        </ServiceLayout>
+      );
+    }
   }
 
-  // DB 에러 시 error.tsx가 처리 (try-catch로 notFound() 하지 않음)
-  const result = await getMgmtFeeResult(resolvedKaptCode!);
+  // 관리비 결과 조회
+  let result = null;
+  try {
+    result = await getMgmtFeeResult(resolvedKaptCode);
+  } catch (e) {
+    console.error('[apt-mgmt] getMgmtFeeResult failed:', resolvedKaptCode, e);
+    return (
+      <ServiceLayout>
+        <DataNotFound {...NOT_FOUND_PROPS} />
+      </ServiceLayout>
+    );
+  }
 
   if (!result) {
-    notFound();
+    return (
+      <ServiceLayout>
+        <DataNotFound {...NOT_FOUND_PROPS} />
+      </ServiceLayout>
+    );
   }
 
   let topApts: { umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null } = { umd: null, seoul: null };
   try {
-    topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, resolvedKaptCode!);
+    topApts = await getMgmtFeeTopApts(result.billing_ym, result.umd_nm, resolvedKaptCode);
   } catch (e) {
     console.error('[apt-mgmt] getMgmtFeeTopApts failed:', resolvedKaptCode, e);
-    // 페이지 자체는 렌더링 (추천 섹션만 미표시)
+    // 추천 섹션 미표시로 계속
   }
 
   const breadcrumbJsonLd = {
