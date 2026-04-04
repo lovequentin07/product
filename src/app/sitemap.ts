@@ -87,12 +87,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
   // 관리비 지킴이 — 랜딩 + 개별 아파트 (apt_meta 상위 500개)
-  const mgmtAptUrls: MetadataRoute.Sitemap = mgmtApts.map(({ sgg_nm, apt_nm }) => ({
-    url: `${BASE_URL}/apt-mgmt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
-    lastModified: new Date('2026-02-26'),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
+  const mgmtAptUrls: MetadataRoute.Sitemap = mgmtApts.map(({ sgg_nm, apt_nm, billing_ym }) => {
+    // billing_ym 형식: "202501" → "2025-01-01"
+    const lastMod = billing_ym
+      ? new Date(`${billing_ym.slice(0, 4)}-${billing_ym.slice(4, 6)}-01`)
+      : new Date('2026-02-26');
+    return {
+      url: `${BASE_URL}/apt-mgmt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
+      lastModified: lastMod,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    };
+  });
 
   const mgmtUrls: MetadataRoute.Sitemap = [
     {

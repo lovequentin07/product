@@ -68,6 +68,7 @@ npm run lint             # ESLint 실행
 - **SEO**: 각 서비스 페이지에 `generateMetadata` 구현 필수
 - **보안**: API 키는 서버 사이드에서만 사용 (클라이언트에서 외부 API 직접 호출 금지)
 - **프론트 먼저**: 신규 서비스는 mock 데이터로 프론트엔드 완성 후 백엔드/데이터 작업 진행
+- **데이터 미수집 Fallback**: 공공 API/DB에서 데이터를 찾지 못한 경우, `notFound()`(404) 대신 `<DataNotFound>` 컴포넌트(`src/shared/components/ui/DataNotFound.tsx`)를 렌더링. 404는 URL 자체가 잘못된 경우(존재하지 않는 경로, 유효하지 않은 파라미터)에만 사용. HTTP 200으로 사용자에게 "아직 수집되지 않았습니다" 안내 + 검색 페이지 복귀 유도.
 
 ## 서비스 구조 전략
 

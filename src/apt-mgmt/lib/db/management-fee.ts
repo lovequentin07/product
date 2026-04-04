@@ -536,7 +536,7 @@ export async function getMgmtFeeResult(kapt_code: string): Promise<MgmtFeeResult
   }
 }
 
-export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: string }[]> {
+export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: string; billing_ym: string }[]> {
   let db: D1Database | null = null;
   try {
     const { getCloudflareContext } = await import('@opennextjs/cloudflare');
@@ -550,13 +550,14 @@ export async function getMgmtFeeAptUrlList(): Promise<{ sgg_nm: string; apt_nm: 
 
   const result = await db
     .prepare(
-      `SELECT DISTINCT m.sgg_nm, m.apt_nm
+      `SELECT DISTINCT m.sgg_nm, m.apt_nm, MAX(f.billing_ym) as billing_ym
        FROM apt_mgmt_fee f
        JOIN apt_meta m ON m.kapt_code = f.kapt_code
        WHERE m.sgg_nm IS NOT NULL AND m.apt_nm IS NOT NULL
+       GROUP BY m.sgg_nm, m.apt_nm
        LIMIT 500`
     )
-    .all<{ sgg_nm: string; apt_nm: string }>();
+    .all<{ sgg_nm: string; apt_nm: string; billing_ym: string }>();
   return result.results ?? [];
 }
 
