@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
@@ -10,6 +9,7 @@ import PriceTrendChart from '@market/components/PriceTrendChart'
 import BuySignalBanner from '@market/components/BuySignalBanner'
 import GradeSelector from '@market/components/GradeSelector'
 import ServiceLayout from '@shared/components/ui/ServiceLayout'
+import DataNotFound from '@shared/components/ui/DataNotFound'
 
 interface Props {
   params: Promise<{ item: string }>
@@ -55,7 +55,17 @@ export default async function ItemPage({ params, searchParams }: Props) {
   const headersList = await headers()
   const sgg_cd = detectRegion(headersList)
   const item = await getItemBySlugForRegion(id, sgg_cd)
-  if (!item) notFound()
+  if (!item) return (
+    <ServiceLayout>
+      <DataNotFound
+        title={`${id} 시세 정보를 찾을 수 없습니다`}
+        message="해당 품목의 시세 데이터가 아직 공공데이터포털에 수집되지 않았습니다."
+        source="공공데이터포털 KAMIS"
+        backHref="/market"
+        backLabel="장보기 시세로 돌아가기"
+      />
+    </ServiceLayout>
+  )
 
   const priceData = getDefaultKind(item)
   const todayPrice = priceData.retailPrice
