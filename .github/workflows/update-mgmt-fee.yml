@@ -1,14 +1,18 @@
-name: Update Market Prices
+name: Update Management Fee Data
 
 on:
-  # 평일 매일 오전 10시 KST 자동 갱신
-  # Cron: '0 1 * * 1-5' = UTC 01:00 (월-금)
-  # UTC 01:00 + 9시간 = KST 10:00 (오전)
-  # 참고: GitHub Actions 무료 플랜은 스케줄 정확도 보장 안 함 (최대 15분 지연)
+  # 매월 1일 오전 11시 KST 자동 갱신
+  # Cron: '0 2 1 * *' = UTC 02:00 1일 (KST 11:00)
+  # K-APT 데이터 제출 지연(-2개월)을 감안하여 월초 1회 실행
   schedule:
-    - cron: '0 1 * * *'
-  # 수동 트리거 (테스트/긴급 실행용)
+    - cron: '0 2 1 * *'
+  # 수동 트리거
   workflow_dispatch:
+    inputs:
+      update_months:
+        description: '수집 월 수 (기본 2, 최대 6)'
+        required: false
+        default: '2'
 
 jobs:
   update:
@@ -31,23 +35,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. 공공데이터포털 농산물 가격 수집 + D1 갱신
-      - name: Fetch market prices and update D1
-        run: npx tsx src/market/scripts/update-market.ts
+      # 4. K-APT 관리비 API 수집 + D1 갱신
+      - name: Fetch management fee data and update D1
+        run: npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts
         env:
-          # 공공데이터포털
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
-          # Cloudflare D1
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+          UPDATE_MONTHS: ${{ github.event.inputs.update_months || '2' }}
 
       # 5. 완료 알림
       - name: Notify completion
         if: success()
-        run: echo "✅ Market data update completed successfully at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        run: echo "✅ Management fee data update completed at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-      # 6. 실패 알림 - GitHub Issue 자동 생성
+      # 6. 실패 시 GitHub Issue 자동 생성
       - name: Create GitHub Issue on failure
         if: failure()
         uses: actions/github-script@v7
@@ -56,23 +58,24 @@ jobs:
           script: |
             const now = new Date().toISOString();
             const logUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = `## 🔴 Market data update failed\n\n` +
+            const body = `## 🔴 Management fee data update failed\n\n` +
               `**실패 시간**: ${now}\n` +
-              `**실행 유형**: 평일 오전 10시 KST 자동 갱신\n` +
+              `**실행 유형**: 매월 1일 오전 11시 KST 자동 갱신\n` +
               `**상태**: ❌ Failed\n\n` +
               `### 확인 사항\n` +
-              `1. 공공데이터포털 API 응답 상태\n` +
+              `1. K-APT API 응답 상태 (DATA_GO_KR_API_KEY)\n` +
               `2. Cloudflare D1 접근 권한\n` +
-              `3. GitHub Secrets 설정 (DATA_GO_KR_API_KEY, CLOUDFLARE_*)\n\n` +
+              `3. apt_meta 테이블에 kapt_code 데이터 존재 여부\n` +
+              `4. GitHub Secrets 설정 (DATA_GO_KR_API_KEY, CLOUDFLARE_*)\n\n` +
               `### 참고\n` +
               `- [Workflow 로그](${logUrl})\n` +
-              `- 스크립트: \`src/market/scripts/update-market.ts\`\n` +
-              `- 다음 자동 실행: 내일 오전 10시 KST (또는 수동 실행)`;
+              `- 스크립트: \`src/apt-mgmt/scripts/update-mgmt-fee.ts\`\n` +
+              `- 다음 자동 실행: 다음달 1일 오전 11시 KST (또는 수동 실행)`;
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🔴 Market data update failed',
+              title: '🔴 Management fee data update failed',
               body: body,
-              labels: ['bug', 'market', 'automated']
+              labels: ['bug', 'apt-mgmt', 'automated']
             });

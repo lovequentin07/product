@@ -20,7 +20,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { getRawApartmentTransactions, getRawSilvTradeTransactions } from '@apt/lib/api/apartment';
-import { regions } from '@shared/data/regions';
+import { regions, getRegionNameByCode } from '@shared/data/regions';
 import type { TransactionItem, SilvTradeItem } from '@apt/types/real-estate';
 
 // -------------------------
@@ -80,7 +80,7 @@ function toInsertValues(item: TransactionItem | SilvTradeItem, dealType: '매매
   const sggCd = String(item.sggCd).padStart(5, '0');
   const sggNm = item.estateAgentSggNm
     ? item.estateAgentSggNm.replace('서울 ', '')
-    : null;
+    : getRegionNameByCode(sggCd) ?? null;
 
   const dealYear = Number(item.dealYear);
   const dealMonth = Number(item.dealMonth);
