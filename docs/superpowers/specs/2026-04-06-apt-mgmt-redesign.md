@@ -15,17 +15,20 @@
 ## 변경 1 — 랜딩 페이지: "만든 이유" 블록 추가
 
 ### 위치
+
 `src/app/apt-mgmt/page.tsx` — 기존 `이런 분께 유용합니다` 섹션과 `FAQ` 섹션 사이
 
 ### 내용 (확정 카피)
-```
-관리비가 오를 때마다 내 탓인지 공동관리비 탓인지
-알 수가 없었습니다. 옆 단지와 비교할 방법도 없었고요.
 
-K-apt 공공데이터로 그걸 가능하게 만들었습니다.
+```
+우리 아파트 관리비, 비싼 걸까요?
+
+매달 청구서를 받으면서도 알 수가 없었습니다.
+같은 평형·가격대 단지들과 비교해서 답을 찾습니다.
 ```
 
 ### UI
+
 - 섹션 레이블: `이 서비스를 만든 이유` (기존 FAQ 헤더와 동일 스타일: `text-xs font-semibold uppercase tracking-widest`)
 - 카드 스타일: `var(--ds-cream-card)` 배경, `var(--ds-cream-border)` 테두리, `rounded-xl p-4`
 - 폰트: `text-sm leading-relaxed`, `var(--ds-ink-muted)`
@@ -36,6 +39,7 @@ K-apt 공공데이터로 그걸 가능하게 만들었습니다.
 ## 변경 2 — 결과 페이지: 결과 섹션 리디자인
 
 ### 대상 파일
+
 - `src/apt-mgmt/components/AptMgmtSummaryCards.tsx` — 히어로 + 순위 바 교체
 - `src/lib/db/management-fee.ts` (또는 결과 페이지 서버 컴포넌트) — 평형·거래가·유사 단지 데이터 추가 쿼리
 
@@ -43,12 +47,12 @@ K-apt 공공데이터로 그걸 가능하게 만들었습니다.
 
 현재 없음 → 아파트명 아래에 칩 3~4개 추가:
 
-| 칩 | 데이터 출처 | 없을 때 |
-|---|---|---|
-| 🏠 N평 평균 | `apt_transactions.area_pyeong` 최근 12개월 평균, `kapt_code` join | 칩 숨김 |
-| 💰 N억 평균 | `apt_transactions.deal_amount_billion` 최근 12개월 평균 | 칩 숨김 |
-| 📅 YYYY년 준공 | `apt_meta.build_year` | 칩 숨김 |
-| 🏘️ N세대 | `apt_mgmt_fee.household_cnt` | 칩 숨김 |
+| 칩             | 데이터 출처                                                       | 없을 때 |
+| -------------- | ----------------------------------------------------------------- | ------- |
+| 🏠 N평 평균    | `apt_transactions.area_pyeong` 최근 12개월 평균 (`apt_meta.id = apt_transactions.apt_meta_id` join) | 칩 숨김 |
+| 💰 N억 평균    | `apt_transactions.deal_amount_billion` 최근 12개월 평균 (동일 join)                                 | 칩 숨김 |
+| 📅 YYYY년 준공 | `apt_meta.build_year`                                                                               | 칩 숨김 |
+| 🏘️ N세대       | `apt_meta.household_cnt` (이미 result에 포함, 추가 쿼리 불필요)                                     | 칩 숨김 |
 
 ### 2-2. 히어로 판정 카드
 
@@ -66,12 +70,12 @@ K-apt 공공데이터로 그걸 가능하게 만들었습니다.
 
 **건물 4개** (왼쪽→오른쪽 = 저렴→비쌈):
 
-| 건물 | 값 | 색상 |
-|---|---|---|
-| 가장 저렴 | 유사 조건 그룹 하위 10% | 초록 (`#dcfce7` / `#86efac`) |
-| 서울 평균 | 유사 조건 그룹 평균 | 회색 (`#f8fafc` / `#cbd5e1`) |
-| 우리 단지 | `total_per_hh` | 빨강 (`#fef2f2` / `#f87171`), 강조 shadow |
-| 가장 비쌈 | 유사 조건 그룹 상위 10% | 연한 빨강 (`#fff5f5` / `#fca5a5`) |
+| 건물      | 값                      | 색상                                      |
+| --------- | ----------------------- | ----------------------------------------- |
+| 가장 저렴 | 유사 조건 그룹 하위 10% | 초록 (`#dcfce7` / `#86efac`)              |
+| 서울 평균 | 유사 조건 그룹 평균     | 회색 (`#f8fafc` / `#cbd5e1`)              |
+| 우리 단지 | `total_per_hh`          | 빨강 (`#fef2f2` / `#f87171`), 강조 shadow |
+| 가장 비쌈 | 유사 조건 그룹 상위 10% | 연한 빨강 (`#fff5f5` / `#fca5a5`)         |
 
 - 건물 높이: 각 금액에 비례 (최고값 기준 정규화)
 - 창문 디테일: 각 건물에 격자 패턴
@@ -120,8 +124,9 @@ apt_mgmt_fee.kapt_code
 ### 신규 쿼리 (서버 컴포넌트에서 병렬 실행)
 
 **쿼리 1 — 우리 단지 평형·거래가**
+
 ```sql
-SELECT 
+SELECT
   AVG(t.area_pyeong)         AS avg_pyeong,
   AVG(t.deal_amount_billion) AS avg_price
 FROM apt_transactions t
@@ -132,6 +137,7 @@ WHERE t.apt_meta_id = m.id
 ```
 
 **쿼리 2 — 유사 조건 피어 그룹 통계 (서울·구·동)**
+
 ```sql
 -- 1단계: 피어 그룹 kapt_code 목록 (평형·가격 조건)
 SELECT DISTINCT m2.kapt_code
@@ -159,11 +165,11 @@ WHERE f.kapt_code IN (/* 위 목록 */)
 
 ### Fallback 전략
 
-| 상황 | 처리 |
-|---|---|
+| 상황                          | 처리                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------- |
 | 거래 이력 없음 (신규 단지 등) | 평형·거래가 칩 숨김, 유사 조건 비교 건너뜀 → 기존 서울 전체 평균으로 표시 |
-| 유사 조건 그룹 10개 미만 | 범위 확장 (±7평, ±8억) 재시도, 그래도 부족하면 전체 평균 표시 |
-| 동 단위 그룹 5개 미만 | 동 게이지 행 숨김 |
+| 유사 조건 그룹 10개 미만      | 범위 확장 (±7평, ±8억) 재시도, 그래도 부족하면 전체 평균 표시             |
+| 동 단위 그룹 5개 미만         | 동 게이지 행 숨김                                                         |
 
 ---
 
@@ -178,8 +184,9 @@ WHERE f.kapt_code IN (/* 위 목록 */)
 ```
 
 건물 시각화 전용:
+
 - 저렴 건물: `#dcfce7` fill / `#86efac` border
-- 평균 건물: `#f8fafc` fill / `#cbd5e1` border  
+- 평균 건물: `#f8fafc` fill / `#cbd5e1` border
 - 우리 건물: `#fef2f2` fill / `#f87171` border + `box-shadow: 0 0 16px rgba(239,68,68,0.15)`
 - 최고 건물: `#fff5f5` fill / `#fca5a5` border
 
