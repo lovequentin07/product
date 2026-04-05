@@ -53,18 +53,47 @@ function perHh(total: number, hh: number | null): number | null {
   return Math.round(total / hh);
 }
 
-function SubRow({ label, amount, avg = null }: { label: string; amount: number | null; avg?: number | null }) {
+/** 우리 단지와 평균 비교: 초과 여부 판단 */
+function isOver(amount: number | null, avg: number | null): boolean {
+  if (amount == null || avg == null || avg === 0) return false;
+  return amount > avg * 1.1;
+}
+
+function SubRow({
+  label,
+  amount,
+  avg = null,
+}: {
+  label: string;
+  amount: number | null;
+  avg?: number | null;
+}) {
+  const over = isOver(amount, avg);
   return (
-    <div className="grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-2 border-b border-gray-50 last:border-0">
-      <span className="text-xs text-gray-500 pl-6">{label}</span>
-      <span className="text-xs text-gray-700 text-right whitespace-nowrap">{fmt(amount)}</span>
-      <span className="text-xs text-gray-400 text-right whitespace-nowrap">{avg != null ? fmt(avg) : '-'}</span>
+    <div className="grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-2 border-b last:border-0"
+      style={{ borderColor: 'var(--ds-cream-border)' }}
+    >
+      <span className="text-xs pl-6" style={{ color: 'var(--ds-ink-muted)' }}>{label}</span>
+      <span
+        className="text-xs text-right whitespace-nowrap font-medium"
+        style={{ color: over ? '#b91c1c' : 'var(--ds-ink)' }}
+      >
+        {fmt(amount)}
+        {over && <span className="ml-0.5 text-[10px]">▲</span>}
+      </span>
+      <span className="text-xs text-right whitespace-nowrap" style={{ color: 'var(--ds-ink-faint)' }}>
+        {avg != null ? fmt(avg) : '-'}
+      </span>
     </div>
   );
 }
 
 function MainRow({
-  label, amount, avg, toggle, open,
+  label,
+  amount,
+  avg,
+  toggle,
+  open,
 }: {
   label: string;
   amount: number | null;
@@ -72,21 +101,29 @@ function MainRow({
   toggle?: () => void;
   open?: boolean;
 }) {
+  const over = isOver(amount, avg);
   return (
     <div
-      className={`grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-3 border-b border-gray-100 ${toggle ? 'cursor-pointer select-none' : ''}`}
+      className={`grid grid-cols-[1fr_5.5rem_5.5rem] items-center gap-x-3 py-3 border-b ${toggle ? 'cursor-pointer select-none' : ''}`}
+      style={{ borderColor: 'var(--ds-cream-border)' }}
       onClick={toggle}
     >
-      <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+      <span className="text-sm font-semibold flex items-center gap-1" style={{ color: 'var(--ds-ink)' }}>
         {label}
         {toggle && (
-          <span className="text-gray-400 text-xs">{open ? '▾' : '▸'}</span>
+          <span style={{ color: 'var(--ds-ink-faint)', fontSize: '11px' }}>
+            {open ? '▾' : '▸'}
+          </span>
         )}
       </span>
-      <span className="text-sm font-bold text-gray-900 text-right whitespace-nowrap">
+      <span
+        className="text-sm font-bold text-right whitespace-nowrap"
+        style={{ color: over ? '#b91c1c' : 'var(--ds-ink)' }}
+      >
         {fmt(amount)}
+        {over && <span className="ml-0.5 text-xs">▲</span>}
       </span>
-      <span className="text-xs text-gray-400 text-right whitespace-nowrap">
+      <span className="text-xs text-right whitespace-nowrap" style={{ color: 'var(--ds-ink-faint)' }}>
         {fmt(avg)}
       </span>
     </div>
@@ -114,14 +151,20 @@ export default function AptMgmtCompareSection({
     : null;
 
   return (
-    <div className="bg-gray-50 rounded-2xl px-5 py-5">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+    <div
+      className="rounded-2xl px-5 py-5"
+      style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)' }}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--ds-ink-faint)' }}>
         주요 항목 비교
       </p>
-      <div className="grid grid-cols-[1fr_5.5rem_5.5rem] gap-x-3 pb-2 border-b border-gray-200 mb-1">
-        <span className="text-xs text-gray-400">항목</span>
-        <span className="text-xs text-gray-400 text-right">우리 단지</span>
-        <span className="text-xs text-gray-400 text-right">{avgLabel}</span>
+      <div
+        className="grid grid-cols-[1fr_5.5rem_5.5rem] gap-x-3 pb-2 mb-1 border-b"
+        style={{ borderColor: 'var(--ds-cream-border)' }}
+      >
+        <span className="text-xs" style={{ color: 'var(--ds-ink-faint)' }}>항목</span>
+        <span className="text-xs text-right" style={{ color: 'var(--ds-ink-faint)' }}>우리 단지</span>
+        <span className="text-xs text-right" style={{ color: 'var(--ds-ink-faint)' }}>{avgLabel}</span>
       </div>
 
       <MainRow label="총 관리비" amount={result.total_per_hh} avg={activeAvgTotal} />
@@ -135,23 +178,23 @@ export default function AptMgmtCompareSection({
       />
       {commonOpen && (
         <>
-          <SubRow label="인건비"         amount={perHh(result.labor_cost, hh)}     avg={activeAvgLabor} />
-          <SubRow label="제사무비"       amount={perHh(result.office_cost, hh)}    avg={activeAvgOffice} />
-          <SubRow label="세금공과금"     amount={perHh(result.tax_fee, hh)}        avg={activeAvgTax} />
-          <SubRow label="피복비"         amount={perHh(result.clothing_cost, hh)}  avg={activeAvgClothing} />
-          <SubRow label="교육훈련비"     amount={perHh(result.training_cost, hh)}  avg={activeAvgTraining} />
-          <SubRow label="차량유지비"     amount={perHh(result.vehicle_cost, hh)}   avg={activeAvgVehicle} />
-          <SubRow label="기타일반관리비" amount={perHh(result.other_overhead, hh)} avg={activeAvgOtherOverhead} />
-          <SubRow label="청소비"         amount={result.cleaning_per_hh}           avg={activeAvgCleaning} />
-          <SubRow label="경비비"         amount={result.security_per_hh}           avg={activeAvgSecurity} />
-          <SubRow label="소독비"         amount={perHh(result.disinfection_cost, hh)} avg={activeAvgDisinfection} />
-          <SubRow label="승강기유지비"   amount={perHh(result.elevator_cost, hh)}  avg={activeAvgElevator} />
-          <SubRow label="지능형홈네트워크" amount={perHh(result.network_cost, hh)} avg={activeAvgNetwork} />
-          <SubRow label="수선비"         amount={perHh(result.repair_cost, hh)}    avg={activeAvgRepair} />
-          <SubRow label="시설유지비"     amount={perHh(result.facility_cost, hh)}  avg={activeAvgFacility} />
-          <SubRow label="안전점검비"     amount={perHh(result.safety_cost, hh)}    avg={activeAvgSafety} />
-          <SubRow label="재해대비비"     amount={perHh(result.disaster_cost, hh)}  avg={activeAvgDisaster} />
-          <SubRow label="위탁관리수수료" amount={perHh(result.trust_mgmt_fee, hh)} avg={activeAvgTrustMgmt} />
+          <SubRow label="인건비"           amount={perHh(result.labor_cost, hh)}        avg={activeAvgLabor} />
+          <SubRow label="제사무비"         amount={perHh(result.office_cost, hh)}        avg={activeAvgOffice} />
+          <SubRow label="세금공과금"       amount={perHh(result.tax_fee, hh)}            avg={activeAvgTax} />
+          <SubRow label="피복비"           amount={perHh(result.clothing_cost, hh)}      avg={activeAvgClothing} />
+          <SubRow label="교육훈련비"       amount={perHh(result.training_cost, hh)}      avg={activeAvgTraining} />
+          <SubRow label="차량유지비"       amount={perHh(result.vehicle_cost, hh)}       avg={activeAvgVehicle} />
+          <SubRow label="기타일반관리비"   amount={perHh(result.other_overhead, hh)}     avg={activeAvgOtherOverhead} />
+          <SubRow label="청소비"           amount={result.cleaning_per_hh}               avg={activeAvgCleaning} />
+          <SubRow label="경비비"           amount={result.security_per_hh}               avg={activeAvgSecurity} />
+          <SubRow label="소독비"           amount={perHh(result.disinfection_cost, hh)}  avg={activeAvgDisinfection} />
+          <SubRow label="승강기유지비"     amount={perHh(result.elevator_cost, hh)}      avg={activeAvgElevator} />
+          <SubRow label="지능형홈네트워크" amount={perHh(result.network_cost, hh)}       avg={activeAvgNetwork} />
+          <SubRow label="수선비"           amount={perHh(result.repair_cost, hh)}        avg={activeAvgRepair} />
+          <SubRow label="시설유지비"       amount={perHh(result.facility_cost, hh)}      avg={activeAvgFacility} />
+          <SubRow label="안전점검비"       amount={perHh(result.safety_cost, hh)}        avg={activeAvgSafety} />
+          <SubRow label="재해대비비"       amount={perHh(result.disaster_cost, hh)}      avg={activeAvgDisaster} />
+          <SubRow label="위탁관리수수료"   amount={perHh(result.trust_mgmt_fee, hh)}     avg={activeAvgTrustMgmt} />
         </>
       )}
 
@@ -164,18 +207,18 @@ export default function AptMgmtCompareSection({
       />
       {personalOpen && (
         <>
-          <SubRow label="난방비"           amount={result.heating_per_hh}                                       avg={activeAvgHeating} />
-          <SubRow label="급탕비"           amount={perHh(result.hot_water_common + result.hot_water_indiv, hh)} avg={activeAvgHotWater} />
-          <SubRow label="가스비"           amount={perHh(result.gas_common + result.gas_indiv, hh)}             avg={activeAvgGas} />
-          <SubRow label="전기료"           amount={result.electricity_per_hh} avg={activeAvgElectricity} />
-          <SubRow label="수도료"           amount={result.water_per_hh}       avg={activeAvgWater} />
-          <SubRow label="TV수신료"         amount={perHh(result.tv_fee, hh)}          avg={activeAvgTv} />
-          <SubRow label="하수도료"         amount={perHh(result.sewage_fee, hh)}      avg={activeAvgSewage} />
-          <SubRow label="생활폐기물수수료" amount={perHh(result.waste_fee, hh)}       avg={activeAvgWaste} />
-          <SubRow label="입주자대표운영비" amount={perHh(result.tenant_rep_cost, hh)} avg={activeAvgTenantRep} />
-          <SubRow label="화재보험료"       amount={perHh(result.insurance_cost, hh)}  avg={activeAvgInsurance} />
-          <SubRow label="선거관리비"       amount={perHh(result.election_cost, hh)}   avg={activeAvgElection} />
-          <SubRow label="기타"             amount={perHh(result.other_indiv, hh)}     avg={activeAvgOtherIndiv} />
+          <SubRow label="난방비"           amount={result.heating_per_hh}                                         avg={activeAvgHeating} />
+          <SubRow label="급탕비"           amount={perHh(result.hot_water_common + result.hot_water_indiv, hh)}   avg={activeAvgHotWater} />
+          <SubRow label="가스비"           amount={perHh(result.gas_common + result.gas_indiv, hh)}               avg={activeAvgGas} />
+          <SubRow label="전기료"           amount={result.electricity_per_hh}                                     avg={activeAvgElectricity} />
+          <SubRow label="수도료"           amount={result.water_per_hh}                                           avg={activeAvgWater} />
+          <SubRow label="TV수신료"         amount={perHh(result.tv_fee, hh)}                                      avg={activeAvgTv} />
+          <SubRow label="하수도료"         amount={perHh(result.sewage_fee, hh)}                                  avg={activeAvgSewage} />
+          <SubRow label="생활폐기물수수료" amount={perHh(result.waste_fee, hh)}                                   avg={activeAvgWaste} />
+          <SubRow label="입주자대표운영비" amount={perHh(result.tenant_rep_cost, hh)}                             avg={activeAvgTenantRep} />
+          <SubRow label="화재보험료"       amount={perHh(result.insurance_cost, hh)}                              avg={activeAvgInsurance} />
+          <SubRow label="선거관리비"       amount={perHh(result.election_cost, hh)}                               avg={activeAvgElection} />
+          <SubRow label="기타"             amount={perHh(result.other_indiv, hh)}                                 avg={activeAvgOtherIndiv} />
         </>
       )}
 

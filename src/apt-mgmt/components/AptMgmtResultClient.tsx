@@ -24,8 +24,13 @@ export default function AptMgmtResultClient({ result, topApts, history }: Props)
 
   return (
     <div className="space-y-5 animate-fade-in">
+      {/* 1. Hero + 순위 바 + 진단 카드 + 비교 테이블 */}
       <AptMgmtSummaryCards result={result} />
+
+      {/* 2. 추이 차트 — 진단 카드 바로 다음 */}
       {history.length > 0 && <AptMgmtHistoryChart history={history} />}
+
+      {/* 3. 추천 섹션 */}
       <AptMgmtTopAptRecommend
         topApts={topApts}
         currentUmdNm={result.umd_nm}

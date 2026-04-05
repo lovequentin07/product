@@ -63,6 +63,24 @@ const faqJsonLd = {
   })),
 };
 
+const USE_CASES = [
+  {
+    icon: '💸',
+    title: '관리비가 너무 비싼 것 같을 때',
+    desc: '이웃 단지 대비 얼마나 비싼지 등급으로 바로 확인',
+  },
+  {
+    icon: '🏘️',
+    title: '이사 전 관리비 사전 점검',
+    desc: '입주 전 관리비 수준을 서울 전체와 비교해 예산 계획',
+  },
+  {
+    icon: '📊',
+    title: '항목별 상세 비교',
+    desc: '경비비·청소비·엘리베이터 등 세부 항목까지 분석',
+  },
+];
+
 export default function AptMgmtPage() {
   return (
     <ServiceLayout>
@@ -75,51 +93,122 @@ export default function AptMgmtPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      <header className="text-center my-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4" style={{ background: 'var(--ds-accent-faint)' }}>
-          <span className="text-2xl">🏠</span>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900">관리비 지킴이</h1>
-        <p className="text-gray-500 mt-2">
+      {/* Hero */}
+      <header className="text-center mb-6 pt-2">
+        <h1 className="text-3xl font-bold mb-3" style={{ color: 'var(--ds-ink)' }}>
+          관리비 지킴이
+        </h1>
+        <p className="text-base mb-5" style={{ color: 'var(--ds-ink-muted)' }}>
           우리 아파트 관리비가 동네·구·서울 평균 대비 어느 수준인지 확인하세요
         </p>
+
+        {/* 3가지 포인트 */}
+        <div className="flex flex-wrap justify-center gap-2 text-sm">
+          {[
+            { icon: '📍', text: '동·구·서울 3단계 비교' },
+            { icon: '🏅', text: 'A~E 등급으로 한눈에' },
+            { icon: '📅', text: 'K-apt 매월 업데이트' },
+          ].map(({ icon, text }) => (
+            <span
+              key={text}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{
+                background: 'var(--ds-accent-faint)',
+                color: 'var(--ds-accent)',
+              }}
+            >
+              <span>{icon}</span>
+              {text}
+            </span>
+          ))}
+        </div>
       </header>
 
       <main className="space-y-6">
-        <AptMgmtSearchForm />
-
-        <section className="text-sm text-gray-500 space-y-3 rounded-xl p-5 text-center" style={{ background: 'var(--ds-cream-muted)' }}>
-          <h2 className="font-medium text-gray-700">이런 분께 유용합니다</h2>
-          <ul className="space-y-1.5">
-            <li>관리비가 너무 많이 나오는 것 같은 분</li>
-            <li>이사 전 아파트 관리비 수준을 미리 확인하고 싶은 분</li>
-            <li>경비비·청소비 등 항목별 비교가 필요한 분</li>
-          </ul>
+        {/* 검색 폼 카드 */}
+        <section
+          className="rounded-2xl p-6 shadow-md"
+          style={{
+            background: 'var(--ds-cream-card)',
+            border: '1px solid var(--ds-cream-border)',
+          }}
+        >
+          <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--ds-ink)' }}>
+            아파트 관리비 분석
+          </h2>
+          <AptMgmtSearchForm />
         </section>
 
-        <section aria-label="자주 묻는 질문" className="space-y-1.5">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">자주 묻는 질문</h2>
-          <dl className="space-y-1.5">
+        {/* 이런 분께 유용합니다 — 3개 카드 그리드 */}
+        <section>
+          <h2
+            className="text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'var(--ds-ink-faint)' }}
+          >
+            이런 분께 유용합니다
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {USE_CASES.map(({ icon, title, desc }) => (
+              <div
+                key={title}
+                className="rounded-xl p-4"
+                style={{
+                  background: 'var(--ds-cream-card)',
+                  border: '1px solid var(--ds-cream-border)',
+                }}
+              >
+                <div className="text-2xl mb-2">{icon}</div>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--ds-ink)' }}>
+                  {title}
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--ds-ink-muted)' }}>
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section aria-label="자주 묻는 질문">
+          <h2
+            className="text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'var(--ds-ink-faint)' }}
+          >
+            자주 묻는 질문
+          </h2>
+          <dl className="space-y-2">
             {FAQ_ITEMS.map(({ question, answer }) => (
               <details
                 key={question}
                 className="group rounded-xl overflow-hidden"
-                style={{ background: 'var(--ds-cream-muted)' }}
+                style={{
+                  background: 'var(--ds-cream-card)',
+                  border: '1px solid var(--ds-cream-border)',
+                }}
               >
-                <summary className="flex items-center justify-between cursor-pointer px-5 py-3 font-medium text-gray-800 list-none">
-                  <dt>{question}</dt>
-                  <span className="ml-3 shrink-0 text-gray-400 group-open:rotate-180 transition-transform">
+                <summary
+                  className="flex items-center justify-between cursor-pointer px-5 py-3.5 font-medium list-none"
+                  style={{ color: 'var(--ds-ink)' }}
+                >
+                  <dt className="text-sm">{question}</dt>
+                  <span
+                    className="ml-3 shrink-0 group-open:rotate-180 transition-transform text-xs"
+                    style={{ color: 'var(--ds-ink-faint)' }}
+                  >
                     ▾
                   </span>
                 </summary>
-                <dd className="px-5 pb-3 text-sm text-gray-600 leading-relaxed">
+                <dd
+                  className="px-5 pb-4 text-sm leading-relaxed"
+                  style={{ color: 'var(--ds-ink-muted)' }}
+                >
                   {answer}
                 </dd>
               </details>
             ))}
           </dl>
         </section>
-
       </main>
     </ServiceLayout>
   );
