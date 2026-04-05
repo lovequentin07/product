@@ -3,8 +3,8 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getMgmtFeeResult, getMgmtFeeTopApts, getMgmtFeeApts } from '@apt-mgmt/lib/db/management-fee';
-import type { MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
+import { getMgmtFeeResult, getMgmtFeeTopApts, getMgmtFeeApts, getMgmtFeeHistory } from '@apt-mgmt/lib/db/management-fee';
+import type { MgmtFeeTopApt, MgmtFeeHistory } from '@apt-mgmt/types/management-fee';
 import AptMgmtResultClient from '@apt-mgmt/components/AptMgmtResultClient';
 import ServiceLayout from '@shared/components/ui/ServiceLayout';
 import DataNotFound from '@shared/components/ui/DataNotFound';
@@ -96,6 +96,13 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
     // 추천 섹션 미표시로 계속
   }
 
+  let history: MgmtFeeHistory[] = [];
+  try {
+    history = await getMgmtFeeHistory(resolvedKaptCode);
+  } catch (e) {
+    console.error('[apt-mgmt] getMgmtFeeHistory failed:', resolvedKaptCode, e);
+  }
+
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -123,7 +130,7 @@ export default async function AptMgmtDetailPage({ params, searchParams }: PagePr
         <span className="text-gray-600 font-medium">{aptName}</span>
       </nav>
 
-      <AptMgmtResultClient result={result} topApts={topApts} />
+      <AptMgmtResultClient result={result} topApts={topApts} history={history} />
     </ServiceLayout>
   );
 }

@@ -6,14 +6,16 @@ import { useState } from 'react';
 import AptMgmtAnalysisLoader from './AptMgmtAnalysisLoader';
 import AptMgmtSummaryCards from './AptMgmtSummaryCards';
 import AptMgmtTopAptRecommend from './AptMgmtTopAptRecommend';
-import { MgmtFeeResult, MgmtFeeTopApt } from '@apt-mgmt/types/management-fee';
+import AptMgmtHistoryChart from './AptMgmtHistoryChart';
+import { MgmtFeeResult, MgmtFeeTopApt, MgmtFeeHistory } from '@apt-mgmt/types/management-fee';
 
 interface Props {
   result: MgmtFeeResult;
   topApts: { umd: MgmtFeeTopApt | null; seoul: MgmtFeeTopApt | null };
+  history: MgmtFeeHistory[];
 }
 
-export default function AptMgmtResultClient({ result, topApts }: Props) {
+export default function AptMgmtResultClient({ result, topApts, history }: Props) {
   const [showResult, setShowResult] = useState(false);
 
   if (!showResult) {
@@ -23,6 +25,7 @@ export default function AptMgmtResultClient({ result, topApts }: Props) {
   return (
     <div className="space-y-5 animate-fade-in">
       <AptMgmtSummaryCards result={result} />
+      {history.length > 0 && <AptMgmtHistoryChart history={history} />}
       <AptMgmtTopAptRecommend
         topApts={topApts}
         currentUmdNm={result.umd_nm}

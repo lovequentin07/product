@@ -58,6 +58,15 @@ function computeAdviceLine(
   return '전반적으로 평균 수준으로 잘 유지되고 있어요.';
 }
 
+/**
+ * 관리비 순위를 사람이 읽기 쉬운 문장으로 변환.
+ * rank=1 → 가장 저렴 (좋은 것)
+ */
+function rankLabel(rank: number | null, total: number | null): string {
+  if (!rank || !total) return '';
+  return `${total.toLocaleString()}개 단지 중 저렴한 순 ${rank.toLocaleString()}위`;
+}
+
 function toTier(rank: number | null, total: number | null): Tier | null {
   if (!rank || !total) return null;
   const pct = (rank / total) * 100;
@@ -85,28 +94,77 @@ interface BarRowProps {
   label: string;
   dotColor: string;
   score: number;  // 0~100 (높을수록 좋음)
+  rankText?: string;
 }
 
-function BarRow({ label, dotColor, score }: BarRowProps) {
+function BarRow({ label, dotColor, score, rankText }: BarRowProps) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1.5 w-[6.5rem] sm:w-28 shrink-0">
-        <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-        <span className="text-sm text-gray-600">{label}</span>
+    <div className="space-y-1">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 w-26 sm:w-28 shrink-0">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+          <span className="text-sm text-gray-600">{label}</span>
+        </div>
+        <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${scoreColor(score)}`}
+            style={{ width: `${score}%` }}
+          />
+        </div>
+        <span className="text-xs font-semibold text-gray-600 w-12 text-right shrink-0">
+          {score}점
+        </span>
       </div>
-      <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${scoreColor(score)}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-      <span className="text-xs font-semibold text-gray-600 w-12 text-right shrink-0">
-        {score}점
-      </span>
+      {rankText && (
+        <p className="text-xs text-gray-400 pl-29">{rankText}</p>
+      )}
     </div>
   );
 }
 
+
+interface DiagnosisCardProps {
+  label: string;
+  perHh: number | null;
+  seoulRank: number | null;
+  seoulTotal: number | null;
+  sggRank: number | null;
+  sggTotal: number | null;
+  sggNm: string;
+  isHighlighted: boolean;
+}
+
+function DiagnosisCard({ label, perHh, seoulRank, seoulTotal, sggRank, sggTotal, sggNm, isHighlighted }: DiagnosisCardProps) {
+  const seoulScore = rankScore(seoulRank, seoulTotal);
+  const levelColor = seoulScore >= 67 ? 'text-emerald-600' : seoulScore >= 40 ? 'text-amber-600' : 'text-red-600';
+  const levelText = seoulScore >= 67 ? '저렴' : seoulScore >= 40 ? '보통' : '높음';
+
+  return (
+    <div className={`rounded-xl p-4 border ${isHighlighted ? 'border-red-200 bg-red-50' : 'border-gray-100 bg-gray-50'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold text-gray-700">{label}</span>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+          isHighlighted ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
+        }`}>
+          {isHighlighted ? '⚠ 주의' : '정상'}
+        </span>
+      </div>
+      {perHh != null && (
+        <p className={`text-xl font-bold mb-2 ${levelColor}`}>
+          월 {perHh.toLocaleString()}원
+        </p>
+      )}
+      <div className="space-y-1 text-xs text-gray-500">
+        {seoulRank && seoulTotal && (
+          <p>서울: {seoulTotal.toLocaleString()}개 중 저렴한 순 <span className={`font-semibold ${levelColor}`}>{seoulRank.toLocaleString()}위</span> ({levelText})</p>
+        )}
+        {sggRank && sggTotal && (
+          <p>{sggNm}: {sggTotal.toLocaleString()}개 중 저렴한 순 <span className="font-semibold">{sggRank.toLocaleString()}위</span></p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AptMgmtSummaryCards({ result }: Props) {
   // 기준 결정: umd_total >= 5이면 동 기준, 아니면 구 기준 fallback
@@ -121,22 +179,8 @@ export default function AptMgmtSummaryCards({ result }: Props) {
   const score = rankScore(activeRank, activeTotal);
   const scoreLabel = `절약점수 ${score}점`;
 
-  // 동 기준 percent (A/B: 상위, D/E: 하위)
-  const isGood = tier === 'A' || tier === 'B' || tier === 'C';
-  const umdPercent = activeTotal && activeRank
-    ? isGood
-      ? Math.round((activeRank / activeTotal) * 100)
-      : Math.round(((activeTotal - activeRank) / activeTotal) * 100) + 1
-    : null;
-
-  // 구 기준 percent (fallback 텍스트용)
   const sggRank  = result.sgg_rank  ?? 0;
   const sggTotal = result.sgg_total ?? 0;
-  const sggPercent = sggTotal > 0
-    ? isGood
-      ? Math.round((sggRank / sggTotal) * 100)
-      : Math.round(((sggTotal - sggRank) / sggTotal) * 100) + 1
-    : null;
 
   // 개인관리비 = 총 관리비 - 공용관리비
   const personalFee = (result.total_per_hh != null && result.common_per_hh != null)
@@ -196,10 +240,8 @@ export default function AptMgmtSummaryCards({ result }: Props) {
     umd_nm:       result.umd_nm ?? result.sgg_nm,
     umd_rank:     activeRank  ?? 0,
     umd_total:    activeTotal ?? 0,
-    umd_percent:  umdPercent  ?? 0,
     rank:         sggRank,
     total_count:  sggTotal,
-    percent:      sggPercent  ?? 0,
     problem_area: problemArea,
   };
 
@@ -298,18 +340,50 @@ export default function AptMgmtSummaryCards({ result }: Props) {
           label="동네 절약점수"
           dotColor="bg-cyan-400"
           score={rankScore(result.umd_rank, result.umd_total)}
+          rankText={rankLabel(result.umd_rank, result.umd_total)}
         />
         <BarRow
           label="구 절약점수"
           dotColor="bg-violet-400"
           score={rankScore(result.sgg_rank, result.sgg_total)}
+          rankText={rankLabel(result.sgg_rank, result.sgg_total)}
         />
         <BarRow
           label="서울 절약점수"
           dotColor="bg-blue-400"
           score={rankScore(result.seoul_rank, result.seoul_total)}
+          rankText={rankLabel(result.seoul_rank, result.seoul_total)}
         />
       </div>
+
+      {/* 공용/개인 분리 진단 */}
+      {(result.common_seoul_rank || result.personal_seoul_rank) && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">공용 vs 개인 진단</p>
+          <div className="grid grid-cols-2 gap-3">
+            <DiagnosisCard
+              label="공용관리비"
+              perHh={result.common_per_hh}
+              seoulRank={result.common_seoul_rank}
+              seoulTotal={result.seoul_total}
+              sggRank={result.common_sgg_rank}
+              sggTotal={result.sgg_total}
+              sggNm={result.sgg_nm}
+              isHighlighted={commonDiff >= personalDiff}
+            />
+            <DiagnosisCard
+              label="개인관리비"
+              perHh={personalFee}
+              seoulRank={result.personal_seoul_rank}
+              seoulTotal={result.seoul_total}
+              sggRank={result.personal_sgg_rank}
+              sggTotal={result.sgg_total}
+              sggNm={result.sgg_nm}
+              isHighlighted={personalDiff > commonDiff}
+            />
+          </div>
+        </div>
+      )}
 
       <AptMgmtCompareSection
         result={result}

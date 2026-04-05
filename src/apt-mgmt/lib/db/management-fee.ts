@@ -7,11 +7,11 @@ import { MgmtFeeApt, MgmtFeeResult, MgmtFeeRow, MgmtFeeHistory, MgmtFeeTopApt } 
 // Mock 데이터 (로컬 개발용)
 // -------------------------
 const MOCK_APTS: MgmtFeeApt[] = [
-  { kapt_code: 'A10001000', apt_nm: '래미안대치팰리스', umd_nm: '대치동', billing_ym: '202501' },
-  { kapt_code: 'A10001001', apt_nm: '은마아파트', umd_nm: '대치동', billing_ym: '202501' },
-  { kapt_code: 'A10001002', apt_nm: '타워팰리스', umd_nm: '도곡동', billing_ym: '202501' },
-  { kapt_code: 'A10001003', apt_nm: '개포주공', umd_nm: '개포동', billing_ym: '202501' },
-  { kapt_code: 'A10001004', apt_nm: '삼성현대', umd_nm: '삼성동', billing_ym: '202501' },
+  { kapt_code: 'A10001000', apt_nm: '래미안대치팰리스', sgg_nm: '강남구', umd_nm: '대치동', billing_ym: '202501' },
+  { kapt_code: 'A10001001', apt_nm: '은마아파트', sgg_nm: '강남구', umd_nm: '대치동', billing_ym: '202501' },
+  { kapt_code: 'A10001002', apt_nm: '타워팰리스', sgg_nm: '강남구', umd_nm: '도곡동', billing_ym: '202501' },
+  { kapt_code: 'A10001003', apt_nm: '개포주공', sgg_nm: '강남구', umd_nm: '개포동', billing_ym: '202501' },
+  { kapt_code: 'A10001004', apt_nm: '삼성현대', sgg_nm: '강남구', umd_nm: '삼성동', billing_ym: '202501' },
 ];
 
 // mock 데이터 세부 비용을 common_per_hh / personal_per_hh 비례 계산
@@ -240,13 +240,28 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
 async function getD1MgmtFeeApts(db: D1Database, sgg_nm: string): Promise<MgmtFeeApt[]> {
   const result = await db
     .prepare(
-      `SELECT kapt_code, apt_nm, umd_nm, MAX(billing_ym) as billing_ym
+      `SELECT kapt_code, apt_nm, sgg_nm, umd_nm, MAX(billing_ym) as billing_ym
        FROM apt_mgmt_fee
        WHERE sgg_nm = ? AND sido = '서울특별시'
        GROUP BY kapt_code
        ORDER BY apt_nm`
     )
     .bind(sgg_nm)
+    .all<MgmtFeeApt>();
+  return result.results ?? [];
+}
+
+async function getD1MgmtFeeSearch(db: D1Database, q: string): Promise<MgmtFeeApt[]> {
+  const result = await db
+    .prepare(
+      `SELECT kapt_code, apt_nm, sgg_nm, umd_nm, MAX(billing_ym) as billing_ym
+       FROM apt_mgmt_fee
+       WHERE apt_nm LIKE ? AND sido = '서울특별시'
+       GROUP BY kapt_code
+       ORDER BY apt_nm
+       LIMIT 50`
+    )
+    .bind(`%${q}%`)
     .all<MgmtFeeApt>();
   return result.results ?? [];
 }
@@ -514,6 +529,23 @@ export async function getMgmtFeeApts(sgg_nm: string): Promise<MgmtFeeApt[]> {
   return getD1MgmtFeeApts(db, sgg_nm);
 }
 
+export async function getMgmtFeeSearch(q: string): Promise<MgmtFeeApt[]> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    // 로컬 개발 환경
+  }
+
+  if (!db) {
+    const lower = q.toLowerCase();
+    return MOCK_APTS.filter(a => a.apt_nm.toLowerCase().includes(lower)).slice(0, 50);
+  }
+  return getD1MgmtFeeSearch(db, q);
+}
+
 export async function getMgmtFeeResult(kapt_code: string): Promise<MgmtFeeResult | null> {
   let db: D1Database | null = null;
   let cache: KVNamespace | null = null;
@@ -611,6 +643,20 @@ export async function getMgmtFeeHistory(kapt_code: string): Promise<MgmtFeeHisto
     // 로컬 개발 환경
   }
 
-  if (!db) return [];
+  if (!db) {
+    // Mock: 12개월 추이 생성
+    const base = MOCK_RESULTS[kapt_code]?.common_per_hh ?? 20000;
+    const totalBase = MOCK_RESULTS[kapt_code]?.total_per_hh ?? 70000;
+    return Array.from({ length: 12 }, (_, i) => {
+      const ym = String(202501 - i).padStart(6, '0');
+      const fluctuation = 1 + (Math.sin(i * 0.8) * 0.05);
+      return {
+        billing_ym: ym,
+        common_per_hh: Math.round(base * fluctuation),
+        total_per_hh: Math.round(totalBase * fluctuation),
+        household_cnt: 500,
+      };
+    });
+  }
   return getD1MgmtFeeHistory(db, kapt_code);
 }

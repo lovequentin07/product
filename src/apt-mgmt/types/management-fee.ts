@@ -76,6 +76,7 @@ export interface MgmtFeeRow {
 export interface MgmtFeeApt {
   kapt_code: string;
   apt_nm: string;
+  sgg_nm: string | null;
   umd_nm: string | null;
   billing_ym: string;  // 가장 최신 발생년월
 }

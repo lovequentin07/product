@@ -105,7 +105,7 @@ export default function AptMgmtCompareSection({
   activeAvgSewage, activeAvgWaste, activeAvgTenantRep, activeAvgInsurance,
   activeAvgElection, activeAvgOtherIndiv,
 }: Props) {
-  const [commonOpen, setCommonOpen] = useState(false);
+  const [commonOpen, setCommonOpen] = useState(true);
   const [personalOpen, setPersonalOpen] = useState(false);
 
   const hh = result.household_cnt;

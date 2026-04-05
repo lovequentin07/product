@@ -1,6 +1,6 @@
 'use client';
 // src/components/apt-mgmt/AptMgmtSearchForm.tsx
-// 구 드롭다운 → 아파트 텍스트 입력(자동완성) → 제출
+// 구 드롭다운(선택) + 아파트 텍스트 자동완성 → 제출
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,10 +23,10 @@ export default function AptMgmtSearchForm() {
   const [selectedApt, setSelectedApt] = useState<MgmtFeeApt | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 구 변경 시 아파트 목록 로드 + 선택 초기화
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedApt(null);
     setInputValue('');
     setShowDropdown(false);
@@ -45,17 +45,38 @@ export default function AptMgmtSearchForm() {
       .finally(() => setLoading(false));
   }, [sggNm]);
 
-  // 클라이언트 필터링
+  // 구 미선택 + 이름 입력 시 전체 검색 (디바운스 400ms)
+  const fetchSearch = (q: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!q.trim()) { setApts([]); return; }
+    searchTimer.current = setTimeout(() => {
+      setLoading(true);
+      setError('');
+      fetch(`/api/apt-mgmt/apts?q=${encodeURIComponent(q)}`)
+        .then((r) => {
+          if (!r.ok) throw new Error(`서버 오류 (${r.status})`);
+          return r.json() as Promise<MgmtFeeApt[]>;
+        })
+        .then((data) => setApts(Array.isArray(data) ? data : []))
+        .catch(() => setError('검색에 실패했습니다.'))
+        .finally(() => setLoading(false));
+    }, 400);
+  };
+
+  // 클라이언트 필터링 (구 선택 시) 또는 서버 결과 그대로 (전체 검색 시)
   const filtered = (() => {
-    const q = inputValue.replace(/\s+/g, '').toLowerCase();
-    if (!q) return apts.slice(0, 50);
-    return apts
-      .filter((a) => {
-        const nm = a.apt_nm.replace(/\s+/g, '').toLowerCase();
-        const umd = (a.umd_nm ?? '').toLowerCase();
-        return nm.includes(q) || umd.includes(q);
-      })
-      .slice(0, 50);
+    if (sggNm) {
+      const q = inputValue.replace(/\s+/g, '').toLowerCase();
+      if (!q) return apts.slice(0, 50);
+      return apts
+        .filter((a) => {
+          const nm = a.apt_nm.replace(/\s+/g, '').toLowerCase();
+          const umd = (a.umd_nm ?? '').toLowerCase();
+          return nm.includes(q) || umd.includes(q);
+        })
+        .slice(0, 50);
+    }
+    return apts; // 전체 검색은 서버가 50개 제한
   })();
 
   const handleSelect = (apt: MgmtFeeApt) => {
@@ -65,9 +86,11 @@ export default function AptMgmtSearchForm() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const val = e.target.value;
+    setInputValue(val);
     setSelectedApt(null);
     setShowDropdown(true);
+    if (!sggNm) fetchSearch(val);
   };
 
   const handleFocus = () => {
@@ -81,11 +104,15 @@ export default function AptMgmtSearchForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sggNm || !selectedApt) return;
+    if (!selectedApt) return;
+    const district = selectedApt.sgg_nm ?? sggNm;
+    if (!district) return;
     router.push(
-      `/apt-mgmt/${encodeURIComponent(sggNm)}/${encodeURIComponent(selectedApt.apt_nm)}?kaptCode=${selectedApt.kapt_code}`
+      `/apt-mgmt/${encodeURIComponent(district)}/${encodeURIComponent(selectedApt.apt_nm)}?kaptCode=${selectedApt.kapt_code}`
     );
   };
+
+  const canSubmit = !!selectedApt && !!(selectedApt.sgg_nm ?? sggNm);
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 space-y-4">
@@ -102,15 +129,17 @@ export default function AptMgmtSearchForm() {
           />
         </div>
 
-        {/* 구 선택 */}
+        {/* 구 선택 (선택사항) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">구 선택</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            구 선택 <span className="text-gray-400 font-normal">(선택사항)</span>
+          </label>
           <select
             value={sggNm}
             onChange={(e) => setSggNm(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent)"
           >
-            <option value="">-- 구를 선택하세요 --</option>
+            <option value="">-- 전체 --</option>
             {SEOUL_DISTRICTS.map((r) => (
               <option key={r.code} value={r.name}>{r.name}</option>
             ))}
@@ -126,12 +155,8 @@ export default function AptMgmtSearchForm() {
             onChange={handleInputChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            disabled={!sggNm || loading}
-            placeholder={
-              loading ? '불러오는 중...' :
-              !sggNm ? '구를 먼저 선택하세요' :
-              '아파트명 입력'
-            }
+            disabled={loading && !!sggNm}
+            placeholder={loading ? '불러오는 중...' : '아파트명을 입력하세요'}
             autoComplete="off"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--ds-accent) disabled:bg-(--ds-cream-muted) disabled:text-gray-400 placeholder:text-gray-400"
           />
@@ -147,14 +172,14 @@ export default function AptMgmtSearchForm() {
                   className="flex items-baseline justify-between px-3 py-2 cursor-pointer hover:bg-(--ds-accent-faint) text-sm"
                 >
                   <span className="font-medium text-gray-900">{a.apt_nm}</span>
-                  {a.umd_nm && (
-                    <span className="ml-2 text-xs text-gray-400 shrink-0">{a.umd_nm}</span>
-                  )}
+                  <span className="ml-2 text-xs text-gray-400 shrink-0">
+                    {[a.sgg_nm, a.umd_nm].filter(Boolean).join(' ')}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-          {showDropdown && sggNm && !loading && filtered.length === 0 && (
+          {showDropdown && !loading && inputValue && filtered.length === 0 && (
             <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-500">
               검색 결과가 없습니다.
             </div>
@@ -164,7 +189,7 @@ export default function AptMgmtSearchForm() {
 
       <button
         type="submit"
-        disabled={!sggNm || !selectedApt}
+        disabled={!canSubmit}
         style={{ background: 'var(--ds-accent)' }}
         className="w-full hover:opacity-80 active:opacity-70 active:scale-95 disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-lg transition-opacity text-sm"
       >
