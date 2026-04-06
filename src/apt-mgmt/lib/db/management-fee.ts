@@ -178,6 +178,10 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     seoul_avg_total: 70000, sgg_avg_total: 65000,
     common_seoul_rank: 280, common_sgg_rank: 38,
     personal_seoul_rank: 350, personal_sgg_rank: 45,
+    avg_pyeong: 33, avg_price: 52, build_year: 2002,
+    peer_seoul_cnt: 10, peer_seoul_avg: 420000, peer_seoul_min: 280000, peer_seoul_max: 680000,
+    peer_sgg_cnt:    4, peer_sgg_avg:  480000,  peer_sgg_min:  320000,  peer_sgg_max:  620000,
+    peer_umd_cnt: null, peer_umd_avg: null, peer_umd_min: null, peer_umd_max: null,
   },
   // B등급: sgg 32%, seoul 25%, umd 42%
   A10001001: {
@@ -191,6 +195,10 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     seoul_avg_total: 70000, sgg_avg_total: 65000,
     common_seoul_rank: 750, common_sgg_rank: 88,
     personal_seoul_rank: 850, personal_sgg_rank: 98,
+    avg_pyeong: null, avg_price: null, build_year: null,
+    peer_seoul_cnt: null, peer_seoul_avg: null, peer_seoul_min: null, peer_seoul_max: null,
+    peer_sgg_cnt: null, peer_sgg_avg: null, peer_sgg_min: null, peer_sgg_max: null,
+    peer_umd_cnt: null, peer_umd_avg: null, peer_umd_min: null, peer_umd_max: null,
   },
   // C등급: sgg 50%, seoul 50%, umd 50%
   A10001002: {
@@ -204,6 +212,10 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     seoul_avg_total: 70000, sgg_avg_total: 65000,
     common_seoul_rank: 1600, common_sgg_rank: 140,
     personal_seoul_rank: 1600, personal_sgg_rank: 140,
+    avg_pyeong: null, avg_price: null, build_year: null,
+    peer_seoul_cnt: null, peer_seoul_avg: null, peer_seoul_min: null, peer_seoul_max: null,
+    peer_sgg_cnt: null, peer_sgg_avg: null, peer_sgg_min: null, peer_sgg_max: null,
+    peer_umd_cnt: null, peer_umd_avg: null, peer_umd_min: null, peer_umd_max: null,
   },
   // D등급: sgg 71%, seoul 68%, umd 67%
   A10001003: {
@@ -217,6 +229,10 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     seoul_avg_total: 70000, sgg_avg_total: 65000,
     common_seoul_rank: 2200, common_sgg_rank: 198,
     personal_seoul_rank: 2100, personal_sgg_rank: 192,
+    avg_pyeong: null, avg_price: null, build_year: null,
+    peer_seoul_cnt: null, peer_seoul_avg: null, peer_seoul_min: null, peer_seoul_max: null,
+    peer_sgg_cnt: null, peer_sgg_avg: null, peer_sgg_min: null, peer_sgg_max: null,
+    peer_umd_cnt: null, peer_umd_avg: null, peer_umd_min: null, peer_umd_max: null,
   },
   // E등급: sgg 93%, seoul 91%, umd 92%
   A10001004: {
@@ -230,6 +246,10 @@ const MOCK_RESULTS: Record<string, MgmtFeeResult> = {
     seoul_avg_total: 70000, sgg_avg_total: 65000,
     common_seoul_rank: 2900, common_sgg_rank: 258,
     personal_seoul_rank: 2950, personal_sgg_rank: 262,
+    avg_pyeong: null, avg_price: null, build_year: null,
+    peer_seoul_cnt: null, peer_seoul_avg: null, peer_seoul_min: null, peer_seoul_max: null,
+    peer_sgg_cnt: null, peer_sgg_avg: null, peer_sgg_min: null, peer_sgg_max: null,
+    peer_umd_cnt: null, peer_umd_avg: null, peer_umd_min: null, peer_umd_max: null,
   },
 };
 
@@ -280,7 +300,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v9:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v10:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     try {
@@ -339,6 +359,10 @@ async function getD1MgmtFeeResult(
     sgg_avg_insurance: null, umd_avg_insurance: null,
     sgg_avg_election: null, umd_avg_election: null,
     sgg_avg_other_indiv: null, umd_avg_other_indiv: null,
+    avg_pyeong: null, avg_price: null, build_year: null,
+    peer_seoul_cnt: null, peer_seoul_avg: null, peer_seoul_min: null, peer_seoul_max: null,
+    peer_sgg_cnt:   null, peer_sgg_avg:   null, peer_sgg_min:   null, peer_sgg_max:   null,
+    peer_umd_cnt:   null, peer_umd_avg:   null, peer_umd_min:   null, peer_umd_max:   null,
   };
 
   // Step 2: 사전집계 평균 (최대 3행 × 36컬럼 — D1 한계 안전)
@@ -408,6 +432,89 @@ async function getD1MgmtFeeResult(
     }
   } catch (e) {
     console.error('[apt-mgmt] summary query failed:', kapt_code, e);
+  }
+
+  // Step 2b: 단지 프로필 + 피어 그룹 통계
+  try {
+    const metaRow = await db
+      .prepare(`SELECT avg_pyeong, avg_price, build_year FROM apt_meta WHERE kapt_code = ?`)
+      .bind(kapt_code)
+      .first<{ avg_pyeong: number | null; avg_price: number | null; build_year: number | null }>();
+
+    row.avg_pyeong = metaRow?.avg_pyeong ?? null;
+    row.avg_price  = metaRow?.avg_price  ?? null;
+    row.build_year = metaRow?.build_year ?? null;
+
+    const p  = row.avg_pyeong;
+    const pr = row.avg_price;
+
+    if (p !== null && pr !== null) {
+      const PYEONG_RANGE = 5;
+      const PRICE_RANGE  = 5;
+
+      const [peerSeoul, peerSgg, peerUmd] = await db.batch([
+        db.prepare(`
+          SELECT COUNT(DISTINCT f.kapt_code) as cnt,
+                 AVG(f.total_per_hh) as avg_val,
+                 MIN(f.total_per_hh) as min_val,
+                 MAX(f.total_per_hh) as max_val
+          FROM apt_mgmt_fee f
+          JOIN apt_meta m ON m.kapt_code = f.kapt_code
+          WHERE f.billing_ym = ?
+            AND m.avg_pyeong BETWEEN ? AND ?
+            AND m.avg_price  BETWEEN ? AND ?
+        `).bind(billing_ym, p - PYEONG_RANGE, p + PYEONG_RANGE, pr - PRICE_RANGE, pr + PRICE_RANGE),
+
+        db.prepare(`
+          SELECT COUNT(DISTINCT f.kapt_code) as cnt,
+                 AVG(f.total_per_hh) as avg_val,
+                 MIN(f.total_per_hh) as min_val,
+                 MAX(f.total_per_hh) as max_val
+          FROM apt_mgmt_fee f
+          JOIN apt_meta m ON m.kapt_code = f.kapt_code
+          WHERE f.billing_ym = ?
+            AND m.avg_pyeong BETWEEN ? AND ?
+            AND m.avg_price  BETWEEN ? AND ?
+            AND m.sgg_nm = ?
+        `).bind(billing_ym, p - PYEONG_RANGE, p + PYEONG_RANGE, pr - PRICE_RANGE, pr + PRICE_RANGE, sgg),
+
+        db.prepare(`
+          SELECT COUNT(DISTINCT f.kapt_code) as cnt,
+                 AVG(f.total_per_hh) as avg_val,
+                 MIN(f.total_per_hh) as min_val,
+                 MAX(f.total_per_hh) as max_val
+          FROM apt_mgmt_fee f
+          JOIN apt_meta m ON m.kapt_code = f.kapt_code
+          WHERE f.billing_ym = ?
+            AND m.avg_pyeong BETWEEN ? AND ?
+            AND m.avg_price  BETWEEN ? AND ?
+            AND m.sgg_nm = ?
+            AND m.umd_nm = ?
+        `).bind(billing_ym, p - PYEONG_RANGE, p + PYEONG_RANGE, pr - PRICE_RANGE, pr + PRICE_RANGE, sgg, umd ?? ''),
+      ]);
+
+      const s = peerSeoul.results[0] as { cnt: number; avg_val: number; min_val: number; max_val: number } | undefined;
+      const g = peerSgg.results[0]   as { cnt: number; avg_val: number; min_val: number; max_val: number } | undefined;
+      const u = peerUmd.results[0]   as { cnt: number; avg_val: number; min_val: number; max_val: number } | undefined;
+
+      row.peer_seoul_cnt = s?.cnt     ?? null;
+      row.peer_seoul_avg = s?.avg_val ?? null;
+      row.peer_seoul_min = s?.min_val ?? null;
+      row.peer_seoul_max = s?.max_val ?? null;
+
+      row.peer_sgg_cnt = g?.cnt     ?? null;
+      row.peer_sgg_avg = g?.avg_val ?? null;
+      row.peer_sgg_min = g?.min_val ?? null;
+      row.peer_sgg_max = g?.max_val ?? null;
+
+      // 동은 5개 미만이면 신뢰도 부족 — null 처리
+      row.peer_umd_cnt = (u?.cnt ?? 0) >= 5 ? (u!.cnt)     : null;
+      row.peer_umd_avg = (u?.cnt ?? 0) >= 5 ? (u!.avg_val) : null;
+      row.peer_umd_min = (u?.cnt ?? 0) >= 5 ? (u!.min_val) : null;
+      row.peer_umd_max = (u?.cnt ?? 0) >= 5 ? (u!.max_val) : null;
+    }
+  } catch (e) {
+    console.error('[apt-mgmt] peer group query failed:', kapt_code, e);
   }
 
   // Step 3: 순위 계산 — db.batch()로 10개 COUNT 쿼리를 한 번에 전송
