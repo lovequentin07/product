@@ -300,7 +300,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v11:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v12:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     try {
