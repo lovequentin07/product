@@ -300,7 +300,7 @@ async function getD1MgmtFeeResult(
   if (!latestRow?.max_ym) return null;
 
   const billing_ym = latestRow.max_ym;
-  const cacheKey = `v10:fee:${kapt_code}:${billing_ym}`;
+  const cacheKey = `v11:fee:${kapt_code}:${billing_ym}`;
 
   if (cache) {
     try {
@@ -461,6 +461,7 @@ async function getD1MgmtFeeResult(
           FROM apt_mgmt_fee f
           JOIN apt_meta m ON m.kapt_code = f.kapt_code
           WHERE f.billing_ym = ?
+            AND f.total_per_hh > 0
             AND m.avg_pyeong BETWEEN ? AND ?
             AND m.avg_price  BETWEEN ? AND ?
         `).bind(billing_ym, p - PYEONG_RANGE, p + PYEONG_RANGE, pr - PRICE_RANGE, pr + PRICE_RANGE),
@@ -473,6 +474,7 @@ async function getD1MgmtFeeResult(
           FROM apt_mgmt_fee f
           JOIN apt_meta m ON m.kapt_code = f.kapt_code
           WHERE f.billing_ym = ?
+            AND f.total_per_hh > 0
             AND m.avg_pyeong BETWEEN ? AND ?
             AND m.avg_price  BETWEEN ? AND ?
             AND m.sgg_nm = ?
@@ -486,6 +488,7 @@ async function getD1MgmtFeeResult(
           FROM apt_mgmt_fee f
           JOIN apt_meta m ON m.kapt_code = f.kapt_code
           WHERE f.billing_ym = ?
+            AND f.total_per_hh > 0
             AND m.avg_pyeong BETWEEN ? AND ?
             AND m.avg_price  BETWEEN ? AND ?
             AND m.sgg_nm = ?

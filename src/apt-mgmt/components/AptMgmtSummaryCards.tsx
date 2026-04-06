@@ -129,9 +129,8 @@ function PeerGaugeRow({ label, ourValue, peerMin, peerMax, peerCnt }: PeerGaugeR
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium" style={{ color: 'var(--ds-ink-muted)' }}>{label}</span>
-        <span className="text-xs font-bold" style={{ color: jColor }}>{judgment}</span>
+      <div className="flex items-center justify-end">
+        <span className="text-sm font-bold" style={{ color: jColor }}>{judgment}</span>
       </div>
       {/* 그라디언트 바 */}
       <div className="relative h-3 rounded-full overflow-hidden"
@@ -143,11 +142,11 @@ function PeerGaugeRow({ label, ourValue, peerMin, peerMax, peerCnt }: PeerGaugeR
         />
       </div>
       <div className="flex justify-between text-xs" style={{ color: 'var(--ds-ink-faint)' }}>
-        <span>저렴 · {Math.round(peerMin / 1000)}천원</span>
-        <span>비쌈 · {Math.round(peerMax / 1000)}천원</span>
+        <span>최저 {Math.round(peerMin / 10000)}만원</span>
+        <span>최고 {Math.round(peerMax / 10000)}만원</span>
       </div>
       <p className="text-xs" style={{ color: 'var(--ds-ink-faint)' }}>
-        유사 단지 {peerCnt}곳 비교
+        유사 단지 {peerCnt}곳
       </p>
     </div>
   );
@@ -506,19 +505,20 @@ export default function AptMgmtSummaryCards({ result }: Props) {
 
           {/* 서울 — 건물 차트 */}
           <div>
-            <p className="text-xs font-medium mb-3" style={{ color: 'var(--ds-ink-muted)' }}>서울 전체</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--ds-ink-faint)' }}>서울 전체</p>
             <AptMgmtBuildingChart
               ourValue={result.total_per_hh}
               peerMin={result.peer_seoul_min}
               peerAvg={result.peer_seoul_avg}
               peerMax={result.peer_seoul_max}
               peerCnt={result.peer_seoul_cnt ?? 0}
-              scopeLabel="서울 전체"
             />
           </div>
 
           {/* 구 — 게이지 바 */}
           {result.peer_sgg_cnt && result.peer_sgg_avg && result.peer_sgg_min != null && result.peer_sgg_max != null && (
+            <div className="pt-1 border-t" style={{ borderColor: 'var(--ds-cream-border)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--ds-ink-faint)' }}>{result.sgg_nm}</p>
             <PeerGaugeRow
               label={result.sgg_nm}
               ourValue={result.total_per_hh}
@@ -527,10 +527,13 @@ export default function AptMgmtSummaryCards({ result }: Props) {
               peerMax={result.peer_sgg_max}
               peerCnt={result.peer_sgg_cnt}
             />
+            </div>
           )}
 
           {/* 동 — 게이지 바 (5개 이상일 때만) */}
           {result.peer_umd_cnt && result.peer_umd_avg && result.peer_umd_min != null && result.peer_umd_max != null && result.umd_nm && (
+            <div className="pt-1 border-t" style={{ borderColor: 'var(--ds-cream-border)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--ds-ink-faint)' }}>{result.umd_nm}</p>
             <PeerGaugeRow
               label={result.umd_nm}
               ourValue={result.total_per_hh}
@@ -539,6 +542,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
               peerMax={result.peer_umd_max}
               peerCnt={result.peer_umd_cnt}
             />
+            </div>
           )}
         </div>
       ) : (
