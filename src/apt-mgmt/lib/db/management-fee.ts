@@ -366,7 +366,14 @@ async function getD1MgmtFeeResult(
   };
 
   // Step 2: 사전집계 평균 (최대 3행 × 36컬럼 — D1 한계 안전)
+  // summary가 billing_ym보다 한 달 늦게 업데이트될 수 있으므로 가장 최근 가용 월 사용
   try {
+    const summaryYmRow = await db
+      .prepare(`SELECT MAX(billing_ym) as max_ym FROM apt_mgmt_fee_summary WHERE billing_ym <= ?`)
+      .bind(billing_ym)
+      .first<{ max_ym: string | null }>();
+    const summary_ym = summaryYmRow?.max_ym ?? billing_ym;
+
     const sumRows = await db
       .prepare(`
         SELECT * FROM apt_mgmt_fee_summary
@@ -375,7 +382,7 @@ async function getD1MgmtFeeResult(
             OR (sgg_nm = ? AND umd_nm = '')
             OR (sgg_nm = ? AND umd_nm = COALESCE(?, '')))
       `)
-      .bind(billing_ym, sgg, sgg, umd)
+      .bind(summary_ym, sgg, sgg, umd)
       .all<Record<string, unknown>>();
 
     const seoulSum = sumRows.results.find(r => r.sgg_nm === '' && r.umd_nm === '');
