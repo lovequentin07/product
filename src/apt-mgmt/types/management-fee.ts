@@ -138,6 +138,29 @@ export interface MgmtFeeResult extends MgmtFeeRow {
   personal_seoul_rank: number | null;
   personal_sgg_rank: number | null;
 
+  // 단지 프로필 (apt_meta)
+  avg_pyeong: number | null;   // 최근 12개월 평균 평형
+  avg_price:  number | null;   // 최근 12개월 평균 거래가 (억)
+  build_year: number | null;   // 준공년도
+
+  // 피어 그룹 통계 — 서울 전체 (유사 평형·가격)
+  peer_seoul_cnt: number | null;
+  peer_seoul_avg: number | null;
+  peer_seoul_min: number | null;
+  peer_seoul_max: number | null;
+
+  // 피어 그룹 통계 — 구
+  peer_sgg_cnt: number | null;
+  peer_sgg_avg: number | null;
+  peer_sgg_min: number | null;
+  peer_sgg_max: number | null;
+
+  // 피어 그룹 통계 — 동
+  peer_umd_cnt: number | null;
+  peer_umd_avg: number | null;
+  peer_umd_min: number | null;
+  peer_umd_max: number | null;
+
   // 세부항목 동/구 평균 (18개 신규)
   sgg_avg_office: number | null;
   umd_avg_office: number | null;

@@ -169,6 +169,31 @@ export default function AptMgmtPage() {
           </div>
         </section>
 
+        {/* 만든 이유 */}
+        <section>
+          <h2
+            className="text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'var(--ds-ink-faint)' }}
+          >
+            이 서비스를 만든 이유
+          </h2>
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: 'var(--ds-cream-card)',
+              border: '1px solid var(--ds-cream-border)',
+            }}
+          >
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--ds-ink)' }}>
+              우리 아파트 관리비, 비싼 걸까요?
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--ds-ink-muted)' }}>
+              매달 청구서를 받으면서도 알 수가 없었습니다.<br />
+              같은 평형·가격대 단지들과 비교해서 답을 찾습니다.
+            </p>
+          </div>
+        </section>
+
         {/* FAQ */}
         <section aria-label="자주 묻는 질문">
           <h2
