@@ -495,7 +495,7 @@ export default function AptMgmtSummaryCards({ result }: Props) {
       )}
 
       {/* === 유사 단지 비교 (피어 그룹) === */}
-      {result.total_per_hh && result.peer_seoul_avg && result.peer_seoul_min != null && result.peer_seoul_max != null ? (
+      {result.total_per_hh != null && result.peer_seoul_avg != null && result.peer_seoul_min != null && result.peer_seoul_max != null ? (
         <div
           className="rounded-2xl px-5 py-5 space-y-5"
           style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)' }}
