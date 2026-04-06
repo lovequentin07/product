@@ -5,6 +5,7 @@ import { MgmtFeeResult } from '@apt-mgmt/types/management-fee';
 import { type Tier, tierConfig } from './summaryConfig';
 import AptMgmtShareButtons from './AptMgmtShareButtons';
 import AptMgmtCompareSection from './AptMgmtCompareSection';
+import AptMgmtBuildingChart from './AptMgmtBuildingChart';
 
 function formatBillingYm(ym: string): string {
   if (!ym || ym.length < 6) return ym;
@@ -110,34 +111,44 @@ const TIER_HERO: Record<Tier, { bg: string; border: string; badge: string; badge
   E: { bg: 'var(--ds-danger-bg)',   border: '#fca5a5', badge: '#b91c1c', badgeText: '#fff' },
 };
 
-interface RankBarRowProps {
+/** 게이지 바: 저렴(초록) ──── 우리 위치 표시 ──── 비쌈(빨강) */
+interface PeerGaugeRowProps {
   label: string;
-  score: number;
-  rankText: string;
-  percentile: string;
+  ourValue: number;
+  peerMin: number;
+  peerAvg: number;
+  peerMax: number;
+  peerCnt: number;
 }
 
-function RankBarRow({ label, score, rankText, percentile }: RankBarRowProps) {
-  const barColor = scoreColor(score);
-  const trackColor = scoreTrackColor(score);
+function PeerGaugeRow({ label, ourValue, peerMin, peerMax, peerCnt }: PeerGaugeRowProps) {
+  const range = peerMax - peerMin;
+  const pos = range > 0 ? Math.max(0, Math.min(100, ((ourValue - peerMin) / range) * 100)) : 50;
+  const judgment = pos >= 67 ? '비싼 편' : pos >= 33 ? '보통' : '저렴한 편';
+  const jColor = pos >= 67 ? '#b91c1c' : pos >= 33 ? '#d97706' : '#047857';
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-gray-600 shrink-0 w-24">{label}</span>
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: trackColor }}>
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${score}%`, background: barColor }}
-          />
-        </div>
-        <span className="text-xs font-bold shrink-0 w-16 text-right" style={{ color: barColor }}>
-          {percentile}
-        </span>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium" style={{ color: 'var(--ds-ink-muted)' }}>{label}</span>
+        <span className="text-xs font-bold" style={{ color: jColor }}>{judgment}</span>
       </div>
-      {rankText && (
-        <p className="text-xs text-gray-400 pl-26">{rankText}</p>
-      )}
+      {/* 그라디언트 바 */}
+      <div className="relative h-3 rounded-full overflow-hidden"
+        style={{ background: 'linear-gradient(to right, #4ade80, #facc15, #f87171)' }}>
+        {/* 우리 단지 마커 */}
+        <div
+          className="absolute top-0 bottom-0 w-1 rounded-sm"
+          style={{ left: `calc(${pos}% - 2px)`, background: '#fff', boxShadow: '0 0 0 1.5px #334155' }}
+        />
+      </div>
+      <div className="flex justify-between text-xs" style={{ color: 'var(--ds-ink-faint)' }}>
+        <span>저렴 · {Math.round(peerMin / 1000)}천원</span>
+        <span>비쌈 · {Math.round(peerMax / 1000)}천원</span>
+      </div>
+      <p className="text-xs" style={{ color: 'var(--ds-ink-faint)' }}>
+        유사 단지 {peerCnt}곳 비교
+      </p>
     </div>
   );
 }
@@ -453,36 +464,117 @@ export default function AptMgmtSummaryCards({ result }: Props) {
         </div>
       </div>
 
-      {/* === 순위 바 차트 (동·구·서울) === */}
-      <div
-        className="rounded-2xl px-5 py-5 space-y-4"
-        style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)' }}
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--ds-ink-faint)' }}>
-          관리비 순위 비교
-        </p>
-        <RankBarRow
-          label="동네 순위"
-          score={rankScore(result.umd_rank, result.umd_total)}
-          rankText={rankLabel(result.umd_rank, result.umd_total)}
-          percentile={rankPercentileLabel(result.umd_rank, result.umd_total)}
-        />
-        <RankBarRow
-          label="구 순위"
-          score={rankScore(result.sgg_rank, result.sgg_total)}
-          rankText={rankLabel(result.sgg_rank, result.sgg_total)}
-          percentile={rankPercentileLabel(result.sgg_rank, result.sgg_total)}
-        />
-        <RankBarRow
-          label="서울 순위"
-          score={seoulScore}
-          rankText={rankLabel(result.seoul_rank, result.seoul_total)}
-          percentile={seoulPctLabel}
-        />
-        <p className="text-xs pt-1" style={{ color: 'var(--ds-ink-faint)' }}>
-          * 바가 길수록(오른쪽) 관리비가 저렴한 순위입니다.
-        </p>
-      </div>
+      {/* === 단지 프로필 칩 === */}
+      {(result.avg_pyeong || result.avg_price || result.build_year || result.household_cnt) && (
+        <div className="flex flex-wrap gap-2">
+          {result.avg_pyeong && (
+            <span className="text-xs px-3 py-1.5 rounded-full font-medium"
+              style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)', color: 'var(--ds-ink-muted)' }}>
+              평균 {result.avg_pyeong}평형
+            </span>
+          )}
+          {result.avg_price && (
+            <span className="text-xs px-3 py-1.5 rounded-full font-medium"
+              style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)', color: 'var(--ds-ink-muted)' }}>
+              평균 {result.avg_price}억
+            </span>
+          )}
+          {result.build_year && (
+            <span className="text-xs px-3 py-1.5 rounded-full font-medium"
+              style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)', color: 'var(--ds-ink-muted)' }}>
+              {result.build_year}년 준공
+            </span>
+          )}
+          {result.household_cnt && (
+            <span className="text-xs px-3 py-1.5 rounded-full font-medium"
+              style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)', color: 'var(--ds-ink-muted)' }}>
+              {result.household_cnt.toLocaleString()}세대
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* === 유사 단지 비교 (피어 그룹) === */}
+      {result.total_per_hh && result.peer_seoul_avg && result.peer_seoul_min != null && result.peer_seoul_max != null ? (
+        <div
+          className="rounded-2xl px-5 py-5 space-y-5"
+          style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--ds-ink-faint)' }}>
+            유사 평형·가격 단지 비교
+          </p>
+
+          {/* 서울 — 건물 차트 */}
+          <div>
+            <p className="text-xs font-medium mb-3" style={{ color: 'var(--ds-ink-muted)' }}>서울 전체</p>
+            <AptMgmtBuildingChart
+              ourValue={result.total_per_hh}
+              peerMin={result.peer_seoul_min}
+              peerAvg={result.peer_seoul_avg}
+              peerMax={result.peer_seoul_max}
+              peerCnt={result.peer_seoul_cnt ?? 0}
+              scopeLabel="서울 전체"
+            />
+          </div>
+
+          {/* 구 — 게이지 바 */}
+          {result.peer_sgg_cnt && result.peer_sgg_avg && result.peer_sgg_min != null && result.peer_sgg_max != null && (
+            <PeerGaugeRow
+              label={result.sgg_nm}
+              ourValue={result.total_per_hh}
+              peerMin={result.peer_sgg_min}
+              peerAvg={result.peer_sgg_avg}
+              peerMax={result.peer_sgg_max}
+              peerCnt={result.peer_sgg_cnt}
+            />
+          )}
+
+          {/* 동 — 게이지 바 (5개 이상일 때만) */}
+          {result.peer_umd_cnt && result.peer_umd_avg && result.peer_umd_min != null && result.peer_umd_max != null && result.umd_nm && (
+            <PeerGaugeRow
+              label={result.umd_nm}
+              ourValue={result.total_per_hh}
+              peerMin={result.peer_umd_min}
+              peerAvg={result.peer_umd_avg}
+              peerMax={result.peer_umd_max}
+              peerCnt={result.peer_umd_cnt}
+            />
+          )}
+        </div>
+      ) : (
+        /* 피어 데이터 없을 때 — 기존 순위 바 */
+        <div
+          className="rounded-2xl px-5 py-5 space-y-4"
+          style={{ background: 'var(--ds-cream-card)', border: '1px solid var(--ds-cream-border)' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--ds-ink-faint)' }}>
+            관리비 순위 비교
+          </p>
+          {[
+            { label: '동네', rank: result.umd_rank, total: result.umd_total },
+            { label: result.sgg_nm, rank: result.sgg_rank, total: result.sgg_total },
+            { label: '서울 전체', rank: result.seoul_rank, total: result.seoul_total },
+          ].map(({ label, rank, total }) => {
+            const score = rankScore(rank, total);
+            const barColor = scoreColor(score);
+            const trackColor = scoreTrackColor(score);
+            return (
+              <div key={label} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium shrink-0 w-20" style={{ color: 'var(--ds-ink-muted)' }}>{label}</span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: trackColor }}>
+                    <div className="h-full rounded-full" style={{ width: `${score}%`, background: barColor }} />
+                  </div>
+                  <span className="text-xs font-bold shrink-0 w-16 text-right" style={{ color: barColor }}>
+                    {rankPercentileLabel(rank, total)}
+                  </span>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--ds-ink-faint)' }}>{rankLabel(rank, total)}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* === 공용 / 개인 진단 카드 === */}
       {(result.common_seoul_rank || result.personal_seoul_rank) && (
