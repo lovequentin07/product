@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getLatestDealDate } from "@apt/lib/db/apt";
+import { getLatestDealDate, getAptUrlList } from "@apt/lib/db/apt";
 import { getMgmtFeeAptUrlList } from "@apt-mgmt/lib/db/management-fee";
 import { regions } from "@shared/data/regions";
 import marketStatsRaw from "@market/data/market-stats-by-region.json";
@@ -9,6 +9,7 @@ const BASE_URL = "https://datazip.net";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const latestDate = await getLatestDealDate();
   const mgmtApts = await getMgmtFeeAptUrlList();
+  const aptUrls = await getAptUrlList();
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
@@ -84,6 +85,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
+  const aptUrlList: MetadataRoute.Sitemap = aptUrls.map(({ sgg_nm, apt_nm }) => ({
+    url: `${BASE_URL}/apt/${encodeURIComponent(sgg_nm)}/${encodeURIComponent(apt_nm)}`,
+    lastModified: latestDate,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   // 관리비 지킴이 — 랜딩 + 개별 아파트 (apt_meta 상위 500개)
   const mgmtAptUrls: MetadataRoute.Sitemap = mgmtApts.map(({ sgg_nm, apt_nm, billing_ym }) => {
     // billing_ym 형식: "202501" → "2025-01-01"
@@ -117,5 +125,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticUrls, ...regionUrls, ...mgmtUrls, ...marketItemUrls];
+  return [...staticUrls, ...regionUrls, ...aptUrlList, ...mgmtUrls, ...marketItemUrls];
 }

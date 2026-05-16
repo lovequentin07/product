@@ -236,6 +236,29 @@ export async function getDistinctApartments(): Promise<{ sgg_cd: string; sgg_nm:
   return result.results ?? [];
 }
 
+export async function getAptUrlList(): Promise<{ sgg_nm: string; apt_nm: string }[]> {
+  let db: D1Database | null = null;
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = await getCloudflareContext();
+    db = (env as unknown as { DB: D1Database }).DB ?? null;
+  } catch {
+    return [];
+  }
+  if (!db) return [];
+
+  const result = await db
+    .prepare(`
+      SELECT DISTINCT sgg_nm, apt_nm
+      FROM apt_transactions
+      WHERE sgg_nm IS NOT NULL AND apt_nm IS NOT NULL
+      ORDER BY sgg_nm, apt_nm
+      LIMIT 5000
+    `)
+    .all<{ sgg_nm: string; apt_nm: string }>();
+  return result.results ?? [];
+}
+
 export async function getAptHistory(
   sgg_cd: string,
   apt_nm: string,
