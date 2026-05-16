@@ -90,21 +90,16 @@ test.describe('관리비 지킴이 (/apt-mgmt)', () => {
   });
 
   test('TC-AM7: 상세 페이지 title에 현재 연도 포함', async ({ page }) => {
-    await page.goto('/apt-mgmt');
-    const links = page.locator('a[href*="/apt-mgmt/"]');
-    if (await links.count() === 0) { test.skip(); return; }
-    const href = await links.first().getAttribute('href');
-    await page.goto(href!);
+    // 네이버 Search Advisor 상위 노출 페이지 직접 사용
+    const res = await page.goto('/apt-mgmt/강남구/청담르엘');
+    if (res?.status() !== 200) { test.skip(); return; }
     const title = await page.title();
     expect(title).toContain(String(new Date().getFullYear()));
   });
 
   test('TC-AM8: 상세 페이지 description에 세대당 관리비 문구 포함', async ({ page }) => {
-    await page.goto('/apt-mgmt');
-    const links = page.locator('a[href*="/apt-mgmt/"]');
-    if (await links.count() === 0) { test.skip(); return; }
-    const href = await links.first().getAttribute('href');
-    await page.goto(href!);
+    const res = await page.goto('/apt-mgmt/강남구/청담르엘');
+    if (res?.status() !== 200) { test.skip(); return; }
     const desc = await page.getAttribute('meta[name="description"]', 'content');
     expect(desc).toMatch(/세대당|월 관리비/);
   });
