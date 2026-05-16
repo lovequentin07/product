@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       update_months:
-        description: '수집 월 수 (기본 2, 최대 6)'
+        description: '수집 월 수 (기본 12, 최대 14)'
         required: false
-        default: '2'
+        default: '12'
 
 jobs:
   update:

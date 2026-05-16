@@ -1,5 +1,68 @@
 # Lessons Learned
 
+## 2026-05-16: todo 항목 수행 전 D1 실제 상태 먼저 확인
+
+**상황**: todo.md에 "K-APT 관리비 45,694건 추가 수집" 항목이 있었음. 이 숫자는 Windows 로컬 환경의 `schedule.json` 기준이었고, D1 실제 상태와 무관했음. 숫자를 그대로 믿고 `UPDATE_MONTHS=14` 대규모 수집 계획을 세웠다가 "과거 데이터가 왜 필요하냐"는 지적을 받음.
+
+**올바른 접근**:
+1. 데이터 수집 과제 전 반드시 `wrangler d1 execute ... GROUP BY billing_ym`으로 실제 현황 파악
+2. 서비스가 **어떤 데이터를 실제로 사용하는지** 확인 (관리비 순위 = 최신 월 1개면 충분)
+3. todo 숫자·설명이 다른 환경/시점 기준일 수 있으므로 맹신 금지
+
+**교훈**: 과제 수행 전 "이 작업의 결과로 서비스가 어떻게 달라지는가"를 먼저 묻는다.
+
+---
+
+## 2026-04-05: wrangler D1 실행 결과 JSON 파싱 형식
+
+**상황**: `wrangler d1 execute --json` 출력을 `{columns, rows}` 형식으로 파싱 → 빈 결과 반환.
+
+**실제 형식**:
+```json
+[{ "results": [{"col1": "val1", "col2": "val2"}, ...], "success": true, "meta": {...} }]
+```
+→ `parsed[0].results`가 row 객체 배열. `columns`/`rows` 분리 형식 아님.
+
+**수정 방법**:
+```typescript
+const parsed = JSON.parse(output) as Array<{ results: Array<Record<string, unknown>> }>;
+const results = parsed[0].results;
+return results.map(row => ({ col1: String(row.col1 ?? '') }));
+```
+
+---
+
+## 2026-04-05: 대규모 API 수집 + 배치 DB write 설계 (2-phase 패턴)
+
+**상황**: 3,335개 단지 × 2개월 = 6,670개 API 호출 + wrangler 실행. execSync가 이벤트 루프를 블로킹하여 CONCURRENCY=5여도 D1 write는 직렬화됨. 40분+ 소요.
+
+**해결 — Phase 분리 패턴**:
+- Phase 1: 병렬 API 수집 (CONCURRENCY=10) → `processUnit()`이 SQL 문자열 반환 (`string | null`)
+  - null: 데이터 없음 (skip)
+  - string: UPSERT SQL → 배열에 누적
+- Phase 2: 수집된 SQL 50개씩 `flushBatch()` → wrangler 1번에 50개 처리
+  - 결과: 3,335 → 67회 (50배 단축), ~40분 → ~25분
+
+**핵심 원칙**:
+1. "수집"과 "저장"을 분리할 것 — processUnit은 SQL 반환만, write는 배치로
+2. D1 한 번에 많은 INSERT 가능 (50×3KB ≈ 150KB 안전)
+3. CONCURRENCY는 API rate limit + 메모리 고려해 환경변수로 조정 가능하게
+
+---
+
+## 2026-04-05: 공공 API 응답 필드 null fallback
+
+**상황**: `update-recent.ts`에서 `estateAgentSggNm` 없으면 `sgg_nm = null` → 불완전한 데이터 저장.
+
+**해결**: 보조 필드(`sggCd`)로 역매핑 fallback 추가.
+```typescript
+sgg_nm: item.estateAgentSggNm ?? getRegionNameByCode(item.sggCd) ?? null
+```
+
+**교훈**: API 응답에서 중요 필드가 누락될 때, 다른 필드로 복구 가능한지 먼저 확인.
+
+---
+
 ## 2026-03-22: 폰트 지정 시 사용자 원래 폰트 확인 필수
 
 **상황**: 범례 텍스트에서 "오늘"의 폰트가 다르게 보인다는 피드백 → 명시적 폰트(`system-ui, -apple-system, sans-serif`)를 지정 → 오히려 더 이상한 폰트가 됨
