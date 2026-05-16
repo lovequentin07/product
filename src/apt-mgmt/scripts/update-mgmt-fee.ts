@@ -9,7 +9,7 @@
  *   DATA_GO_KR_API_KEY    공공데이터 API 키 (필수)
  *   CLOUDFLARE_API_TOKEN  wrangler 인증 (CI 환경 필수)
  *   CLOUDFLARE_ACCOUNT_ID wrangler 계정 (CI 환경 필수)
- *   UPDATE_MONTHS         수집 월 수 (기본 2, 최대 6)
+ *   UPDATE_MONTHS         수집 월 수 (기본 2, 최대 14)
  *   CONCURRENCY           동시 처리 단지 수 (기본 5)
  */
 
@@ -31,7 +31,7 @@ const RETRY_DELAY_MS = 5000;
 const BATCH_SIZE = 50;  // D1 write 배치 크기 (50개 × 3KB ≈ 150KB)
 
 const isDryRun = process.argv.includes('--dry-run');
-const UPDATE_MONTHS = Math.min(6, Math.max(1, parseInt(process.env.UPDATE_MONTHS || '2', 10)));
+const UPDATE_MONTHS = Math.min(14, Math.max(1, parseInt(process.env.UPDATE_MONTHS || '2', 10)));
 const CONCURRENCY = Math.min(20, Math.max(1, parseInt(process.env.CONCURRENCY || '10', 10)));
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────

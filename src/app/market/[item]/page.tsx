@@ -31,9 +31,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   type RegionStatRecord = { item_cd: string; item_nm: string; unit: string; unit_sz: string; combos: { is_default: boolean; latest_price: number }[] }
   const regionStats = regionStatsRaw as RegionStatRecord[]
   const record = regionStats.find((r) => r.item_cd === id)
-  if (!record) return {}
+  if (!record) return {
+    title: '시세 정보를 찾을 수 없습니다 | DataZip',
+    description: '해당 품목의 시세 데이터를 찾을 수 없습니다. 다른 품목을 검색해보세요.',
+  }
   const combo = record.combos.find((c) => c.is_default) ?? record.combos[0]
-  if (!combo) return {}
+  if (!combo) return {
+    title: '시세 정보를 찾을 수 없습니다 | DataZip',
+    description: '해당 품목의 시세 데이터를 찾을 수 없습니다. 다른 품목을 검색해보세요.',
+  }
 
   const todayPrice = combo.latest_price
   const unit = record.unit_sz === '1' ? record.unit : `${record.unit_sz}${record.unit}`

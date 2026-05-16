@@ -88,6 +88,13 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
 
+        <h1
+          className="text-2xl font-bold mb-5 leading-tight"
+          style={{ fontFamily: "var(--font-noto-serif-kr)", color: "#1A1918" }}
+        >
+          오늘 바로 쓸 수 있는 정보
+        </h1>
+
         {/* 장바구니 시세 — 풀너비 카드 */}
         <section
           className="rounded-2xl p-6 mb-4"
