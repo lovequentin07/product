@@ -18,13 +18,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { sgg_nm, apt_nm } = await params;
   const decodedSggNm = decodeURIComponent(sgg_nm);
   const aptName = decodeURIComponent(apt_nm);
-  const title = `${aptName} 관리비 비교 | ${decodedSggNm} 아파트 관리비 분석`;
-  const description = `${aptName} 아파트의 관리비를 ${decodedSggNm} 평균, 서울 전체 평균과 비교 분석한 결과를 확인하세요. 경비비·청소비·난방비 등 항목별 상세 비교 제공.`;
+  const year = new Date().getFullYear();
+  const title = `${aptName} 관리비 — ${decodedSggNm} 평균 대비 얼마? (${year})`;
+  const description = `${aptName} 세대당 월 관리비가 ${decodedSggNm} 평균보다 비싼지 즉시 확인. 경비비·청소비·난방비 항목별 금액과 절감 가능 항목 분석 제공.`;
   const canonicalUrl = `/apt-mgmt/${sgg_nm}/${apt_nm}`;
   return {
     title,
     description,
-    keywords: [`${aptName} 관리비`, `${decodedSggNm} 아파트 관리비`, `${aptName} 관리비 비교`, '아파트 관리비 분석'],
+    keywords: [`${aptName} 관리비`, `${decodedSggNm} 아파트 관리비`, `${aptName} 관리비 ${year}`, '아파트 관리비 조회', `${aptName} 관리비 조회`],
     alternates: { canonical: canonicalUrl },
     openGraph: { title, description, url: canonicalUrl },
   };

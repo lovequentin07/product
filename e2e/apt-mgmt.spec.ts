@@ -88,4 +88,24 @@ test.describe('관리비 지킴이 (/apt-mgmt)', () => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 2);
   });
+
+  test('TC-AM7: 상세 페이지 title에 현재 연도 포함', async ({ page }) => {
+    await page.goto('/apt-mgmt');
+    const links = page.locator('a[href*="/apt-mgmt/"]');
+    if (await links.count() === 0) { test.skip(); return; }
+    const href = await links.first().getAttribute('href');
+    await page.goto(href!);
+    const title = await page.title();
+    expect(title).toContain(String(new Date().getFullYear()));
+  });
+
+  test('TC-AM8: 상세 페이지 description에 세대당 관리비 문구 포함', async ({ page }) => {
+    await page.goto('/apt-mgmt');
+    const links = page.locator('a[href*="/apt-mgmt/"]');
+    if (await links.count() === 0) { test.skip(); return; }
+    const href = await links.first().getAttribute('href');
+    await page.goto(href!);
+    const desc = await page.getAttribute('meta[name="description"]', 'content');
+    expect(desc).toMatch(/세대당|월 관리비/);
+  });
 });
