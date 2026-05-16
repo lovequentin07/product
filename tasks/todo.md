@@ -7,18 +7,33 @@
 ## 완료된 항목 (이번 세션)
 
 - [x] 파일 이관: `product_from_localmachine` → `product` (`.env.local`, `ga4-credentials.json`, `tasks/lessons.md` 병합)
-- [x] GitHub PAT 설정 후 push 완료 (`1788be4` 커밋 반영)
+- [x] GitHub PAT 설정 후 push 완료
 - [x] 사이트 Playwright 점검 및 코드 교차 검증
-- [x] `src/app/market/[item]/page.tsx:34` — `generateMetadata()` 빈 객체 반환 버그 수정 (fallback 메타데이터)
+- [x] `src/app/market/[item]/page.tsx` — `generateMetadata()` fallback 수정
 - [x] `src/app/page.tsx` — 홈페이지 `<h1>` 누락 수정
-- [x] `src/apt-mgmt/scripts/update-mgmt-fee.ts` — UPDATE_MONTHS 최대 한도 주석 6→14 업데이트 후 커밋
+- [x] K-APT 관리비 202603 신규 수집 (0 → 2,585건), 202512 재수집 (2,543 → 3,184건)
+- [x] D1 202501 삭제 (202502 이전 데이터 정리)
+- [x] `update-mgmt-fee.ts` — TARGET_YMS 지원 + PID별 tmp 파일 (병렬 실행 안전)
+- [x] `refresh-apt-meta.ts` — 신규 단지 자동 갱신 스크립트 생성
+- [x] `update-mgmt-fee.yml` — refresh→collect→cleanup 3단계 워크플로우, UPDATE_MONTHS=2 복원
 
 ---
 
-## 참고: K-APT 관리비 수집 구조
+## 참고: K-APT 관리비 수집 구조 (2026-05-16 기준)
 
-- **자동 수집**: `.github/workflows/update-mgmt-fee.yml` — 매월 1일 KST 11:00 자동 실행 (`UPDATE_MONTHS=2`)
-- **수동 실행 필요 시**: `npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts` (`.env.local` 자동 로드)
-- **D1 현황 (2026-05-16 기준)**: 202601·202602 각 3,335건(완전), 202603 0건(미수집)
-- **과거 데이터 gap**: 서비스는 최신 월 순위만 사용 → 과거 gap 메울 필요 없음
-- **202603 수집 필요 시**: `UPDATE_MONTHS=2 npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts`
+- **자동 수집**: `.github/workflows/update-mgmt-fee.yml` — 매월 1일 KST 11:00 자동 실행
+  - Step 1: `refresh-apt-meta.ts` — K-APT 신규 단지 apt_meta 자동 추가
+  - Step 2: `update-mgmt-fee.ts` — UPDATE_MONTHS=2 (최신 2개월 수집)
+  - Step 3: cleanup DELETE — 15개월 이전 데이터 자동 삭제
+- **수동 실행**: `TARGET_YMS=YYYYMM npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts`
+- **D1 현황 (2026-05-16)**: 202502~202603 보존 (14개월), 202602·202601 완전(3,335건), 202603=2,585건(77%)
+- **보존 정책**: 최신 월 기준 -15개월 (12개월 차트 + YoY 1개월 + K-APT 딜레이 2개월)
+- **단지 한계선**: K-APT 미등록 단지 제외 시 자연 상한 ~93~95%
+
+---
+
+## 남은 과제
+
+- [ ] `apt-mgmt` 서비스 검토 — 관리비 지킴이 서비스 전반적인 기능·UX 점검
+- [ ] SEO 점검 — 각 서비스 페이지 `generateMetadata` 품질 확인
+- [ ] 애드센스 최적화 — 클릭률 개선을 위한 광고 배치 점검
