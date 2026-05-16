@@ -215,7 +215,7 @@ async function main() {
       const umd_cd   = apt.bjdCode?.substring(5, 10) ?? '';
       const sgg_nm   = info.as2?.trim() ?? apt.as2 ?? '';
       const umd_nm   = (info.as3 ?? info.as4 ?? apt.as3 ?? apt.as4)?.trim() ?? '';
-      const apt_nm   = normalize(info.kaptName ?? apt.kaptName);
+      const apt_nm   = (info.kaptName ?? apt.kaptName ?? '').trim();
       const hh       = Math.max(parseInt(String(info.kaptdaCnt ?? '0'), 10) || 0, 0);
       const bldg     = Math.max(parseInt(String(info.kaptDongCnt ?? '0'), 10) || 0, 0);
       const compDate = usedateToDate(info.kaptUsedate);

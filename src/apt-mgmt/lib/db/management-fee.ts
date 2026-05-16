@@ -530,7 +530,9 @@ async function getD1MgmtFeeResult(
   // Step 3: 순위 계산 — db.batch()로 10개 COUNT 쿼리를 한 번에 전송
   const total = row.total_per_hh;
   const common = row.common_per_hh;
-  const personal = (total ?? 0) - (common ?? 0);
+  // total이 null이면 순위 계산 자체를 스킵
+  if (total === null || total === undefined) return row;
+  const personal = total - (common ?? 0);
 
   const BASE = `billing_ym=? AND total_per_hh IS NOT NULL AND total_per_hh > 0 AND household_cnt >= 10`;
   const SEOUL = `${BASE} AND sido='서울특별시'`;
