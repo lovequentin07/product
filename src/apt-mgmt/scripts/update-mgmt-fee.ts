@@ -25,7 +25,7 @@ import { fetchCommon, fetchPrivate, fetchRepair, sleep } from './fetch-kapt-mgmt
 // ─── 설정 ────────────────────────────────────────────────────────────────────
 
 const DB_NAME = 'apt-trade-db';
-const TMP_SQL_FILE = path.join(os.tmpdir(), 'mgmt_fee_update.sql');
+const TMP_SQL_FILE = path.join(os.tmpdir(), `mgmt_fee_update_${process.pid}.sql`);
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 const BATCH_SIZE = 50;  // D1 write 배치 크기 (50개 × 3KB ≈ 150KB)
@@ -46,11 +46,13 @@ interface AptMetaRow {
 
 // ─── 날짜 헬퍼 ───────────────────────────────────────────────────────────────
 
-/** 현재 월 기준 -2개월부터 N개월 반환 (K-APT 제출 지연 반영) */
+/** TARGET_YMS 환경변수(쉼표 구분)가 있으면 그것을 우선 사용, 없으면 현재 월 기준 -2개월부터 N개월 반환 */
 function getTargetBillingYms(): string[] {
+  if (process.env.TARGET_YMS) {
+    return process.env.TARGET_YMS.split(',').map(s => s.trim()).filter(Boolean);
+  }
   const result: string[] = [];
   const now = new Date();
-  // -2개월 오프셋에서 시작
   for (let i = UPDATE_MONTHS + 1; i >= 2; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     result.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`);

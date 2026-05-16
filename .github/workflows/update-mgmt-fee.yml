@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       update_months:
-        description: '수집 월 수 (기본 12, 최대 14)'
+        description: '수집 월 수 (기본 2, 최대 14)'
         required: false
-        default: '12'
+        default: '2'
 
 jobs:
   update:
@@ -35,7 +35,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. K-APT 관리비 API 수집 + D1 갱신
+      # 4. apt_meta 신규 단지 자동 갱신 (K-APT 신규 등록 단지 추가)
+      - name: Refresh apt_meta with new apartments
+        run: npx tsx src/apt-mgmt/scripts/refresh-apt-meta.ts
+        env:
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # 5. K-APT 관리비 API 수집 + D1 갱신
       - name: Fetch management fee data and update D1
         run: npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts
         env:
@@ -44,12 +52,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           UPDATE_MONTHS: ${{ github.event.inputs.update_months || '2' }}
 
-      # 5. 완료 알림
+      # 6. 오래된 데이터 자동 삭제 (현재월 -15개월 이전: 12개월 차트 + YoY 1개월 + K-APT 딜레이 2개월)
+      - name: Cleanup old management fee data
+        run: |
+          CUTOFF=$(date -d "-15 months" +%Y%m)
+          echo "삭제 기준: ${CUTOFF} 이전"
+          npx wrangler d1 execute apt-trade-db \
+            --command "DELETE FROM apt_mgmt_fee WHERE billing_ym < '${CUTOFF}'" \
+            --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # 7. 완료 알림
       - name: Notify completion
         if: success()
         run: echo "✅ Management fee data update completed at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-      # 6. 실패 시 GitHub Issue 자동 생성
+      # 8. 실패 시 GitHub Issue 자동 생성
       - name: Create GitHub Issue on failure
         if: failure()
         uses: actions/github-script@v7
