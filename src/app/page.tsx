@@ -7,12 +7,12 @@ import type { ItemDetail } from "@market/types/market";
 import ServiceLayout from "@shared/components/ui/ServiceLayout";
 
 export const metadata: Metadata = {
-  title: "DataZip — 오늘 바로 쓸 수 있는 정보",
+  title: "DataZip — 아파트 실거래가 · 관리비 · 장바구니 시세",
   description:
     "장바구니 시세, 아파트 실거래가, 관리비 분석까지. 매일 업데이트되는 생활 데이터를 한눈에 확인하세요.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "DataZip — 오늘 바로 쓸 수 있는 정보",
+    title: "DataZip — 아파트 실거래가 · 관리비 · 장바구니 시세",
     description:
       "장바구니 시세, 아파트 실거래가, 관리비 분석. 매일 업데이트.",
     url: "/",
@@ -92,7 +92,7 @@ export default async function HomePage() {
           className="text-2xl font-bold mb-5 leading-tight"
           style={{ fontFamily: "var(--font-noto-serif-kr)", color: "#1A1918" }}
         >
-          오늘 바로 쓸 수 있는 정보
+          아파트 실거래가 · 관리비 · 장바구니 시세
         </h1>
 
         {/* 장바구니 시세 — 풀너비 카드 */}

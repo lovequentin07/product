@@ -74,4 +74,10 @@ test.describe('시세 서비스 (/market)', () => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 2); // 2px 여유
   });
+
+  test('TC-M6: 존재하지 않는 품목 fallback title DataZip 중복 없음', async ({ page }) => {
+    await page.goto('/market/99999');
+    const title = await page.title();
+    expect(title).not.toMatch(/DataZip.*DataZip/);
+  });
 });

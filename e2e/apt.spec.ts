@@ -58,4 +58,21 @@ test.describe('실거래가 서비스 (/apt)', () => {
     const res = await page.goto('/apt/존재하지않는구');
     expect(res?.status()).toBe(404);
   });
+
+  test('TC-A6: 단지 상세 title에 현재 연도 포함', async ({ page }) => {
+    await page.goto('/apt/강남구');
+    const links = page.locator('a[href*="/apt/강남구/"]');
+    if (await links.count() === 0) { test.skip(); return; }
+    const href = await links.first().getAttribute('href');
+    await page.goto(href!);
+    const title = await page.title();
+    expect(title).toContain(String(new Date().getFullYear()));
+  });
+
+  test('TC-A7: sitemap.xml에 /apt-mgmt URL 포함', async ({ page }) => {
+    const res = await page.goto('/sitemap.xml');
+    expect(res?.status()).toBe(200);
+    const body = await page.textContent('body');
+    expect(body).toContain('apt-mgmt<');
+  });
 });
