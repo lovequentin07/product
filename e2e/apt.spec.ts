@@ -75,4 +75,17 @@ test.describe('실거래가 서비스 (/apt)', () => {
     const body = await page.textContent('body');
     expect(body).toContain('apt-mgmt<');
   });
+
+  test('TC-A8: sitemap.xml에 apt 개별 단지 URL 포함', async ({ page }) => {
+    const res = await page.goto('/sitemap.xml');
+    expect(res?.status()).toBe(200);
+    // <loc> 요소에서 URL을 직접 추출해 /apt/[구]/[단지] 패턴 검증
+    const locs = await page.locator('loc').allTextContents();
+    const hasAptDetail = locs.some(url => {
+      const path = decodeURIComponent(url.replace('https://datazip.net', ''));
+      const parts = path.split('/').filter(Boolean);
+      return parts[0] === 'apt' && parts.length >= 3;
+    });
+    expect(hasAptDetail).toBe(true);
+  });
 });

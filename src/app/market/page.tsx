@@ -58,7 +58,7 @@ export default async function MarketPage() {
       itemListElement: cheapItems.slice(0, 6).map((item, idx) => ({
         '@type': 'ListItem',
         position: idx + 1,
-        url: `https://datazip.net/market/${item.id}`,
+        url: `https://datazip.net/market/${encodeURIComponent(item.name)}`,
         name: item.name,
         description: `${item.name} - ${item.kinds[0]?.retailPrice.toLocaleString()}원/${item.unit}`,
       })),

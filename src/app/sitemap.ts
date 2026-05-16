@@ -7,10 +7,8 @@ import marketStatsRaw from "@market/data/market-stats-by-region.json";
 const BASE_URL = "https://datazip.net";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [latestDate, mgmtApts] = await Promise.all([
-    getLatestDealDate(),
-    getMgmtFeeAptUrlList(),
-  ]);
+  const latestDate = await getLatestDealDate();
+  const mgmtApts = await getMgmtFeeAptUrlList();
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
@@ -111,10 +109,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // 농수축산물 품목 상세 페이지 (정적 JSON → 94개 품목, DB 쿼리 불필요)
-  type MarketStatEntry = { item_cd: string }
-  const uniqueItemCds = [...new Set((Object.values(marketStatsRaw) as MarketStatEntry[]).map((e) => e.item_cd).filter(Boolean))]
-  const marketItemUrls: MetadataRoute.Sitemap = uniqueItemCds.map((item_cd) => ({
-    url: `${BASE_URL}/market/${item_cd}`,
+  const codeToNmMap = new Map((marketStatsRaw as { item_cd: string; item_nm: string }[]).map(e => [e.item_cd, e.item_nm]));
+  const marketItemUrls: MetadataRoute.Sitemap = [...codeToNmMap.values()].filter(Boolean).map((item_nm) => ({
+    url: `${BASE_URL}/market/${encodeURIComponent(item_nm)}`,
     lastModified: latestDate,
     changeFrequency: 'daily',
     priority: 0.8,

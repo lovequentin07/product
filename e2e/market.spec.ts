@@ -80,4 +80,19 @@ test.describe('시세 서비스 (/market)', () => {
     const title = await page.title();
     expect(title).not.toMatch(/DataZip.*DataZip/);
   });
+
+  test('TC-M7: 품목명 URL로 상세 페이지 로드 (쌀)', async ({ page }) => {
+    const res = await page.goto('/market/쌀');
+    expect(res?.status()).toBe(200);
+    const title = await page.title();
+    expect(title).toContain('쌀');
+  });
+
+  test('TC-M8: 숫자 코드 URL은 품목명 URL로 redirect', async ({ page }) => {
+    const res = await page.goto('/market/111');
+    // redirect 후 최종 URL이 /market/쌀 이어야 함
+    expect(res?.status()).toBe(200);
+    expect(page.url()).toContain('/market/');
+    expect(page.url()).not.toMatch(/\/market\/\d+$/);
+  });
 });

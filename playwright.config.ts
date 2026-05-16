@@ -6,7 +6,7 @@ export default defineConfig({
   retries: 1,
   reporter: 'list',
   use: {
-    baseURL: 'https://datazip.net',
+    baseURL: process.env.TEST_BASE_URL ?? 'https://datazip.net',
     headless: true,
     screenshot: 'only-on-failure',
     ignoreHTTPSErrors: false,

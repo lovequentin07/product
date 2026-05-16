@@ -68,7 +68,7 @@ export default function PriceChangeList({ items, title }: Props) {
           return (
             <Link
               key={item.id}
-              href={`/market/${item.id}${item.featuredGrdCd ? `?grd=${item.featuredGrdCd}${item.featuredVrtyCd ? `&vrty=${item.featuredVrtyCd}` : ''}` : ''}`}
+              href={`/market/${encodeURIComponent(item.name)}${item.featuredGrdCd ? `?grd=${item.featuredGrdCd}${item.featuredVrtyCd ? `&vrty=${item.featuredVrtyCd}` : ''}` : ''}`}
               className="bg-white border border-gray-100 rounded-xl p-3 active:scale-[0.97] transition-transform"
             >
               {/* 품목명 */}

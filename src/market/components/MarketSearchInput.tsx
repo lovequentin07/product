@@ -21,7 +21,7 @@ export default function MarketSearchInput({ items }: Props) {
     const trimmed = query.trim()
     if (!trimmed) return
     const found = items.find((item) => item.name.includes(trimmed) || item.id === trimmed)
-    if (found) router.push(`/market/${found.id}`)
+    if (found) router.push(`/market/${encodeURIComponent(found.name)}`)
   }
 
   return (

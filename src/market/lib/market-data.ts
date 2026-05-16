@@ -22,6 +22,18 @@ import {
   getItemStatsByRegion,
 } from '@market/lib/db/market'
 import type { MarketItemStats } from '@market/types/market'
+import marketStatsRaw from '@market/data/market-stats-by-region.json'
+
+const _nameToCode = new Map<string, string>();
+const _codeToName = new Map<string, string>();
+(marketStatsRaw as { item_cd: string; item_nm: string }[]).forEach(e => {
+  if (e.item_cd && e.item_nm) {
+    _nameToCode.set(e.item_nm, e.item_cd);
+    _codeToName.set(e.item_cd, e.item_nm);
+  }
+});
+export const itemNmToCode = (nm: string): string | undefined => _nameToCode.get(nm);
+export const itemCdToNm  = (cd: string): string | undefined => _codeToName.get(cd);
 
 // =====================================================================
 // 순수 함수들 (재사용)
