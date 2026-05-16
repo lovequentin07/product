@@ -21,6 +21,7 @@
 - [x] Playwright E2E 테스트 추가 (apt/apt-mgmt/market, chromium + Pixel5 mobile, 32개 pass)
 - [x] 오래된 feature 브랜치 7개 삭제 (feat/apt-mgmt 등)
 - [x] CLAUDE.md, apt-mgmt.md, todo.md 코드 기준 현행화
+- [x] apt-mgmt 서비스 검토 — 프로덕션 수준 확인 (마이너 이슈 3개, 버그 없음)
 
 ---
 
@@ -33,12 +34,24 @@
 - **수동 실행**: `TARGET_YMS=YYYYMM npx tsx src/apt-mgmt/scripts/update-mgmt-fee.ts`
 - **D1 현황 (2026-05-16)**: 202502~202603 보존 (14개월), 202602·202601=100%, 202603=77%
 - **보존 정책**: 최신 월 기준 -15개월 (12개월 차트 + YoY 1개월 + K-APT 딜레이 2개월)
-- **단지 한계선**: K-APT 미등록 단지 제외 시 자연 상한 ~93~95%
 
 ---
 
-## 남은 과제
+## 남은 과제 (코드 기준, 우선순위 순)
 
-- [ ] `apt-mgmt` 서비스 검토 — 관리비 지킴이 서비스 전반적인 기능·UX 점검
-- [ ] SEO 점검 — 각 서비스 페이지 `generateMetadata` 품질 확인
-- [ ] 애드센스 최적화 — 클릭률 개선을 위한 광고 배치 점검
+### 🔴 높음
+
+- [ ] **애드센스 광고 단위 삽입** — `layout.tsx`에 스크립트만 있고 실제 광고 컴포넌트 미삽입 → 수익 0원
+- [ ] **가이드 페이지 홈 연결** — 4개 가이드 페이지 완성됐으나 `src/app/page.tsx`에 링크 없음
+  - `/guide/apt-price-guide`, `/guide/mgmt-fee-guide`, `/guide/market-price-guide`, `/guide/market-shopping-guide`
+- [ ] **sitemap.ts에 가이드 페이지 추가** — 4개 가이드 URL 누락 → 검색엔진 크롤링 안 됨
+
+### 🟡 중간
+
+- [ ] **홈페이지 h1 SEO 강화** — 현재 "오늘 바로 쓸 수 있는 정보"만 있음, 핵심 키워드 포함 문구로 개선
+- [ ] **SEO 점검** — apt, market 페이지 `generateMetadata` description 품질 확인 (동적 생성 vs 하드코딩)
+
+### 🟢 낮음
+
+- [ ] **apt-mgmt 마이너 UX** — `AptMgmtComparisonTable` 일반관리비 7개 항목 주석, HistoryChart 24→12개월 주석, 동/구 기준 fallback UI 명시
+- [ ] **개인정보처리방침 최종 수정일 갱신** — 2026-02-21 → 현재 날짜

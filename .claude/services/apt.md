@@ -4,7 +4,7 @@
 
 서울 아파트 실거래가를 조회·비교하는 핵심 서비스.
 - **URL**: `datazip.net/apt`, `datazip.net/apt/{sgg_nm}`, `datazip.net/apt/{sgg_nm}/{apt_nm}`
-- **DB 테이블**: `apt_transactions` (구 `transactions`, v4 스키마)
+- **DB 테이블**: `apt_transactions` (v4 스키마)
 
 ## 데이터 플로우
 
@@ -12,7 +12,7 @@
 SearchForm (클라이언트)
   → URL 쿼리 파라미터 push
   → src/app/apt/page.tsx (서버 컴포넌트, searchParams 읽기)
-  → getTransactions() → src/lib/db/transactions.ts
+  → getTransactions() → src/apt/lib/db/transactions.ts
   → D1 SQL (정렬·필터·페이지네이션 모두 서버사이드)
   → TransactionRow[] → NormalizedTransaction[]
   → TransactionsClientComponent
@@ -46,8 +46,7 @@ SearchForm (클라이언트)
 
 ## 로컬 개발 (Mock)
 
-- **파일**: `src/lib/db/mock-data.ts`
-- **건수**: 17건
+- **파일**: `src/shared/lib/db/mock-data.ts`
 - D1 연결 불가 시 자동 폴백
 
 ## 핵심 파일
@@ -57,12 +56,13 @@ SearchForm (클라이언트)
 | 목록 페이지 | `src/app/apt/page.tsx` |
 | 지역 페이지 | `src/app/apt/[sgg_nm]/page.tsx` |
 | 상세 페이지 | `src/app/apt/[sgg_nm]/[apt_nm]/page.tsx` |
-| DB 레이어 | `src/lib/db/transactions.ts` |
-| DB 레이어 (단지) | `src/lib/db/apt.ts` |
+| DB 레이어 (거래) | `src/apt/lib/db/transactions.ts` |
+| DB 레이어 (단지) | `src/apt/lib/db/apt.ts` |
+| API 헬퍼 | `src/apt/lib/api/apartment.ts` |
 | API 라우트 | `src/app/api/transactions/route.ts` |
 | 상세 API | `src/app/api/apt/[sgg_cd]/[apt_nm]/history/route.ts` |
-| 클라이언트 컴포넌트 | `src/components/TransactionsClientComponent.tsx` |
-| 상세 트랜잭션 | `src/components/apt-detail/AptDetailTransactionsClient.tsx` |
+| 목록 UI | `src/apt/components/apartment/` |
+| 상세 UI | `src/apt/components/apt-detail/` |
 
 ## KV 캐시
 
@@ -71,17 +71,18 @@ SearchForm (클라이언트)
 - **캐시 키**: `txn:{sgg_cd}:{deal_ymd}:{sort}:{order}:{page}:{limit}:{area_min}:{area_max}:{price_min}:{price_max}`
 - **제외**: `apt_nm` 검색어 있을 때 캐시 미적용
 
-## 스키마 v4 변경사항
+## 스키마 v4
 
-- 테이블명: `transactions` → `apt_transactions`
+- 테이블명: `apt_transactions`
 - `apt_meta` 마스터 테이블 추가 (FK: `apt_meta_id`, nullable)
 - `apt_name_alias` 테이블 추가
-- 마이그레이션 SQL: `src/data/migrate-v4.sql`
+- 마이그레이션 SQL: `src/apt/data/migrate-v4.sql`
 
-## 데이터 스크립트 (`src/scripts/`)
+## 데이터 스크립트 (`src/apt/scripts/`)
 
 | 스크립트 | 용도 |
 |----------|------|
+| `update-recent.ts` | 최신 실거래가 일일 갱신 (GitHub Actions) |
 | `fetch-historical.ts` | 원시 데이터 다운로드 |
 | `migrate-to-d1.ts` | D1 마이그레이션 |
 | `verify-data-integrity.ts` | 데이터 검증 |
