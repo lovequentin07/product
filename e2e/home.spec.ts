@@ -8,6 +8,8 @@
  *   TC-H4: 가이드 카드 4개 — 링크 및 텍스트 확인
  *   TC-H5: 서비스 카드 — 아파트 실거래가·관리비 링크 확인
  *   TC-H6: TrustStrip — 데이터 출처 텍스트 표시 (Phase 02)
+ *   TC-H7: 데스크탑(1280px) — 사이드바 표시 (Phase 03)
+ *   TC-H8: 모바일(390px) — 사이드바 숨김 (Phase 03)
  */
 
 import { test, expect } from '@playwright/test';
@@ -59,17 +61,34 @@ test.describe('홈 페이지 (/)', () => {
 
   test('TC-H5: 서비스 카드 — 실거래가·관리비 링크 확인', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('a[href="/apt"]')).toBeVisible();
-    await expect(page.locator('a[href="/apt-mgmt"]')).toBeVisible();
+    // 사이드바 포함 페이지 내 어딘가에 링크가 있으면 통과
+    await expect(page.locator('a[href="/apt"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/apt-mgmt"]').first()).toBeVisible();
   });
 
   test('TC-H6: TrustStrip — 데이터 출처 텍스트 표시', async ({ page }) => {
     await page.goto('/');
-    // 신뢰 스트립에 공공데이터 출처 텍스트가 보여야 함
     const strip = page.locator('[data-testid="trust-strip"]');
     await expect(strip).toBeVisible();
     await expect(strip).toContainText('공공데이터포털');
     await expect(strip).toContainText('KAMIS');
     await expect(strip).toContainText('K-APT');
+  });
+
+  test('TC-H7: 데스크탑(1280px) — 사이드바 표시', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/');
+    const sidebar = page.locator('[data-testid="home-sidebar"]');
+    await expect(sidebar).toBeVisible();
+    // 사이드바에 apt·apt-mgmt 링크가 있어야 함
+    await expect(sidebar.locator('a[href="/apt"]')).toBeVisible();
+    await expect(sidebar.locator('a[href="/apt-mgmt"]')).toBeVisible();
+  });
+
+  test('TC-H8: 모바일(390px) — 사이드바 숨김', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const sidebar = page.locator('[data-testid="home-sidebar"]');
+    await expect(sidebar).toBeHidden();
   });
 });

@@ -7,6 +7,7 @@ import type { ItemDetail } from "@market/types/market";
 import ServiceLayout from "@shared/components/ui/ServiceLayout";
 import PercentileBadge from "@shared/components/ui/PercentileBadge";
 import Sparkline from "@shared/components/ui/Sparkline";
+import HomeSidebar from "./HomeSidebar";
 
 export const metadata: Metadata = {
   title: "DataZip — 아파트 실거래가 · 관리비 · 장바구니 시세",
@@ -86,12 +87,16 @@ export default async function HomePage() {
   }
 
   return (
-    <ServiceLayout>
+    <ServiceLayout contentClassName="max-w-7xl mx-auto px-5 pt-0 pb-24">
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
+
+      <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+      {/* 메인 컨텐츠 */}
+      <div className="lg:col-span-7">
 
       <h1
         className="text-3xl font-bold mb-5 leading-tight"
@@ -259,6 +264,15 @@ export default async function HomePage() {
           </Link>
         ))}
       </div>
+
+      </div>{/* end 메인 컨텐츠 */}
+
+      {/* 사이드바 */}
+      <div className="lg:col-span-5">
+        <HomeSidebar />
+      </div>
+
+      </div>{/* end grid */}
 
     </ServiceLayout>
   );
