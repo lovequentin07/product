@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import TrustStrip from './TrustStrip'
 
 interface ServiceLayoutProps {
   children: React.ReactNode
@@ -36,10 +37,15 @@ export default function ServiceLayout({
       {/* 주홍 구분선 */}
       <div
         className="max-w-2xl mx-auto px-5"
-        style={{ marginBottom: '32px' }}
+        style={{ marginBottom: '12px' }}
       >
         <div style={{ height: '1px', background: 'var(--ds-accent)' }} />
       </div>
+
+      {/* 신뢰 스트립 */}
+      <TrustStrip />
+
+      <div style={{ marginBottom: '20px' }} />
 
       {/* 콘텐츠 */}
       <main className={contentClassName}>
